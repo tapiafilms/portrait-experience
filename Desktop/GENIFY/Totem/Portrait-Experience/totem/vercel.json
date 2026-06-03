@@ -4,6 +4,12 @@
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [{ "key": "X-Frame-Options", "value": "SAMEORIGIN" }]
+    }
+  ],
   "functions": {
     "api/**/*.js": {
       "maxDuration": 60,
