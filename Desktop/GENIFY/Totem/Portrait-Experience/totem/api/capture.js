@@ -2,9 +2,7 @@ const { createClient } = require('@supabase/supabase-js')
 const { v4: uuidv4 } = require('uuid')
 const QRCode = require('qrcode')
 
-const BASE_URL = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'https://portrait-experience.vercel.app'
+const BASE_URL = process.env.APP_URL || 'https://portrait-experience.vercel.app'
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
