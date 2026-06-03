@@ -1,12 +1,11 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-)
-
 export default function GaleriaPage() {
+  const supabase = useMemo(() => createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+  ), [])
   const eventId = window.location.pathname.split('/galeria/')[1]
   const [photos, setPhotos] = useState([])
   const [current, setCurrent] = useState(0)
