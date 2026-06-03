@@ -60,8 +60,16 @@ export default function SessionPage() {
   }
 
   if (loading) return (
-    <div style={s.root}>
-      <div style={s.spinner} />
+    <div style={s.loadingRoot}>
+      <video
+        src="/loop.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={s.loadingVideo}
+      />
+      <p style={s.loadingText}>Cargando tu retrato...</p>
     </div>
   )
 
@@ -135,13 +143,21 @@ export default function SessionPage() {
             <p style={s.rejectedText}>⚠️ Foto no apta para el evento</p>
             <button style={s.cameraBtn} onClick={handleTakePhoto}>Intentar de nuevo</button>
           </div>
+        ) : uploading ? (
+          <div style={s.uploadingWrap}>
+            <video
+              src="/loop.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={s.uploadingVideo}
+            />
+            <p style={s.uploadingText}>Espera mientras publicamos...</p>
+          </div>
         ) : (
-          <button
-            style={{ ...s.cameraBtn, opacity: uploading ? 0.6 : 1 }}
-            onClick={handleTakePhoto}
-            disabled={uploading}
-          >
-            {uploading ? '⏳ Publicando...' : '📸 Tomar foto para el evento'}
+          <button style={s.cameraBtn} onClick={handleTakePhoto}>
+            📸 Tomar foto para el evento
           </button>
         )}
       </div>
@@ -164,12 +180,13 @@ export default function SessionPage() {
 
 const s = {
   root: {
-    minHeight: '100vh',
+    minHeight: '100dvh',
     background: '#050810',
     display: 'flex', flexDirection: 'column',
     alignItems: 'center',
     fontFamily: "'Inter', system-ui, sans-serif",
     paddingBottom: 40,
+    color: '#fff',
   },
   header: {
     width: '100%', padding: '20px 24px',
@@ -256,12 +273,36 @@ const s = {
   },
   footerTag: { fontSize: 9, letterSpacing: '4px', color: 'rgba(255,255,255,0.3)', margin: 0, textTransform: 'uppercase' },
   footerLogo: { height: 24, objectFit: 'contain' },
-  spinner: {
-    width: 40, height: 40, borderRadius: '50%',
-    border: '3px solid rgba(59,130,246,0.2)',
-    borderTopColor: '#3b82f6',
-    animation: 'spin 0.8s linear infinite',
-    margin: 'auto',
-    marginTop: '45vh',
+  loadingRoot: {
+    minHeight: '100dvh',
+    background: '#050810',
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 24,
+  },
+  loadingVideo: {
+    width: 180, height: 180,
+    objectFit: 'cover', borderRadius: '50%',
+    border: '2px solid rgba(59,130,246,0.3)',
+    boxShadow: '0 0 40px rgba(59,130,246,0.2)',
+  },
+  loadingText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 14, letterSpacing: '0.05em',
+  },
+  uploadingWrap: {
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', gap: 12,
+    padding: '8px 0',
+  },
+  uploadingVideo: {
+    width: 80, height: 80,
+    objectFit: 'cover', borderRadius: '50%',
+    border: '2px solid rgba(59,130,246,0.3)',
+    boxShadow: '0 0 24px rgba(59,130,246,0.2)',
+  },
+  uploadingText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13, letterSpacing: '0.05em', margin: 0,
   },
 }
