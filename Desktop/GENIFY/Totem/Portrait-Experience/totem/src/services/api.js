@@ -2,8 +2,7 @@
 // En desarrollo local apunta al servidor Express
 const BASE = import.meta.env.VITE_API_URL || ''
 
-export async function uploadCapture(blob) {
-  // Convertir blob a base64 para evitar multipart en Vercel
+export async function uploadCapture(blob, eventId) {
   const base64 = await new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = () => resolve(reader.result)
@@ -13,7 +12,7 @@ export async function uploadCapture(blob) {
   const res = await fetch(`${BASE}/api/capture`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ photo: base64 }),
+    body: JSON.stringify({ photo: base64, eventId }),
   })
   if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
   return res.json()

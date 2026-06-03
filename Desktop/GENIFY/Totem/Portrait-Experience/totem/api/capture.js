@@ -25,13 +25,15 @@ module.exports = async function handler(req, res) {
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(filename)
 
     // Guardar sesión para obtener el ID
+    const { eventId } = req.body
+
     const { data: session, error: dbError } = await supabase
-      .from('sessions').insert({ image_url: publicUrl, filename, qr_data_url: '' })
+      .from('sessions').insert({ image_url: publicUrl, filename, qr_data_url: '', event_id: eventId || null })
       .select().single()
     if (dbError) throw new Error(`DB: ${dbError.message}`)
 
     // QR apunta al endpoint que siempre redirige a la mejor foto (transformada > original)
-    const redirectUrl = `${BASE_URL}/api/session/${session.id}`
+    const redirectUrl = `${BASE_URL}/session/${session.id}`
     const qrDataUrl = await QRCode.toDataURL(redirectUrl, {
       width: 400, margin: 2,
       color: { dark: '#000000', light: '#ffffff' },

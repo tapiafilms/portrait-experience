@@ -67,7 +67,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
     try {
       const blob = await captureFrame()
       if (!blob) throw new Error('No se pudo capturar el frame')
-      const data = await uploadCapture(blob)
+      const data = await uploadCapture(blob, event?.eventId)
       onCaptureDone(data, userName, guestId)
     } catch (err) {
       setUploadError(err.message)
