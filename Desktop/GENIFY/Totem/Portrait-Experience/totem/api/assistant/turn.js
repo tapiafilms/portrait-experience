@@ -1,6 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
-import { createClient } from '@supabase/supabase-js'
-import guests from '../../server/data/guests.json' assert { type: 'json' }
+const Anthropic = require('@anthropic-ai/sdk')
+const guests = require('../../server/data/guests.json')
 
 const conversations = new Map()
 const EVENT_NAME = process.env.EVENT_NAME || 'Vision Futuro 2024'
@@ -44,7 +43,7 @@ Responde SIEMPRE en este JSON:
 {"speech": "lo que dices", "action": null}`
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { sessionId, message, history = [], guestId } = req.body
@@ -71,7 +70,11 @@ export default async function handler(req, res) {
     conv.push({ role: 'assistant', content: response.content })
     conversations.set(sessionId, conv)
 
-    res.json({ speech: parsed.speech || text, action: parsed.action || null, history: conv })
+    res.json({
+      speech: parsed.speech || text,
+      action: parsed.action || null,
+      history: conv,
+    })
   } catch (err) {
     console.error('[assistant]', err.message)
     res.status(500).json({ error: err.message })

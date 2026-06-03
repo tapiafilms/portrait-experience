@@ -1,5 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
-import guests from '../../server/data/guests.json' assert { type: 'json' }
+const Anthropic = require('@anthropic-ai/sdk')
+const guests = require('../../server/data/guests.json')
 
 const conversations = new Map()
 const EVENT_NAME = process.env.EVENT_NAME || 'Vision Futuro 2024'
@@ -40,7 +40,7 @@ const TOOLS = [{
   },
 }]
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { sessionId, message, history = [] } = req.body
@@ -75,7 +75,11 @@ export default async function handler(req, res) {
           max_tokens: 300,
           system: SYSTEM,
           tools: TOOLS,
-          messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: [toolResult] }],
+          messages: [
+            ...messages,
+            { role: 'assistant', content: response.content },
+            { role: 'user', content: [toolResult] },
+          ],
         })
       }
     }
@@ -90,7 +94,13 @@ export default async function handler(req, res) {
     conv.push({ role: 'assistant', content: response.content })
     conversations.set(sessionId, conv)
 
-    res.json({ speech: parsed.speech || text, action: parsed.action || null, guestId: parsed.guestId || (guestData?.id ?? null), guestData: guestData || null, history: conv })
+    res.json({
+      speech: parsed.speech || text,
+      action: parsed.action || null,
+      guestId: parsed.guestId || (guestData?.id ?? null),
+      guestData: guestData || null,
+      history: conv,
+    })
   } catch (err) {
     console.error('[photographer]', err.message)
     res.status(500).json({ error: err.message })

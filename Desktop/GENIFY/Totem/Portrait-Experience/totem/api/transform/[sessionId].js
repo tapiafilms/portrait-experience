@@ -1,42 +1,31 @@
-import { createClient } from '@supabase/supabase-js'
-import { v4 as uuidv4 } from 'uuid'
-import sharp from 'sharp'
-import path from 'path'
+const { createClient } = require('@supabase/supabase-js')
+const { v4: uuidv4 } = require('uuid')
+const sharp = require('sharp')
+const path = require('path')
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
-const BUCKET = 'portraits'
-
-async function uploadBuffer(buffer, filename) {
-  const { error } = await supabase.storage
-    .from(BUCKET).upload(filename, buffer, { contentType: 'image/jpeg', upsert: true })
-  if (error) throw new Error(error.message)
-  const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(filename)
-  return publicUrl
-}
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { sessionId } = req.query
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+  const BUCKET = 'portraits'
 
   const { data: session } = await supabase.from('sessions').select('*').eq('id', sessionId).single()
   if (!session) return res.status(404).json({ error: 'Sesión no encontrada' })
 
   try {
-    // Descargar imagen original
     const imgRes = await fetch(session.image_url)
     const originalBuffer = Buffer.from(await imgRes.arrayBuffer())
 
-    // Preparar para IA
     const preparedBuffer = await sharp(originalBuffer)
       .resize(768, 1024, { fit: 'cover', position: 'top' })
       .jpeg({ quality: 95 }).toBuffer()
 
-    let resultUrl
     const hasKey = !!process.env.FAL_API_KEY
+    let resultUrl
 
     if (hasKey) {
-      const { fal } = await import('@fal-ai/client')
+      const { fal } = require('@fal-ai/client')
       fal.config({ credentials: process.env.FAL_API_KEY })
       const blob = new Blob([preparedBuffer], { type: 'image/jpeg' })
       const imageUrl = await fal.storage.upload(blob)
@@ -53,7 +42,6 @@ export default async function handler(req, res) {
       resultUrl = `data:image/jpeg;base64,${preparedBuffer.toString('base64')}`
     }
 
-    // Obtener buffer del resultado
     let transformedBuffer
     if (resultUrl.startsWith('http')) {
       const r = await fetch(resultUrl)
@@ -78,7 +66,10 @@ export default async function handler(req, res) {
     }]).jpeg({ quality: 92 }).toBuffer()
 
     const finalFilename = `transformed/${uuidv4()}.jpg`
-    const transformedImageUrl = await uploadBuffer(finalBuffer, finalFilename)
+    const { error: upErr } = await supabase.storage.from(BUCKET).upload(finalFilename, finalBuffer, { contentType: 'image/jpeg', upsert: true })
+    if (upErr) throw new Error(upErr.message)
+
+    const { data: { publicUrl: transformedImageUrl } } = supabase.storage.from(BUCKET).getPublicUrl(finalFilename)
 
     await supabase.from('sessions').update({ transformed_url: transformedImageUrl }).eq('id', sessionId)
 
