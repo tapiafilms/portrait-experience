@@ -29,6 +29,7 @@ export function useAssistant({ guestId, onEnd }) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) { setTimeout(onSilence, 2000); return }
 
+    setTimeout(() => {
     const r = new SR()
     r.lang = 'es-ES'
     r.continuous = false
@@ -62,6 +63,7 @@ export function useAssistant({ guestId, onEnd }) {
         onSilence()
       }
     }, ms)
+    }, 500) // delay para re-inicializar mic entre sesiones
   }, [])
 
   const sendTurn = useCallback(async (message) => {

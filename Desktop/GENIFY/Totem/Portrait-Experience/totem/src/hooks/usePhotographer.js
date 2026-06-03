@@ -34,6 +34,8 @@ export function usePhotographer({ onCapture, onGuestIdentified }) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) { setTimeout(onSilence, 1500); return }
 
+    // Pequeño delay para que Chrome re-inicialice el micrófono entre sesiones
+    setTimeout(() => {
     const r = new SR()
     r.lang = 'es-ES'
     r.continuous = false
@@ -69,6 +71,7 @@ export function usePhotographer({ onCapture, onGuestIdentified }) {
         onSilence()
       }
     }, ms)
+    }, 500) // delay para re-inicializar mic entre sesiones
   }, [])
 
   // ── Enviar turno a Claude ─────────────────────────────────────────────────
