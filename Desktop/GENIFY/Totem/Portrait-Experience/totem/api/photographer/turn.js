@@ -4,10 +4,10 @@ const guests = require('../../server/data/guests.json')
 const conversations = new Map()
 const EVENT_NAME = process.env.EVENT_NAME || 'Vision Futuro 2024'
 
-function searchGuest(nombre, apellido) {
+function searchGuest(nombre, apellido, list) {
   const n = (nombre || '').toLowerCase().trim()
   const a = (apellido || '').toLowerCase().trim()
-  return guests.find(g =>
+  return list.find(g =>
     g.nombre.toLowerCase().includes(n) &&
     (!a || g.apellido.toLowerCase().includes(a))
   ) || null
@@ -43,8 +43,12 @@ const TOOLS = [{
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { sessionId, message, history = [] } = req.body
+  const { sessionId, message, history = [], eventName, guests: eventGuests } = req.body
   if (!sessionId || !message) return res.status(400).json({ error: 'Faltan campos' })
+
+  // Usar invitados del evento si vienen en el request, sino usar los locales
+  const guestList = Array.isArray(eventGuests) && eventGuests.length > 0 ? eventGuests : guests
+  const eventTitle = eventName || EVENT_NAME
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const messages = [...history, { role: 'user', content: message }]
@@ -62,7 +66,7 @@ module.exports = async function handler(req, res) {
     if (response.stop_reason === 'tool_use') {
       const toolUse = response.content.find(b => b.type === 'tool_use')
       if (toolUse?.name === 'buscar_invitado') {
-        guestData = searchGuest(toolUse.input.nombre, toolUse.input.apellido)
+        guestData = searchGuest(toolUse.input.nombre, toolUse.input.apellido, guestList)
         const toolResult = {
           type: 'tool_result',
           tool_use_id: toolUse.id,

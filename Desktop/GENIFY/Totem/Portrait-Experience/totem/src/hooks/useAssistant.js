@@ -3,7 +3,7 @@ import { speak, cancelSpeech, VOICE_IDS } from '../services/voice'
 
 const BASE = import.meta.env.VITE_API_URL || ''
 
-export function useAssistant({ guestId, onEnd }) {
+export function useAssistant({ guestId, onEnd, event }) {
   const [state, setState]       = useState('idle')
   const [avatarText, setAvatar] = useState(null)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -75,6 +75,8 @@ export function useAssistant({ guestId, onEnd }) {
         message,
         history: historyRef.current,
         guestId,
+        eventName: event?.eventName,
+        guests: event?.guests,
       }),
     })
     const data = await res.json()

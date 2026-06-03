@@ -46,10 +46,11 @@ Responde SIEMPRE en este JSON:
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { sessionId, message, history = [], guestId } = req.body
+  const { sessionId, message, history = [], guestId, eventName, guests: eventGuests } = req.body
   if (!sessionId || !message) return res.status(400).json({ error: 'Faltan campos' })
 
-  const guest = guestId ? guests.find(g => g.id === guestId) : null
+  const guestList = Array.isArray(eventGuests) && eventGuests.length > 0 ? eventGuests : guests
+  const guest = guestId ? guestList.find(g => g.id === guestId) : null
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const messages = [...history, { role: 'user', content: message }]
 

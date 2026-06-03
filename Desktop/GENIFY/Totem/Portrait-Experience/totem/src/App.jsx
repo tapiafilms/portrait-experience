@@ -4,10 +4,13 @@ import IdleScreen from './components/IdleScreen'
 import ActiveSession from './components/ActiveSession'
 import VideoReveal from './components/VideoReveal'
 import QRDisplay from './components/QRDisplay'
+import LoginScreen from './components/LoginScreen'
+import { useEvent } from './context/EventContext'
 import { transformCapture } from './services/api'
 
-// Flujo: idle → active → transforming → revealing → qr → idle
+// Flujo: login → idle → active → transforming → revealing → qr → idle
 export default function App() {
+  const { event } = useEvent()
   const [screen, setScreen] = useState('idle')
   const [captureData, setCaptureData] = useState(null)
   const [revealData, setRevealData] = useState(null)
@@ -61,6 +64,9 @@ export default function App() {
     setUserName(null)
     setScreen('idle')
   }, [])
+
+  // Mostrar login si no hay evento activo
+  if (!event) return <LoginScreen />
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#0a0a0a' }}>

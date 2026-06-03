@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { speak } from '../services/voice'
 import AvatarVideo from './AvatarVideo'
+import { useEvent } from '../context/EventContext'
 import { useAssistant } from '../hooks/useAssistant'
 
 const AUTO_RESET = 180_000
@@ -15,7 +16,8 @@ export default function QRDisplay({ sessionData, onReset }) {
     setTimeout(onReset, 2000)
   }, [onReset])
 
-  const assistant = useAssistant({ guestId, onEnd: handleAssistantEnd })
+  const { event } = useEvent()
+  const assistant = useAssistant({ guestId, onEnd: handleAssistantEnd, event })
 
   useEffect(() => {
     speak('¡Tu retrato está listo! Escanea el código QR para descargarlo.')

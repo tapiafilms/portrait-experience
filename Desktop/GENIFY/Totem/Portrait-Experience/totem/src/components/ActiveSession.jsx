@@ -4,6 +4,7 @@ import { usePhotographer } from '../hooks/usePhotographer'
 import CameraFeed from './CameraFeed'
 import CountdownCapture from './CountdownCapture'
 import AvatarVideo from './AvatarVideo'
+import { useEvent } from '../context/EventContext'
 import { uploadCapture } from '../services/api'
 
 const IDLE_TIMEOUT = 180_000
@@ -16,6 +17,7 @@ const STATE_LABELS = {
 
 export default function ActiveSession({ onCaptureDone, onReset }) {
   const { videoRef, ready, error, captureFrame } = useSharedCamera()
+  const { event } = useEvent()
   const [phase, setPhase] = useState('conversation')
   const [userName, setUserName] = useState(null)
   const [uploadError, setUploadError] = useState(null)
@@ -39,6 +41,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
   const conversation = usePhotographer({
     onCapture: handleCapture,
     onGuestIdentified: handleGuestIdentified,
+    event,
   })
 
   useEffect(() => { photographerRef.current = conversation }, [conversation])

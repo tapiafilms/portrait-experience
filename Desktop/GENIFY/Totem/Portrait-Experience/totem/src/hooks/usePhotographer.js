@@ -4,7 +4,7 @@ import { speak, cancelSpeech, VOICE_IDS } from '../services/voice'
 const BASE = import.meta.env.VITE_API_URL || ''
 const YES_WORDS = ['sí', 'si', 'yes', 'dale', 'listo', 'lista', 'ya', 'vamos', 'ok', 'claro', 'bueno', 'adelante']
 
-export function usePhotographer({ onCapture, onGuestIdentified }) {
+export function usePhotographer({ onCapture, onGuestIdentified, event }) {
   const [state, setState]       = useState('idle')
   const [avatarText, setAvatar] = useState(null)
   const [guestData, setGuest]   = useState(null)
@@ -83,6 +83,8 @@ export function usePhotographer({ onCapture, onGuestIdentified }) {
         sessionId: sessionId.current,
         message,
         history: historyRef.current,
+        eventName: event?.eventName,
+        guests: event?.guests,
       }),
     })
     const data = await res.json()
