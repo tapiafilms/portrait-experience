@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import AdminPage from './pages/AdminPage'
 import { CameraProvider } from './context/CameraContext'
 import { EventProvider } from './context/EventContext'
 import './styles/global.css'
@@ -10,10 +11,14 @@ navigator.mediaDevices.getUserMedia({ audio: true })
   .then(stream => stream.getTracks().forEach(t => t.stop()))
   .catch(() => {})
 
+const isAdmin = window.location.pathname.startsWith('/admin')
+
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <EventProvider>
-    <CameraProvider>
-      <App />
-    </CameraProvider>
-  </EventProvider>
+  isAdmin ? <AdminPage /> : (
+    <EventProvider>
+      <CameraProvider>
+        <App />
+      </CameraProvider>
+    </EventProvider>
+  )
 )
