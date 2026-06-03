@@ -6,9 +6,6 @@
   ],
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 60
-    },
-    "api/transform/[sessionId].js": {
       "maxDuration": 60,
       "includeFiles": "public/**"
     }
