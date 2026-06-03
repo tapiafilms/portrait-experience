@@ -8,6 +8,7 @@ export default function SessionPage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [uploadResult, setUploadResult] = useState(null)
+  const [showPortrait, setShowPortrait] = useState(true)
   const cameraRef = useRef(null)
 
   useEffect(() => {
@@ -33,30 +34,48 @@ export default function SessionPage() {
     input.click()
   }
 
+  const compressImage = (file) => new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 1280
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+          else { width = Math.round(width * MAX / height); height = MAX }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.75))
+      }
+      img.src = ev.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
     setUploading(true)
     setUploadResult(null)
 
-    const reader = new FileReader()
-    reader.onload = async (ev) => {
-      try {
-        const res = await fetch(`${BASE}/api/photos/upload`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photo: ev.target.result, eventId: data.eventId }),
-        })
-        const result = await res.json()
-        setUploadResult(result.status === 'approved' ? 'published' : 'rejected')
-      } catch {
-        setUploadResult('error')
-      } finally {
-        setUploading(false)
-        e.target.value = ''
-      }
+    try {
+      const compressed = await compressImage(file)
+      const res = await fetch(`${BASE}/api/photos/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo: compressed, eventId: data.eventId }),
+      })
+      const result = await res.json()
+      setUploadResult(result.status === 'approved' ? 'published' : 'rejected')
+    } catch {
+      setUploadResult('error')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
     }
-    reader.readAsDataURL(file)
   }
 
   if (loading) return (
@@ -87,16 +106,23 @@ export default function SessionPage() {
       </div>
 
       {/* Foto principal */}
-      <div style={s.photoWrap}>
-        <div style={s.photoBorder}>
-          <img src={data.photoUrl} alt="Tu retrato" style={s.photo} />
-        </div>
-      </div>
+      {showPortrait && (
+        <>
+          <div style={s.photoWrap}>
+            <div style={s.photoBorder}>
+              <img src={data.photoUrl} alt="Tu retrato" style={s.photo} />
+            </div>
+          </div>
 
-      {/* Botón descargar */}
-      <button style={s.downloadBtn} onClick={handleDownload}>
-        ⬇ Guardar en mi teléfono
-      </button>
+          <button style={s.downloadBtn} onClick={handleDownload}>
+            ⬇ Guardar en mi teléfono
+          </button>
+
+          <button style={s.closePortraitBtn} onClick={() => setShowPortrait(false)}>
+            Cerrar retrato ✕
+          </button>
+        </>
+      )}
 
       {/* Separador */}
       <div style={s.divider}>
@@ -136,7 +162,10 @@ export default function SessionPage() {
 
         {uploadResult === 'published' ? (
           <div style={s.successBox}>
-            <p style={s.successText}>✅ ¡Tu foto está en la pantalla grande!</p>
+            <p style={s.successText}>✅ ¡Tu foto aparecerá en la pantalla grande en cualquier momento!</p>
+            <button style={s.anotherBtn} onClick={() => { setUploadResult(null); handleTakePhoto() }}>
+              📸 Tomar otra foto
+            </button>
           </div>
         ) : uploadResult === 'rejected' ? (
           <div style={s.rejectedBox}>
@@ -145,14 +174,13 @@ export default function SessionPage() {
           </div>
         ) : uploading ? (
           <div style={s.uploadingWrap}>
-            <video
-              src="/loop.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              style={s.uploadingVideo}
-            />
+            <div style={s.orbitRing}>
+              <div style={s.orbitDot} />
+            </div>
+            <div style={s.orbitRing2}>
+              <div style={s.orbitDot2} />
+            </div>
+            <div style={s.orbitCore} />
             <p style={s.uploadingText}>Espera mientras publicamos...</p>
           </div>
         ) : (
@@ -172,6 +200,18 @@ export default function SessionPage() {
         @keyframes scrollLeft {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
+        }
+        @keyframes orbit1 {
+          from { transform: translateX(-50%) rotate(0deg); }
+          to   { transform: translateX(-50%) rotate(360deg); }
+        }
+        @keyframes orbit2 {
+          from { transform: translateX(-50%) rotate(0deg); }
+          to   { transform: translateX(-50%) rotate(360deg); }
+        }
+        @keyframes corePulse {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50%       { opacity: 1;   transform: scale(1.12); }
         }
       `}</style>
     </div>
@@ -213,6 +253,15 @@ const s = {
     border: 'none', color: '#fff',
     fontSize: 15, fontWeight: 700,
     cursor: 'pointer', letterSpacing: '0.02em',
+  },
+  closePortraitBtn: {
+    margin: '10px 24px 0',
+    width: 'calc(100% - 48px)', maxWidth: 352,
+    padding: '10px', borderRadius: 50,
+    background: 'transparent',
+    border: '1px solid rgba(255,255,255,0.12)',
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 13, cursor: 'pointer',
   },
   divider: {
     display: 'flex', alignItems: 'center', gap: 12,
@@ -261,7 +310,14 @@ const s = {
     border: '1px solid rgba(74,222,128,0.3)',
     borderRadius: 12, padding: '12px 16px',
   },
-  successText: { color: '#4ade80', fontSize: 14, fontWeight: 600, margin: 0 },
+  successText: { color: '#4ade80', fontSize: 14, fontWeight: 600, margin: '0 0 12px' },
+  anotherBtn: {
+    width: '100%', padding: '12px',
+    background: 'transparent',
+    border: '1px solid rgba(74,222,128,0.4)',
+    borderRadius: 50, color: '#4ade80',
+    fontSize: 14, fontWeight: 700, cursor: 'pointer',
+  },
   rejectedBox: {
     display: 'flex', flexDirection: 'column', gap: 10,
   },
@@ -292,17 +348,48 @@ const s = {
   },
   uploadingWrap: {
     display: 'flex', flexDirection: 'column',
-    alignItems: 'center', gap: 12,
-    padding: '8px 0',
+    alignItems: 'center', gap: 16,
+    padding: '12px 0',
+    position: 'relative',
   },
-  uploadingVideo: {
-    width: 80, height: 80,
-    objectFit: 'cover', borderRadius: '50%',
-    border: '2px solid rgba(59,130,246,0.3)',
-    boxShadow: '0 0 24px rgba(59,130,246,0.2)',
+  orbitRing: {
+    position: 'absolute',
+    top: 0, left: '50%', transform: 'translateX(-50%)',
+    width: 72, height: 72,
+    borderRadius: '50%',
+    border: '1.5px solid rgba(99,102,241,0.25)',
+    animation: 'orbit1 1.6s linear infinite',
+  },
+  orbitDot: {
+    position: 'absolute',
+    top: -4, left: '50%', marginLeft: -4,
+    width: 8, height: 8, borderRadius: '50%',
+    background: 'linear-gradient(135deg, #6366f1, #22d3ee)',
+    boxShadow: '0 0 8px rgba(99,102,241,0.8)',
+  },
+  orbitRing2: {
+    position: 'absolute',
+    top: 10, left: '50%', transform: 'translateX(-50%)',
+    width: 52, height: 52,
+    borderRadius: '50%',
+    border: '1.5px solid rgba(34,211,238,0.2)',
+    animation: 'orbit2 1.1s linear infinite reverse',
+  },
+  orbitDot2: {
+    position: 'absolute',
+    top: -4, left: '50%', marginLeft: -4,
+    width: 6, height: 6, borderRadius: '50%',
+    background: 'linear-gradient(135deg, #22d3ee, #a855f7)',
+    boxShadow: '0 0 6px rgba(34,211,238,0.8)',
+  },
+  orbitCore: {
+    width: 72, height: 72,
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(34,211,238,0.05) 60%, transparent 100%)',
+    animation: 'corePulse 1.6s ease-in-out infinite',
   },
   uploadingText: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.45)',
     fontSize: 13, letterSpacing: '0.05em', margin: 0,
   },
 }
