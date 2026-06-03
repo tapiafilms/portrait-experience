@@ -1,8 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const { v4: uuidv4 } = require('uuid')
 const QRCode = require('qrcode')
-const formidable = require('formidable')
-const fs = require('fs')
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -11,19 +9,13 @@ module.exports = async function handler(req, res) {
   const BUCKET = 'portraits'
 
   try {
-    // Parsear multipart con formidable
-    const { files } = await new Promise((resolve, reject) => {
-      const form = formidable({ maxFileSize: 20 * 1024 * 1024 })
-      form.parse(req, (err, fields, files) => {
-        if (err) reject(err)
-        else resolve({ fields, files })
-      })
-    })
+    const { photo } = req.body
+    if (!photo) return res.status(400).json({ error: 'No se recibió imagen' })
 
-    const file = Array.isArray(files.photo) ? files.photo[0] : files.photo
-    if (!file) return res.status(400).json({ error: 'No se recibió imagen' })
+    // Convertir base64 a buffer
+    const base64Data = photo.replace(/^data:image\/\w+;base64,/, '')
+    const buffer = Buffer.from(base64Data, 'base64')
 
-    const buffer = await fs.promises.readFile(file.filepath)
     const filename = `original/${uuidv4()}.jpg`
 
     const { error: uploadError } = await supabase.storage
