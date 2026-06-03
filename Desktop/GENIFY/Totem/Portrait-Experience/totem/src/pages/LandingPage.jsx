@@ -16,6 +16,7 @@ export default function LandingPage() {
         <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.navLogo} />
         <div style={s.navLinks}>
           <a href="#como-funciona" style={s.navLink} onClick={e => smoothScroll(e, 'como-funciona')}>Cómo funciona</a>
+          <a href="#en-tu-celular" style={s.navLink} onClick={e => smoothScroll(e, 'en-tu-celular')}>En tu celular</a>
           <a href="#features" style={s.navLink} onClick={e => smoothScroll(e, 'features')}>Features</a>
           <a href="#contacto" style={s.navLink} onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
           <a href="/totem" style={s.navCta}>Iniciar tótem →</a>
@@ -67,7 +68,8 @@ export default function LandingPage() {
           {[
             { n: '01', icon: '🎙️', title: 'El tótem saluda', desc: 'Un fotógrafo virtual con voz natural saluda al invitado, lo identifica y lo prepara para la foto.' },
             { n: '02', icon: '📸', title: 'Captura y transforma', desc: 'Se toma la foto y la IA la convierte en un personaje Pixar en tiempo real, preservando los rasgos de la persona.' },
-            { n: '03', icon: '📱', title: 'Descarga y asistente', desc: 'Aparece el QR para descargar. Una asistente virtual informa mesa, horarios y responde preguntas del evento.' },
+            { n: '03', icon: '📱', title: 'Escanea el QR', desc: 'Aparece el código QR en pantalla. El invitado lo escanea con su celular y accede a su retrato al instante.' },
+            { n: '04', icon: '🎉', title: 'Participa en el evento', desc: 'Desde el celular puede descargar su foto, ver el carrusel de retratos de otros asistentes y subir fotos a la pantalla grande.' },
           ].map(step => (
             <div key={step.n} style={s.step}>
               <div style={s.stepNum}>{step.n}</div>
@@ -76,6 +78,73 @@ export default function LandingPage() {
               <p style={s.stepDesc}>{step.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── En tu celular ── */}
+      <section id="en-tu-celular" style={{ ...s.section, background: 'rgba(255,255,255,0.02)', maxWidth: '100%', padding: '100px 48px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
+          <p style={s.sectionTag}>EXPERIENCIA MÓVIL</p>
+          <h2 style={s.sectionTitle}>Lo que ve el invitado<br />en su celular.</h2>
+
+          <div style={s.phoneRow}>
+
+            {/* Mockup teléfono */}
+            <div style={s.phoneMockup}>
+              <div style={s.phoneScreen}>
+                <div style={s.mockHeader}>
+                  <div style={s.mockLogo} />
+                </div>
+                <div style={s.mockPhoto} />
+                <div style={s.mockBtn} />
+                <div style={s.mockCarouselRow}>
+                  {[0,1,2].map(i => <div key={i} style={s.mockThumb} />)}
+                </div>
+                <div style={{ ...s.mockBtn, background: 'rgba(6,182,212,0.25)', marginTop: 8 }} />
+              </div>
+            </div>
+
+            {/* Steps móvil */}
+            <div style={s.mobileSteps}>
+              {[
+                {
+                  n: '01', icon: '🖼️',
+                  title: 'Su retrato Pixar',
+                  desc: 'Lo primero que ve es su retrato transformado, con un botón para guardarlo en su galería con un toque.',
+                },
+                {
+                  n: '02', icon: '🎠',
+                  title: 'Carrusel del evento',
+                  desc: 'Debajo aparece el carrusel en tiempo real con los retratos de todos los asistentes que pasaron por el tótem.',
+                },
+                {
+                  n: '03', icon: '📸',
+                  title: 'Tomar fotos para la pantalla grande',
+                  desc: 'El invitado puede abrir la cámara y tomar fotos durante el evento. Las aprobadas aparecen en la pantalla grande en segundos.',
+                },
+                {
+                  n: '04', icon: '🔁',
+                  title: 'Repetir cuando quiera',
+                  desc: 'Puede tomar varias fotos durante la noche. Cada una pasa por moderación automática antes de publicarse.',
+                },
+              ].map(step => (
+                <div key={step.n} style={s.mobileStep}>
+                  <div style={s.mobileStepLeft}>
+                    <div style={s.mobileStepNum}>{step.n}</div>
+                    <div style={s.mobileStepLine} />
+                  </div>
+                  <div style={s.mobileStepRight}>
+                    <div style={s.mobileStepIconRow}>
+                      <span style={{ fontSize: 22 }}>{step.icon}</span>
+                      <h3 style={s.mobileStepTitle}>{step.title}</h3>
+                    </div>
+                    <p style={s.mobileStepDesc}>{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -328,6 +397,91 @@ const s = {
   stepIcon: { fontSize: 36, marginBottom: 16 },
   stepTitle: { fontSize: 20, fontWeight: 800, margin: '0 0 12px' },
   stepDesc: { fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, margin: 0 },
+
+  // Mobile experience section
+  phoneRow: {
+    display: 'flex', gap: 64, alignItems: 'center',
+    justifyContent: 'center', flexWrap: 'wrap',
+    marginTop: 0,
+  },
+  phoneMockup: {
+    flexShrink: 0,
+    width: 220, background: '#0a0d1a',
+    borderRadius: 36,
+    border: '1.5px solid rgba(100,160,255,0.25)',
+    boxShadow: '0 0 60px rgba(59,130,246,0.15), inset 0 0 0 1px rgba(255,255,255,0.04)',
+    padding: '24px 14px',
+    display: 'flex', flexDirection: 'column', gap: 10,
+  },
+  phoneScreen: {
+    display: 'flex', flexDirection: 'column', gap: 10,
+  },
+  mockHeader: {
+    display: 'flex', justifyContent: 'center',
+    paddingBottom: 4,
+  },
+  mockLogo: {
+    width: 80, height: 10, borderRadius: 4,
+    background: 'rgba(255,255,255,0.15)',
+  },
+  mockPhoto: {
+    width: '100%', height: 160, borderRadius: 16,
+    background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(34,211,238,0.2))',
+    border: '1px solid rgba(99,102,241,0.2)',
+  },
+  mockBtn: {
+    width: '100%', height: 36, borderRadius: 50,
+    background: 'linear-gradient(135deg, rgba(59,130,246,0.4), rgba(109,40,217,0.4))',
+    border: '1px solid rgba(99,102,241,0.2)',
+  },
+  mockCarouselRow: {
+    display: 'flex', gap: 6,
+  },
+  mockThumb: {
+    flex: 1, height: 52, borderRadius: 8,
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.08)',
+  },
+
+  // Mobile steps
+  mobileSteps: {
+    flex: '1 1 320px', maxWidth: 480,
+    display: 'flex', flexDirection: 'column', gap: 0,
+    textAlign: 'left',
+  },
+  mobileStep: {
+    display: 'flex', gap: 16,
+  },
+  mobileStepLeft: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    paddingTop: 4, flexShrink: 0,
+  },
+  mobileStepNum: {
+    width: 32, height: 32, borderRadius: '50%',
+    background: 'rgba(99,102,241,0.15)',
+    border: '1px solid rgba(99,102,241,0.4)',
+    color: '#818cf8', fontSize: 11, fontWeight: 800,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    letterSpacing: '0.05em', flexShrink: 0,
+  },
+  mobileStepLine: {
+    flex: 1, width: 1, minHeight: 24,
+    background: 'rgba(99,102,241,0.15)',
+    margin: '4px 0',
+  },
+  mobileStepRight: {
+    paddingBottom: 28,
+  },
+  mobileStepIconRow: {
+    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6,
+  },
+  mobileStepTitle: {
+    fontSize: 17, fontWeight: 800, margin: 0,
+  },
+  mobileStepDesc: {
+    fontSize: 14, color: 'rgba(255,255,255,0.55)',
+    lineHeight: 1.7, margin: 0,
+  },
 
   // Features
   features: {
