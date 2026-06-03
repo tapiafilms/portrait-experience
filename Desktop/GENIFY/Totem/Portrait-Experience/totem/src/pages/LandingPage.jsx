@@ -1,5 +1,10 @@
 import { useState } from 'react'
 
+function smoothScroll(e, id) {
+  e.preventDefault()
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -10,9 +15,9 @@ export default function LandingPage() {
       <nav style={s.nav}>
         <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.navLogo} />
         <div style={s.navLinks}>
-          <a href="#como-funciona" style={s.navLink}>Cómo funciona</a>
-          <a href="#features" style={s.navLink}>Features</a>
-          <a href="#contacto" style={s.navLink}>Contacto</a>
+          <a href="#como-funciona" style={s.navLink} onClick={e => smoothScroll(e, 'como-funciona')}>Cómo funciona</a>
+          <a href="#features" style={s.navLink} onClick={e => smoothScroll(e, 'features')}>Features</a>
+          <a href="#contacto" style={s.navLink} onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
           <a href="/totem" style={s.navCta}>Iniciar tótem →</a>
         </div>
       </nav>
@@ -37,8 +42,8 @@ export default function LandingPage() {
           </p>
 
           <div style={s.heroCtas}>
-            <a href="#contacto" style={s.ctaPrimary}>Quiero esto en mi evento</a>
-            <a href="#como-funciona" style={s.ctaSecondary}>Ver cómo funciona</a>
+            <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Quiero esto en mi evento</a>
+            <a href="#como-funciona" style={s.ctaSecondary} onClick={e => smoothScroll(e, 'como-funciona')}>Ver cómo funciona</a>
           </div>
         </div>
 
