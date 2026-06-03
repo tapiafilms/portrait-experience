@@ -21,9 +21,7 @@ if (path.startsWith('/admin')) {
   document.body.classList.add('totem-mode')
   root = (
     <EventProvider>
-      <CameraProvider>
-        <App />
-      </CameraProvider>
+      <App />
     </EventProvider>
   )
 } else {
