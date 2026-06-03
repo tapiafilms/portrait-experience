@@ -25,13 +25,46 @@ export async function getSession(sessionId) {
   return res.json()
 }
 
-export async function transformCapture({ sessionId, style, userName }) {
-  const res = await fetch(`${BASE}/api/transform/${sessionId}`, {
+const WORKER_URL = 'https://wufly-push.pablo77tapia.workers.dev'
+
+export async function transformCapture({ sessionId }) {
+  // 1. Iniciar job en el Worker
+  const startRes = await fetch(`${BASE}/api/transform/${sessionId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ style, userName }),
+    body: JSON.stringify({}),
   })
-  if (!res.ok) throw new Error(`Transform failed: ${res.status}`)
-  return res.json()
-  // { sessionId, originalImageUrl, transformedImageUrl, style, demoMode }
+  if (!startRes.ok) throw new Error(`Transform failed: ${startRes.status}`)
+  const { requestId, statusUrl, responseUrl } = await startRes.json()
+
+  // 2. Polling hasta COMPLETED (máx 90s)
+  const start = Date.now()
+  let transformedImageUrl = null
+
+  while (!transformedImageUrl && Date.now() - start < 90000) {
+    await new Promise(r => setTimeout(r, 4000))
+
+    const pollRes = await fetch(
+      `${WORKER_URL}/api/portrait-status?statusUrl=${encodeURIComponent(statusUrl)}&responseUrl=${encodeURIComponent(responseUrl)}`
+    )
+    if (!pollRes.ok) continue
+    const pollData = await pollRes.json()
+
+    if (pollData.status === 'COMPLETED' && pollData.imageUrl) {
+      transformedImageUrl = pollData.imageUrl
+    } else if (pollData.status === 'FAILED') {
+      throw new Error('Transformación fallida en fal.ai')
+    }
+  }
+
+  if (!transformedImageUrl) throw new Error('Timeout esperando transformación')
+
+  // 3. Guardar resultado en DB
+  await fetch(`${BASE}/api/transform/${sessionId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transformedImageUrl }),
+  })
+
+  return { sessionId, transformedImageUrl, demoMode: false }
 }
