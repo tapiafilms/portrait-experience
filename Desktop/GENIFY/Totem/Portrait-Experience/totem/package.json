@@ -1,0 +1,53 @@
+{
+  "name": "genofy-portrait-totem",
+  "version": "1.0.0",
+  "description": "Genofy AI Portrait Experience — Tótem Interactivo",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run react\" \"wait-on http://localhost:3000 && npm run electron\"",
+    "react": "vite",
+    "electron": "electron .",
+    "server": "node server/index.js",
+    "build": "vite build && electron-builder"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
+    "@fal-ai/client": "^1.10.1",
+    "@supabase/supabase-js": "^2.107.0",
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "form-data": "^4.0.5",
+    "formidable": "^3.5.4",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "qrcode": "^1.5.4",
+    "replicate": "^1.4.0",
+    "sharp": "^0.33.4",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.3.4",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.genofy.portrait",
+    "productName": "Genofy Portrait Experience",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "server/**/*",
+      "node_modules/**/*"
+    ]
+  }
+}

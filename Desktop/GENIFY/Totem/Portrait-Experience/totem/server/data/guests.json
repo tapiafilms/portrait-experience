@@ -1,0 +1,22 @@
+[
+  { "id": 1,  "nombre": "Jaime",     "apellido": "González",   "cargo": "Gerente de Recursos Humanos",    "area": "Recursos Humanos",  "mesa": 1,  "compañeros": ["Paula Soto", "Rodrigo Muñoz"] },
+  { "id": 2,  "nombre": "Paula",     "apellido": "Soto",       "cargo": "Jefa de Selección",              "area": "Recursos Humanos",  "mesa": 1,  "compañeros": ["Jaime González", "Rodrigo Muñoz"] },
+  { "id": 3,  "nombre": "Rodrigo",   "apellido": "Muñoz",      "cargo": "Analista de Personas",           "area": "Recursos Humanos",  "mesa": 1,  "compañeros": ["Jaime González", "Paula Soto"] },
+  { "id": 4,  "nombre": "Camila",    "apellido": "Torres",     "cargo": "Directora de Marketing",         "area": "Marketing",         "mesa": 2,  "compañeros": ["Felipe Rojas", "Valentina Cruz"] },
+  { "id": 5,  "nombre": "Felipe",    "apellido": "Rojas",      "cargo": "Jefe de Contenidos",             "area": "Marketing",         "mesa": 2,  "compañeros": ["Camila Torres", "Valentina Cruz"] },
+  { "id": 6,  "nombre": "Valentina", "apellido": "Cruz",       "cargo": "Diseñadora Senior",              "area": "Marketing",         "mesa": 2,  "compañeros": ["Camila Torres", "Felipe Rojas"] },
+  { "id": 7,  "nombre": "Andrés",    "apellido": "Fuentes",    "cargo": "Gerente de Finanzas",            "area": "Finanzas",          "mesa": 3,  "compañeros": ["Marcela Vega", "Diego Castillo"] },
+  { "id": 8,  "nombre": "Marcela",   "apellido": "Vega",       "cargo": "Contralora",                     "area": "Finanzas",          "mesa": 3,  "compañeros": ["Andrés Fuentes", "Diego Castillo"] },
+  { "id": 9,  "nombre": "Diego",     "apellido": "Castillo",   "cargo": "Analista Financiero",            "area": "Finanzas",          "mesa": 3,  "compañeros": ["Andrés Fuentes", "Marcela Vega"] },
+  { "id": 10, "nombre": "Sofía",     "apellido": "Herrera",    "cargo": "Gerenta de Tecnología",          "area": "Tecnología",        "mesa": 4,  "compañeros": ["Nicolás Pardo", "Isidora Leiva"] },
+  { "id": 11, "nombre": "Nicolás",   "apellido": "Pardo",      "cargo": "Líder de Desarrollo",            "area": "Tecnología",        "mesa": 4,  "compañeros": ["Sofía Herrera", "Isidora Leiva"] },
+  { "id": 12, "nombre": "Isidora",   "apellido": "Leiva",      "cargo": "Arquitecta de Datos",            "area": "Tecnología",        "mesa": 4,  "compañeros": ["Sofía Herrera", "Nicolás Pardo"] },
+  { "id": 13, "nombre": "Matías",    "apellido": "Morales",    "cargo": "Gerente General",                "area": "Gerencia",          "mesa": 5,  "compañeros": ["Carolina Ibáñez", "Sebastián Ríos"] },
+  { "id": 14, "nombre": "Carolina",  "apellido": "Ibáñez",     "cargo": "Subgerenta General",             "area": "Gerencia",          "mesa": 5,  "compañeros": ["Matías Morales", "Sebastián Ríos"] },
+  { "id": 15, "nombre": "Sebastián", "apellido": "Ríos",       "cargo": "Gerente de Operaciones",         "area": "Operaciones",       "mesa": 6,  "compañeros": ["Constanza Moya", "Benjamín Espinoza"] },
+  { "id": 16, "nombre": "Constanza", "apellido": "Moya",       "cargo": "Jefa de Logística",              "area": "Operaciones",       "mesa": 6,  "compañeros": ["Sebastián Ríos", "Benjamín Espinoza"] },
+  { "id": 17, "nombre": "Benjamín",  "apellido": "Espinoza",   "cargo": "Coordinador de Proyectos",       "area": "Operaciones",       "mesa": 6,  "compañeros": ["Sebastián Ríos", "Constanza Moya"] },
+  { "id": 18, "nombre": "Amanda",    "apellido": "Cifuentes",  "cargo": "Directora Comercial",            "area": "Comercial",         "mesa": 7,  "compañeros": ["Tomás Vergara", "Renata Salinas"] },
+  { "id": 19, "nombre": "Tomás",     "apellido": "Vergara",    "cargo": "Gerente de Ventas",              "area": "Comercial",         "mesa": 7,  "compañeros": ["Amanda Cifuentes", "Renata Salinas"] },
+  { "id": 20, "nombre": "Renata",    "apellido": "Salinas",    "cargo": "Ejecutiva de Cuentas",           "area": "Comercial",         "mesa": 7,  "compañeros": ["Amanda Cifuentes", "Tomás Vergara"] }
+]

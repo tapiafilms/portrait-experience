@@ -1,0 +1,120 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:           #07090f;
+  --bg-card:      #0e1120;
+  --grad-start:   #a855f7;
+  --grad-mid:     #22d3ee;
+  --grad-end:     #84cc16;
+  --grad:         linear-gradient(90deg, #a855f7, #22d3ee, #84cc16);
+  --grad-v:       linear-gradient(160deg, #a855f7 0%, #22d3ee 50%, #84cc16 100%);
+  --purple:       #a855f7;
+  --cyan:         #22d3ee;
+  --green:        #84cc16;
+  --glow-purple:  rgba(168,85,247,0.35);
+  --glow-cyan:    rgba(34,211,238,0.25);
+  --text:         #ffffff;
+  --text-sub:     rgba(255,255,255,0.55);
+  --text-muted:   rgba(255,255,255,0.25);
+  --border:       rgba(255,255,255,0.07);
+  --font:         'Inter', 'Helvetica Neue', sans-serif;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  cursor: default;
+  user-select: none;
+}
+
+/* ── Animaciones ───────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInFast {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes ringExpand {
+  0%   { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(2.4);  opacity: 0; }
+}
+
+@keyframes countdownPop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  65%  { transform: scale(1.12); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes talkAnim {
+  from { height: 4px; }
+  to   { height: 14px; border-radius: 6px; }
+}
+
+@keyframes flashIn {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes glitch1 {
+  0%, 100% { transform: translateX(0); opacity: 0.8; }
+  25%  { transform: translateX(-6px); opacity: 0.5; }
+  50%  { transform: translateX(4px);  opacity: 0.9; }
+  75%  { transform: translateX(-2px); opacity: 0.6; }
+}
+
+@keyframes glitch2 {
+  0%, 100% { transform: translateX(0) scaleY(1); }
+  33%  { transform: translateX(8px) scaleY(2); opacity: 0.4; }
+  66%  { transform: translateX(-4px) scaleY(1); opacity: 0.9; }
+}
+
+@keyframes particleFloat {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-60px) scale(0); opacity: 0; }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glowBorder {
+  0%, 100% { box-shadow: 0 0 20px var(--glow-purple), 0 0 60px var(--glow-purple); }
+  50%       { box-shadow: 0 0 40px var(--glow-cyan),   0 0 100px var(--glow-cyan); }
+}
+
+@keyframes cameraIconPulse {
+  0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 8px var(--cyan)); }
+  50%       { transform: scale(1.08); filter: drop-shadow(0 0 20px var(--cyan)); }
+}
