@@ -18,6 +18,7 @@ let root
 if (path.startsWith('/admin')) {
   root = <AdminPage />
 } else if (path.startsWith('/totem')) {
+  document.body.classList.add('totem-mode')
   root = (
     <EventProvider>
       <CameraProvider>
