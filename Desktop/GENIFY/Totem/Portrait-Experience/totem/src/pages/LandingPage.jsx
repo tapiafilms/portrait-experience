@@ -29,22 +29,21 @@ export default function LandingPage() {
         <div style={s.heroGlow} />
 
         <div style={s.heroContent}>
-          <div style={s.badge}>✦ Powered by AI</div>
+          <div style={s.badge}>✦ Powered by Genofy</div>
 
           <h1 style={s.heroTitle}>
-            Tu retrato{' '}
-            <span style={s.heroGrad}>transformado por IA</span>
-            {' '}en segundos
+            Transforma a tus{' '}
+            <span style={s.heroGrad}>invitados en protagonistas</span>
+            {' '}del evento
           </h1>
 
           <p style={s.heroSub}>
-            Una experiencia interactiva para eventos corporativos. El tótem conversa,
-            toma la foto y la transforma en un personaje Pixar — todo en tiempo real.
+            Un fotógrafo virtual crea retratos IA personalizados, mientras una galería colaborativa proyecta en tiempo real los mejores momentos del evento en una pantalla gigante.
           </p>
 
           <div style={s.heroCtas}>
-            <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Quiero esto en mi evento</a>
-            <a href="#como-funciona" style={s.ctaSecondary} onClick={e => smoothScroll(e, 'como-funciona')}>Ver cómo funciona</a>
+            <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Solicitar Demo</a>
+            <a href="#como-funciona" style={s.ctaSecondary} onClick={e => smoothScroll(e, 'como-funciona')}>Ver Experiencia</a>
           </div>
         </div>
 
