@@ -218,7 +218,7 @@ const s = {
   cardZone: {
     flex: 1, minHeight: 0, zIndex: 2,
     display: 'flex', alignItems: 'stretch',
-    padding: '16px 32px 0',
+    padding: '12px 20px 28px',
     width: '100%',
   },
   card: {
