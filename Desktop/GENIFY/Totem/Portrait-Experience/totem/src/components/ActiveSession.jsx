@@ -84,6 +84,9 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       <img src="/bg-totem.png" alt="" style={s.bg} />
       <div style={s.bgOverlay} />
 
+      {/* Contenedor centrado con max-width */}
+      <div style={s.inner}>
+
       {/* Header */}
       <div style={s.header}>
         <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
@@ -172,6 +175,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       {/* Botón cancelar */}
       <button style={s.cancelBtn} onClick={() => { conversation.stop(); onReset() }}>✕</button>
 
+      </div>{/* /inner */}
     </div>
   )
 }
@@ -193,8 +197,14 @@ const s = {
     position: 'absolute', inset: 0, zIndex: 1,
     background: 'linear-gradient(to bottom, rgba(0,5,30,0.4) 0%, rgba(0,5,30,0.2) 50%, rgba(0,5,30,0.6) 100%)',
   },
-  header: {
+  inner: {
     position: 'relative', zIndex: 2,
+    width: '100%', maxWidth: '1000px',
+    height: '100%',
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center',
+  },
+  header: {
     width: '100%', padding: '28px 28px 0',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
