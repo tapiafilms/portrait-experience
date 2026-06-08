@@ -10,6 +10,7 @@ export default function QRDisplay({ sessionData, onReset }) {
   const { imageUrl, qrDataUrl, guestId } = sessionData
   const [secondsLeft, setSecondsLeft] = useState(180)
   const [keyboardInput, setKeyboardInput] = useState('')
+  const [showText, setShowText] = useState(false)
   const inputRef = useRef(null)
 
   const handleAssistantEnd = useCallback(() => {
@@ -89,38 +90,47 @@ export default function QRDisplay({ sessionData, onReset }) {
 
         {/* Burbuja + input */}
         <div style={s.bubbleCol}>
-          {assistant.avatarText && (
-            <div style={s.bubble}>
-              <p style={s.assistantName}>
-                Luna · Asistente Virtual
-                {assistant.state === 'listening' && <span style={s.listeningDot}> 🎙️</span>}
-              </p>
-              <p style={s.bubbleText}>{assistant.avatarText}</p>
-              {assistant.state === 'listening' && (
-                <div style={s.dots}>
-                  <div style={s.dot} />
-                  <div style={{ ...s.dot, animationDelay: '0.2s' }} />
-                  <div style={{ ...s.dot, animationDelay: '0.4s' }} />
+          <button style={s.writeBtn} onClick={() => setShowText(v => !v)}>
+            {showText ? 'cerrar' : 'escribir'}
+          </button>
+
+          {showText && (
+            <>
+              {assistant.avatarText && (
+                <div style={s.bubble}>
+                  <p style={s.assistantName}>
+                    Luna · Asistente Virtual
+                    {assistant.state === 'listening' && <span style={s.listeningDot}> 🎙️</span>}
+                  </p>
+                  <p style={s.bubbleText}>{assistant.avatarText}</p>
+                  {assistant.state === 'listening' && (
+                    <div style={s.dots}>
+                      <div style={s.dot} />
+                      <div style={{ ...s.dot, animationDelay: '0.2s' }} />
+                      <div style={{ ...s.dot, animationDelay: '0.4s' }} />
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          {assistant.state === 'listening' && (
-            <input
-              ref={inputRef}
-              style={s.keyboardInput}
-              value={keyboardInput}
-              onChange={e => setKeyboardInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && keyboardInput.trim()) {
-                  assistant.sendManualInput(keyboardInput.trim())
-                  setKeyboardInput('')
-                }
-              }}
-              placeholder="Escribe tu respuesta y presiona Enter..."
-              autoFocus
-            />
+              {assistant.state === 'listening' && (
+                <input
+                  ref={inputRef}
+                  style={s.keyboardInput}
+                  value={keyboardInput}
+                  onChange={e => setKeyboardInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && keyboardInput.trim()) {
+                      assistant.sendManualInput(keyboardInput.trim())
+                      setKeyboardInput('')
+                      setShowText(false)
+                    }
+                  }}
+                  placeholder="Escribe tu respuesta y presiona Enter..."
+                  autoFocus
+                />
+              )}
+            </>
           )}
         </div>
       </div>
@@ -242,6 +252,16 @@ const s = {
   },
   bubbleCol: {
     flex: 1, display: 'flex', flexDirection: 'column', gap: '8px',
+  },
+  writeBtn: {
+    alignSelf: 'flex-start',
+    background: 'rgba(168,85,247,0.15)',
+    border: '1px solid rgba(168,85,247,0.5)',
+    color: 'rgba(255,255,255,0.85)',
+    padding: '6px 18px', borderRadius: '50px',
+    cursor: 'pointer', fontSize: '12px',
+    fontWeight: 600, letterSpacing: '1px',
+    backdropFilter: 'blur(8px)',
   },
   bubble: {
     background: 'rgba(255,255,255,0.95)',
