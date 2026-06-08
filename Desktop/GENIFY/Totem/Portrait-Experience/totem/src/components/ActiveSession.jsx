@@ -231,6 +231,7 @@ const s = {
     display: 'flex', alignItems: 'flex-end', gap: '12px',
   },
   pipWrap: {
+    position: 'relative',
     width: 110, height: 140,
     borderRadius: '16px', overflow: 'hidden', flexShrink: 0,
     border: '2px solid rgba(100,160,255,0.5)',
