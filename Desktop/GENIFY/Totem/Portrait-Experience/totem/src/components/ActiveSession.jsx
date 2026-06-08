@@ -90,7 +90,6 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       {/* Header */}
       <div style={s.header}>
         <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logoGenofy} />
       </div>
 
       {/* Tarjeta central — avatar del fotógrafo */}
@@ -206,11 +205,11 @@ const s = {
   },
   header: {
     flexShrink: 0,
-    width: '100%', padding: '28px 28px 0',
+    width: '100%', padding: '28px 55px 0',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
   logoTitle: {
-    height: '34px', objectFit: 'contain',
+    height: '80px', objectFit: 'contain',
   },
   logoGenofy: {
     height: '26px', objectFit: 'contain',
@@ -218,7 +217,7 @@ const s = {
   cardZone: {
     flex: 1, minHeight: 0, zIndex: 2,
     display: 'flex', alignItems: 'stretch',
-    padding: '12px 20px 10px',
+    padding: '12px 55px 10px',
     width: '100%',
   },
   card: {
@@ -239,7 +238,7 @@ const s = {
   bottomZone: {
     flexShrink: 0,
     zIndex: 2,
-    width: '100%', padding: '12px 20px 28px',
+    width: '100%', padding: '12px 55px 28px',
     display: 'flex', alignItems: 'flex-end', gap: '12px',
   },
   pipWrap: {
