@@ -88,10 +88,11 @@ export function useAssistant({ guestId, onEnd, event }) {
     if (!activeRef.current) return
 
     setAvatar(data.speech)
+    setIsSpeaking(true)
     const wordCount = data.speech.split(/\s+/).length
     const minDuration = Math.max(1500, wordCount * 380)
     await Promise.all([
-      speak(data.speech, { voiceId: VOICE_IDS.assistant, onStart: () => setIsSpeaking(true) }),
+      speak(data.speech, { voiceId: VOICE_IDS.assistant }).catch(err => console.warn('[speak]', err)),
       new Promise(r => setTimeout(r, minDuration)),
     ])
     setIsSpeaking(false)
