@@ -76,6 +76,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
   }, [captureFrame, onCaptureDone, userName, guestId])
 
   const currentLabel = STATE_LABELS[conversation.state] || ''
+  const [showText, setShowText] = useState(false)
 
   return (
     <div style={s.root}>
@@ -136,43 +137,52 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
 
         {/* Burbuja + estado */}
         <div style={s.bubbleCol}>
-          {conversation.avatarText && phase === 'conversation' && (
-            <div style={s.bubble}>
-              {userName && <p style={s.bubbleName}>👋 {userName}</p>}
-              <p style={s.bubbleText}>{conversation.avatarText}</p>
-              {currentLabel && (
-                <div style={s.listeningIndicator}>
-                  <div style={s.dot} />
-                  <div style={{ ...s.dot, animationDelay: '0.2s' }} />
-                  <div style={{ ...s.dot, animationDelay: '0.4s' }} />
-                  <span style={s.listeningLabel}>{currentLabel}</span>
-                </div>
-              )}
-            </div>
+          {/* Botón escribir — siempre visible */}
+          {phase === 'conversation' && (
+            <button style={s.writeBtn} onClick={() => setShowText(v => !v)}>
+              {showText ? 'cerrar' : 'escribir'}
+            </button>
           )}
 
-          {/* Input teclado */}
-          {phase === 'conversation' && conversation.state === 'listening' && (
-            <input
-              ref={inputRef}
-              style={s.keyboardInput}
-              value={keyboardInput}
-              onChange={e => setKeyboardInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && keyboardInput.trim()) {
-                  conversation.sendManualInput(keyboardInput.trim())
-                  setKeyboardInput('')
-                }
-              }}
-              placeholder="Escribe tu respuesta y presiona Enter..."
-              autoFocus
-            />
+          {/* Texto + input — solo si showText */}
+          {showText && (
+            <>
+              {conversation.avatarText && phase === 'conversation' && (
+                <div style={s.bubble}>
+                  {userName && <p style={s.bubbleName}>👋 {userName}</p>}
+                  <p style={s.bubbleText}>{conversation.avatarText}</p>
+                  {currentLabel && (
+                    <div style={s.listeningIndicator}>
+                      <div style={s.dot} />
+                      <div style={{ ...s.dot, animationDelay: '0.2s' }} />
+                      <div style={{ ...s.dot, animationDelay: '0.4s' }} />
+                      <span style={s.listeningLabel}>{currentLabel}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {phase === 'conversation' && conversation.state === 'listening' && (
+                <input
+                  ref={inputRef}
+                  style={s.keyboardInput}
+                  value={keyboardInput}
+                  onChange={e => setKeyboardInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && keyboardInput.trim()) {
+                      conversation.sendManualInput(keyboardInput.trim())
+                      setKeyboardInput('')
+                      setShowText(false)
+                    }
+                  }}
+                  placeholder="Escribe tu respuesta y presiona Enter..."
+                  autoFocus
+                />
+              )}
+            </>
           )}
         </div>
       </div>
-
-      {/* Botón cancelar */}
-      <button style={s.cancelBtn} onClick={() => { conversation.stop(); onReset() }}>✕</button>
 
       </div>{/* /inner */}
     </div>
@@ -292,14 +302,15 @@ const s = {
     outline: 'none', boxSizing: 'border-box',
     backdropFilter: 'blur(10px)',
   },
-  cancelBtn: {
-    position: 'absolute', top: '20px', right: '24px',
-    background: 'rgba(255,255,255,0.1)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: 'rgba(255,255,255,0.5)',
-    width: '36px', height: '36px', borderRadius: '50%',
-    cursor: 'pointer', fontSize: '13px', zIndex: 20,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  writeBtn: {
+    alignSelf: 'flex-start',
+    background: 'rgba(168,85,247,0.15)',
+    border: '1px solid rgba(168,85,247,0.5)',
+    color: 'rgba(255,255,255,0.85)',
+    padding: '6px 18px', borderRadius: '50px',
+    cursor: 'pointer', fontSize: '12px',
+    fontWeight: 600, letterSpacing: '1px',
+    backdropFilter: 'blur(8px)',
   },
   spinner: {
     width: '48px', height: '48px', borderRadius: '50%',
