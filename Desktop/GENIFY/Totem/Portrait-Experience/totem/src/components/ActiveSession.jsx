@@ -200,11 +200,12 @@ const s = {
   inner: {
     position: 'relative', zIndex: 2,
     width: '100%', maxWidth: '1000px',
-    height: '100%',
+    height: '100%', minHeight: 0,
     display: 'flex', flexDirection: 'column',
     alignItems: 'center',
   },
   header: {
+    flexShrink: 0,
     width: '100%', padding: '28px 28px 0',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
@@ -215,13 +216,13 @@ const s = {
     height: '26px', objectFit: 'contain',
   },
   cardZone: {
-    flex: 1, zIndex: 2,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flex: 1, minHeight: 0, zIndex: 2,
+    display: 'flex', alignItems: 'stretch',
     padding: '16px 32px 0',
     width: '100%',
   },
   card: {
-    width: '100%', height: '100%',
+    flex: 1, minHeight: 0,
     borderRadius: '28px',
     overflow: 'hidden',
     border: '1.5px solid rgba(100,160,255,0.35)',
@@ -236,6 +237,7 @@ const s = {
     alignItems: 'center', justifyContent: 'center', gap: '20px', zIndex: 5,
   },
   bottomZone: {
+    flexShrink: 0,
     zIndex: 2,
     width: '100%', padding: '12px 20px 28px',
     display: 'flex', alignItems: 'flex-end', gap: '12px',
