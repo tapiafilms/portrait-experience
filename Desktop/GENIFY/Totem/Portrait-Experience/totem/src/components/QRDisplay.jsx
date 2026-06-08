@@ -37,9 +37,12 @@ export default function QRDisplay({ sessionData, onReset }) {
   return (
     <div style={s.root}>
 
-      {/* Fondo */}
+      {/* Fondo — siempre 100% viewport */}
       <img src="/bg-totem.png" alt="" style={s.bg} />
       <div style={s.bgOverlay} />
+
+      {/* Contenedor centrado con max-width */}
+      <div style={s.inner}>
 
       {/* Header */}
       <div style={s.header}>
@@ -122,6 +125,7 @@ export default function QRDisplay({ sessionData, onReset }) {
         </div>
       </div>
 
+      </div>{/* /inner */}
     </div>
   )
 }
@@ -143,8 +147,15 @@ const s = {
     position: 'absolute', inset: 0, zIndex: 1,
     background: 'linear-gradient(to bottom, rgba(0,5,30,0.4) 0%, rgba(0,5,30,0.2) 50%, rgba(0,5,30,0.6) 100%)',
   },
-  header: {
+  inner: {
     position: 'relative', zIndex: 2,
+    width: '100%', maxWidth: '1000px',
+    height: '100%', minHeight: 0,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center',
+  },
+  header: {
+    flexShrink: 0,
     width: '100%', padding: '28px 28px 0',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
@@ -155,7 +166,7 @@ const s = {
     height: '26px', objectFit: 'contain',
   },
   content: {
-    flex: 1, zIndex: 2,
+    flex: 1, minHeight: 0, zIndex: 2,
     display: 'flex', gap: '24px',
     alignItems: 'center', justifyContent: 'center',
     padding: '16px 28px 0',
@@ -218,6 +229,7 @@ const s = {
     borderRadius: '50px', cursor: 'pointer', textTransform: 'uppercase',
   },
   bottomZone: {
+    flexShrink: 0,
     zIndex: 2,
     width: '100%', padding: '12px 20px 28px',
     display: 'flex', alignItems: 'flex-end', gap: '12px',
