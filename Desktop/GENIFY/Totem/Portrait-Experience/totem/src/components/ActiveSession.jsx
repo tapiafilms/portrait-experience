@@ -218,7 +218,7 @@ const s = {
   cardZone: {
     flex: 1, minHeight: 0, zIndex: 2,
     display: 'flex', alignItems: 'stretch',
-    padding: '12px 20px 28px',
+    padding: '12px 20px 10px',
     width: '100%',
   },
   card: {
@@ -244,7 +244,7 @@ const s = {
   },
   pipWrap: {
     position: 'relative',
-    width: 110, height: 140,
+    width: 180, height: 230,
     borderRadius: '16px', overflow: 'hidden', flexShrink: 0,
     border: '2px solid rgba(100,160,255,0.5)',
     boxShadow: '0 0 20px rgba(30,100,255,0.4)',
