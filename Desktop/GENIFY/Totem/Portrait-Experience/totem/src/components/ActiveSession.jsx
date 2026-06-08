@@ -90,17 +90,13 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
         <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logoGenofy} />
       </div>
 
-      {/* Tarjeta central — cámara del usuario */}
+      {/* Tarjeta central — avatar del fotógrafo */}
       <div style={s.cardZone}>
         <div style={s.card}>
-          {error ? (
-            <div style={s.errorBox}>
-              <p style={s.errorText}>⚠ Cámara no disponible</p>
-              <p style={s.errorSub}>{error}</p>
-            </div>
-          ) : (
-            <CameraFeed videoRef={videoRef} />
-          )}
+          <AvatarVideo
+            isSpeaking={conversation.isSpeaking}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
 
           {phase === 'countdown' && (
             <CountdownCapture onCapture={handleCountdownCapture} seconds={3} />
@@ -124,15 +120,16 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
         </div>
       </div>
 
-      {/* Zona inferior — avatar + burbuja */}
+      {/* Zona inferior — PiP cámara + burbuja */}
       <div style={s.bottomZone}>
 
-        {/* Avatar Alex */}
-        <div style={s.avatarWrap}>
-          <AvatarVideo
-            isSpeaking={conversation.isSpeaking}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+        {/* PiP: cámara del usuario */}
+        <div style={s.pipWrap}>
+          {error ? (
+            <div style={s.pipError}><span style={{ fontSize: 20 }}>⚠</span></div>
+          ) : (
+            <CameraFeed videoRef={videoRef} />
+          )}
         </div>
 
         {/* Burbuja + estado */}
@@ -233,11 +230,17 @@ const s = {
     width: '100%', padding: '12px 20px 28px',
     display: 'flex', alignItems: 'flex-end', gap: '12px',
   },
-  avatarWrap: {
-    width: 120, height: 150,
+  pipWrap: {
+    width: 110, height: 140,
     borderRadius: '16px', overflow: 'hidden', flexShrink: 0,
-    border: '1.5px solid rgba(100,160,255,0.4)',
-    boxShadow: '0 0 24px rgba(30,100,255,0.3)',
+    border: '2px solid rgba(100,160,255,0.5)',
+    boxShadow: '0 0 20px rgba(30,100,255,0.4)',
+    background: '#000',
+  },
+  pipError: {
+    width: '100%', height: '100%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: '#0a0a0a', color: '#f87171',
   },
   bubbleCol: {
     flex: 1, display: 'flex', flexDirection: 'column', gap: '8px',
