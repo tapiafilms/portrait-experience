@@ -88,13 +88,18 @@ async function speakElevenLabs(text, { voiceId, onStart } = {}) {
   const arrayBuffer = await res.arrayBuffer()
   console.log('[ElevenLabs] Audio recibido, bytes:', arrayBuffer.byteLength)
   const audioCtx = new AudioContext()
+  // En Windows el AudioContext arranca suspended — hay que resumirlo explícitamente
+  if (audioCtx.state === 'suspended') await audioCtx.resume()
   const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
   const source = audioCtx.createBufferSource()
   source.buffer = audioBuffer
   source.connect(audioCtx.destination)
 
   return new Promise(resolve => {
-    source.onended = resolve
+    // Timeout de seguridad: si onended no dispara, resolvemos al terminar la duración estimada
+    const safetyMs = Math.ceil(audioBuffer.duration * 1000) + 500
+    const safetyTimer = setTimeout(resolve, safetyMs)
+    source.onended = () => { clearTimeout(safetyTimer); resolve() }
     source.start()
     onStart?.()
   })
