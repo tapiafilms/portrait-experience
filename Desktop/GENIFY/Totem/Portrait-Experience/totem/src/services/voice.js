@@ -115,8 +115,8 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
         analyser.connect(audioCtx.destination)
 
         const dataArray = new Uint8Array(analyser.frequencyBinCount)
-        const THRESHOLD = 8      // amplitud mínima para considerar "hablando"
-        const SILENCE_MS = 120   // ms de silencio antes de disparar pausa
+        const THRESHOLD = 15     // amplitud mínima para considerar "hablando"
+        const SILENCE_MS = 300   // ms de silencio antes de disparar pausa
         let talkingNow = true
         let silenceStart = null
 
