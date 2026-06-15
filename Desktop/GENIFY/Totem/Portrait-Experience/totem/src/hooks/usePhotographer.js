@@ -101,6 +101,7 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
       onGuestIdentified?.(data.guestData)
     }
 
+    if (data.action === 'start_countdown') setState('countdown')
     setAvatar(data.speech)
     setIsSpeaking(true)
     const wordCount = data.speech.split(/\s+/).length

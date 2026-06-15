@@ -97,7 +97,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       <div style={s.cardZone}>
         <div style={s.card}>
           <AvatarDisplay
-            state={phase === 'countdown' ? 'countdown' : conversation.isSpeaking ? 'talking' : conversation.state}
+            state={conversation.state === 'countdown' || phase === 'countdown' ? 'countdown' : conversation.isSpeaking ? 'talking' : conversation.state}
             size="100%"
           />
 

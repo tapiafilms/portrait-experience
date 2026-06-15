@@ -46,8 +46,9 @@ export default function AvatarDisplay({ state = 'idle', size = 320 }) {
   const stateInput = useStateMachineInput(rive, 'AvatarSM', 'state')
 
   useEffect(() => {
+    console.log('[AvatarDisplay] riveValue:', riveValue, '| state:', state)
     if (stateInput) stateInput.value = riveValue
-  }, [riveValue])
+  }, [riveValue, state])
 
   return (
     <div style={{ width: size, height: size }}>
