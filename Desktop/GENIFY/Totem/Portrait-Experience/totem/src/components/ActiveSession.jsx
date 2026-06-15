@@ -107,7 +107,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
 
           <div style={{
             position: 'absolute', bottom: 0, left: '50%', width: '130%', height: '130%', zIndex: 1,
-            transform: `translateX(-50%) scale(${conversation.state === 'countdown' || phase === 'countdown' ? 0.944 : 0.8})`,
+            transform: `translateX(-50%) ${conversation.state === 'countdown' || phase === 'countdown' ? 'translateY(8%) scale(1.15)' : 'scale(1.0)'}`,
             transformOrigin: 'bottom center',
             transition: 'transform 1.2s cubic-bezier(0.34, 1.1, 0.64, 1)',
           }}>
