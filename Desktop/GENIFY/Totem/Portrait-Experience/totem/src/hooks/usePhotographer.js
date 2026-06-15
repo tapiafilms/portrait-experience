@@ -106,7 +106,12 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
     const wordCount = data.speech.split(/\s+/).length
     const minDuration = Math.max(1500, wordCount * 380)
     await Promise.all([
-      speak(data.speech, { voiceId: VOICE_IDS.photographer, onStart: () => setIsSpeaking(true) }).catch(err => console.warn('[speak]', err)),
+      speak(data.speech, {
+        voiceId: VOICE_IDS.photographer,
+        onStart:  () => setIsSpeaking(true),
+        onPause:  () => setIsSpeaking(false),
+        onResume: () => setIsSpeaking(true),
+      }).catch(err => console.warn('[speak]', err)),
       new Promise(r => setTimeout(r, minDuration)),
     ])
     setIsSpeaking(false)

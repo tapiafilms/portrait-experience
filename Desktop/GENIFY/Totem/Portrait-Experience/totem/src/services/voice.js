@@ -59,7 +59,7 @@ function normalizeText(text) {
     .replace(/\bsra\.\s*/gi, 'señora ')
 }
 
-async function speakElevenLabs(text, { voiceId, onStart } = {}) {
+async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {}) {
   text = normalizeText(text)
   const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
   const resolvedVoiceId = voiceId
@@ -88,19 +88,67 @@ async function speakElevenLabs(text, { voiceId, onStart } = {}) {
   const arrayBuffer = await res.arrayBuffer()
   console.log('[ElevenLabs] Audio recibido, bytes:', arrayBuffer.byteLength)
 
-  // Usar <Audio> + blob URL — más confiable que AudioContext en Windows/Electron
   const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
   const url = URL.createObjectURL(blob)
   const audio = new Audio(url)
 
   return new Promise(resolve => {
-    const cleanup = () => { URL.revokeObjectURL(url); resolve() }
-    // Timeout de seguridad de 60s por si onended nunca dispara
+    let animFrameId = null
+    let audioCtx = null
+
+    const stopAnalyser = () => {
+      if (animFrameId) cancelAnimationFrame(animFrameId)
+      if (audioCtx) audioCtx.close().catch(() => {})
+    }
+
+    const cleanup = () => { stopAnalyser(); URL.revokeObjectURL(url); resolve() }
     const safetyTimer = setTimeout(cleanup, 60_000)
+
+    const startAnalyser = () => {
+      try {
+        audioCtx = new AudioContext()
+        const source = audioCtx.createMediaElementSource(audio)
+        const analyser = audioCtx.createAnalyser()
+        analyser.fftSize = 256
+        analyser.smoothingTimeConstant = 0.4
+        source.connect(analyser)
+        analyser.connect(audioCtx.destination)
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount)
+        const THRESHOLD = 8      // amplitud mínima para considerar "hablando"
+        const SILENCE_MS = 120   // ms de silencio antes de disparar pausa
+        let talkingNow = true
+        let silenceStart = null
+
+        const tick = () => {
+          analyser.getByteFrequencyData(dataArray)
+          const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
+
+          if (avg > THRESHOLD) {
+            silenceStart = null
+            if (!talkingNow) { talkingNow = true; onResume?.() }
+          } else {
+            if (!silenceStart) silenceStart = Date.now()
+            if (talkingNow && Date.now() - silenceStart > SILENCE_MS) {
+              talkingNow = false
+              onPause?.()
+            }
+          }
+          animFrameId = requestAnimationFrame(tick)
+        }
+        animFrameId = requestAnimationFrame(tick)
+      } catch (e) {
+        console.warn('[AudioAnalyser]', e)
+      }
+    }
+
     audio.onended = () => { clearTimeout(safetyTimer); cleanup() }
     audio.onerror = (e) => { console.warn('[ElevenLabs] Audio error:', e); clearTimeout(safetyTimer); cleanup() }
     audio.play()
-      .then(() => onStart?.())
+      .then(() => {
+        onStart?.()
+        if (onPause || onResume) startAnalyser()
+      })
       .catch(e => { console.warn('[ElevenLabs] play() error:', e); clearTimeout(safetyTimer); cleanup() })
   })
 }
