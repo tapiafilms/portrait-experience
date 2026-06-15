@@ -96,10 +96,12 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       {/* Tarjeta central — avatar del fotógrafo */}
       <div style={s.cardZone}>
         <div style={s.card}>
-          <AvatarDisplay
-            state={conversation.state === 'countdown' || phase === 'countdown' ? 'countdown' : conversation.isSpeaking ? 'talking' : conversation.state}
-            size="100%"
-          />
+          <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '130%', height: '130%' }}>
+            <AvatarDisplay
+              state={conversation.state === 'countdown' || phase === 'countdown' ? 'countdown' : conversation.isSpeaking ? 'talking' : conversation.state}
+              size="100%"
+            />
+          </div>
 
           {phase === 'countdown' && (
             <CountdownCapture onCapture={handleCountdownCapture} seconds={3} />
