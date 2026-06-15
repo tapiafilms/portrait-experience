@@ -103,7 +103,6 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
 
     setAvatar(data.speech)
     setIsSpeaking(true)
-    setState('talking')
     const wordCount = data.speech.split(/\s+/).length
     const minDuration = Math.max(1500, wordCount * 380)
     await Promise.all([
