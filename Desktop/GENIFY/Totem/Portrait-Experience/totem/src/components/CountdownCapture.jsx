@@ -54,7 +54,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(0,0,0,0.5)',
+    background: 'transparent',
     gap: '24px',
     zIndex: 10,
   },
