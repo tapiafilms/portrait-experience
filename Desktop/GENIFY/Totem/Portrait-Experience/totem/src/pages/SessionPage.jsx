@@ -8,7 +8,7 @@ export default function SessionPage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [uploadResult, setUploadResult] = useState(null)
-  const [showPortrait, setShowPortrait] = useState(true)
+  const [showPortrait] = useState(true)
   const cameraRef = useRef(null)
 
   useEffect(() => {
@@ -117,8 +117,6 @@ export default function SessionPage() {
           <button style={s.downloadBtn} onClick={handleDownload}>
             ⬇ Guardar en mi teléfono
           </button>
-
-          <button style={s.closePortraitBtn} onClick={() => setShowPortrait(false)}>✕</button>
         </>
       )}
 
@@ -252,16 +250,6 @@ const s = {
     border: 'none', color: '#fff',
     fontSize: 15, fontWeight: 700,
     cursor: 'pointer', letterSpacing: '0.02em',
-  },
-  closePortraitBtn: {
-    position: 'absolute', top: 8, right: 32,
-    width: 32, height: 32, borderRadius: '50%',
-    background: 'rgba(0,0,0,0.55)',
-    backdropFilter: 'blur(6px)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: '#fff', fontSize: 14,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', lineHeight: 1,
   },
   divider: {
     display: 'flex', alignItems: 'center', gap: 12,
