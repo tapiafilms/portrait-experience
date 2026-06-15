@@ -159,7 +159,7 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
     activeRef.current = true
     historyRef.current = []
     silenceCount.current = 0
-    setState('greeting')
+    setState('thinking')
 
     try {
       const data = await sendTurn('[El invitado acaba de acercarse al tótem. Inicia la conversación.]')
