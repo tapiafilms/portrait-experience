@@ -13,6 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
     "@fal-ai/client": "^1.10.1",
+    "@rive-app/react-canvas": "^4.28.5",
     "@supabase/supabase-js": "^2.107.0",
     "axios": "^1.7.2",
     "cors": "^2.8.5",

@@ -76,6 +76,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
   }, [captureFrame, onCaptureDone, userName, guestId])
 
   const currentLabel = STATE_LABELS[conversation.state] || ''
+  const [showText, setShowText] = useState(false)
 
   return (
     <div style={s.root}>
@@ -84,23 +85,21 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       <img src="/bg-totem.png" alt="" style={s.bg} />
       <div style={s.bgOverlay} />
 
+      {/* Contenedor centrado con max-width */}
+      <div style={s.inner}>
+
       {/* Header */}
       <div style={s.header}>
         <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logoGenofy} />
       </div>
 
-      {/* Tarjeta central — cámara del usuario */}
+      {/* Tarjeta central — avatar del fotógrafo */}
       <div style={s.cardZone}>
         <div style={s.card}>
-          {error ? (
-            <div style={s.errorBox}>
-              <p style={s.errorText}>⚠ Cámara no disponible</p>
-              <p style={s.errorSub}>{error}</p>
-            </div>
-          ) : (
-            <CameraFeed videoRef={videoRef} />
-          )}
+          <AvatarVideo
+            isSpeaking={conversation.isSpeaking}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
 
           {phase === 'countdown' && (
             <CountdownCapture onCapture={handleCountdownCapture} seconds={3} />
@@ -124,57 +123,68 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
         </div>
       </div>
 
-      {/* Zona inferior — avatar + burbuja */}
+      {/* Zona inferior — PiP cámara + burbuja */}
       <div style={s.bottomZone}>
 
-        {/* Avatar Alex */}
-        <div style={s.avatarWrap}>
-          <AvatarVideo
-            isSpeaking={conversation.isSpeaking}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+        {/* PiP: cámara del usuario */}
+        <div style={s.pipWrap}>
+          {error ? (
+            <div style={s.pipError}><span style={{ fontSize: 20 }}>⚠</span></div>
+          ) : (
+            <CameraFeed videoRef={videoRef} />
+          )}
         </div>
 
         {/* Burbuja + estado */}
         <div style={s.bubbleCol}>
-          {conversation.avatarText && phase === 'conversation' && (
-            <div style={s.bubble}>
-              {userName && <p style={s.bubbleName}>👋 {userName}</p>}
-              <p style={s.bubbleText}>{conversation.avatarText}</p>
-              {currentLabel && (
-                <div style={s.listeningIndicator}>
-                  <div style={s.dot} />
-                  <div style={{ ...s.dot, animationDelay: '0.2s' }} />
-                  <div style={{ ...s.dot, animationDelay: '0.4s' }} />
-                  <span style={s.listeningLabel}>{currentLabel}</span>
-                </div>
-              )}
-            </div>
+          {/* Botón escribir — siempre visible */}
+          {phase === 'conversation' && (
+            <button style={s.writeBtn} onClick={() => setShowText(v => !v)}>
+              {showText ? 'cerrar' : 'escribir'}
+            </button>
           )}
 
-          {/* Input teclado */}
-          {phase === 'conversation' && conversation.state === 'listening' && (
-            <input
-              ref={inputRef}
-              style={s.keyboardInput}
-              value={keyboardInput}
-              onChange={e => setKeyboardInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && keyboardInput.trim()) {
-                  conversation.sendManualInput(keyboardInput.trim())
-                  setKeyboardInput('')
-                }
-              }}
-              placeholder="Escribe tu respuesta y presiona Enter..."
-              autoFocus
-            />
+          {/* Texto + input — solo si showText */}
+          {showText && (
+            <>
+              {conversation.avatarText && phase === 'conversation' && (
+                <div style={s.bubble}>
+                  {userName && <p style={s.bubbleName}>👋 {userName}</p>}
+                  <p style={s.bubbleText}>{conversation.avatarText}</p>
+                  {currentLabel && (
+                    <div style={s.listeningIndicator}>
+                      <div style={s.dot} />
+                      <div style={{ ...s.dot, animationDelay: '0.2s' }} />
+                      <div style={{ ...s.dot, animationDelay: '0.4s' }} />
+                      <span style={s.listeningLabel}>{currentLabel}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {phase === 'conversation' && conversation.state === 'listening' && (
+                <input
+                  ref={inputRef}
+                  style={s.keyboardInput}
+                  value={keyboardInput}
+                  onChange={e => setKeyboardInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && keyboardInput.trim()) {
+                      conversation.sendManualInput(keyboardInput.trim())
+                      setKeyboardInput('')
+                      setShowText(false)
+                    }
+                  }}
+                  placeholder="Escribe tu respuesta y presiona Enter..."
+                  autoFocus
+                />
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {/* Botón cancelar */}
-      <button style={s.cancelBtn} onClick={() => { conversation.stop(); onReset() }}>✕</button>
-
+      </div>{/* /inner */}
     </div>
   )
 }
@@ -196,25 +206,32 @@ const s = {
     position: 'absolute', inset: 0, zIndex: 1,
     background: 'linear-gradient(to bottom, rgba(0,5,30,0.4) 0%, rgba(0,5,30,0.2) 50%, rgba(0,5,30,0.6) 100%)',
   },
-  header: {
+  inner: {
     position: 'relative', zIndex: 2,
-    width: '100%', padding: '28px 28px 0',
+    width: '100%', maxWidth: '1000px',
+    height: '100%', minHeight: 0,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center',
+  },
+  header: {
+    flexShrink: 0,
+    width: '100%', padding: '28px 55px 0',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
   logoTitle: {
-    height: '34px', objectFit: 'contain',
+    height: '80px', objectFit: 'contain',
   },
   logoGenofy: {
     height: '26px', objectFit: 'contain',
   },
   cardZone: {
-    flex: 1, zIndex: 2,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '16px 32px 0',
+    flex: 1, minHeight: 0, zIndex: 2,
+    display: 'flex', alignItems: 'stretch',
+    padding: '12px 55px 10px',
     width: '100%',
   },
   card: {
-    width: '100%', height: '100%',
+    flex: 1, minHeight: 0,
     borderRadius: '28px',
     overflow: 'hidden',
     border: '1.5px solid rgba(100,160,255,0.35)',
@@ -229,15 +246,23 @@ const s = {
     alignItems: 'center', justifyContent: 'center', gap: '20px', zIndex: 5,
   },
   bottomZone: {
+    flexShrink: 0,
     zIndex: 2,
-    width: '100%', padding: '12px 20px 28px',
+    width: '100%', padding: '12px 55px 28px',
     display: 'flex', alignItems: 'flex-end', gap: '12px',
   },
-  avatarWrap: {
-    width: 120, height: 150,
+  pipWrap: {
+    position: 'relative',
+    width: 180, height: 230,
     borderRadius: '16px', overflow: 'hidden', flexShrink: 0,
-    border: '1.5px solid rgba(100,160,255,0.4)',
-    boxShadow: '0 0 24px rgba(30,100,255,0.3)',
+    border: '2px solid rgba(100,160,255,0.5)',
+    boxShadow: '0 0 20px rgba(30,100,255,0.4)',
+    background: '#000',
+  },
+  pipError: {
+    width: '100%', height: '100%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: '#0a0a0a', color: '#f87171',
   },
   bubbleCol: {
     flex: 1, display: 'flex', flexDirection: 'column', gap: '8px',
@@ -277,14 +302,15 @@ const s = {
     outline: 'none', boxSizing: 'border-box',
     backdropFilter: 'blur(10px)',
   },
-  cancelBtn: {
-    position: 'absolute', top: '20px', right: '24px',
-    background: 'rgba(255,255,255,0.1)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: 'rgba(255,255,255,0.5)',
-    width: '36px', height: '36px', borderRadius: '50%',
-    cursor: 'pointer', fontSize: '13px', zIndex: 20,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  writeBtn: {
+    alignSelf: 'flex-start',
+    background: 'rgba(168,85,247,0.15)',
+    border: '1px solid rgba(168,85,247,0.5)',
+    color: 'rgba(255,255,255,0.85)',
+    padding: '6px 18px', borderRadius: '50px',
+    cursor: 'pointer', fontSize: '12px',
+    fontWeight: 600, letterSpacing: '1px',
+    backdropFilter: 'blur(8px)',
   },
   spinner: {
     width: '48px', height: '48px', borderRadius: '50%',

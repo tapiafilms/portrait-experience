@@ -10,6 +10,7 @@ export default function QRDisplay({ sessionData, onReset }) {
   const { imageUrl, qrDataUrl, guestId } = sessionData
   const [secondsLeft, setSecondsLeft] = useState(180)
   const [keyboardInput, setKeyboardInput] = useState('')
+  const [showText, setShowText] = useState(false)
   const inputRef = useRef(null)
 
   const handleAssistantEnd = useCallback(() => {
@@ -37,91 +38,109 @@ export default function QRDisplay({ sessionData, onReset }) {
   return (
     <div style={s.root}>
 
-      {/* Fondo */}
+      {/* Fondo — siempre 100% viewport */}
       <img src="/bg-totem.png" alt="" style={s.bg} />
       <div style={s.bgOverlay} />
 
-      {/* Header */}
-      <div style={s.header}>
-        <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logoGenofy} />
-      </div>
+      {/* Contenedor centrado con max-width */}
+      <div style={s.inner}>
 
-      {/* Contenido central */}
-      <div style={s.content}>
-
-        {/* Foto transformada */}
-        <div style={s.photoCard}>
-          <img src={imageUrl} alt="Tu retrato" style={s.photo} />
+        {/* Header */}
+        <div style={s.header}>
+          <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
+          <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logoGenofy} />
         </div>
 
-        {/* QR */}
-        <div style={s.qrSection}>
-          <p style={s.qrTitle}>¡Tu retrato está listo!</p>
-          <p style={s.qrSub}>Escanea para descargar tu imagen</p>
-          <div style={s.qrBox}>
-            {qrDataUrl
-              ? <img src={qrDataUrl} alt="QR" style={s.qrImg} />
-              : <div style={s.spinner} />
-            }
+        {/* Tarjeta central — avatar del asistente */}
+        <div style={s.cardZone}>
+          <div style={s.card}>
+            <AvatarVideo
+              isSpeaking={assistant.isSpeaking}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
           </div>
-          <div style={s.timerBar}>
-            <div style={{ ...s.timerFill, width: `${(secondsLeft / 180) * 100}%` }} />
+        </div>
+
+        {/* Zona inferior — foto + QR + escribir */}
+        <div style={s.bottomZone}>
+
+          {/* Foto transformada (PiP) */}
+          <div style={s.pipWrap}>
+            <img src={imageUrl} alt="Tu retrato" style={s.pipPhoto} />
           </div>
-          <p style={s.timerText}>Volviendo al inicio en {secondsLeft}s</p>
-          <button style={s.newBtn} onClick={onReset}>Nueva foto</button>
-        </div>
-      </div>
 
-      {/* Zona inferior — Luna + burbuja */}
-      <div style={s.bottomZone}>
+          {/* Columna derecha: QR + timer + botón + burbuja */}
+          <div style={s.rightCol}>
 
-        {/* Avatar Luna */}
-        <div style={s.avatarWrap}>
-          <AvatarVideo
-            isSpeaking={assistant.isSpeaking}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
-
-        {/* Burbuja + input */}
-        <div style={s.bubbleCol}>
-          {assistant.avatarText && (
-            <div style={s.bubble}>
-              <p style={s.assistantName}>
-                Luna · Asistente Virtual
-                {assistant.state === 'listening' && <span style={s.listeningDot}> 🎙️</span>}
-              </p>
-              <p style={s.bubbleText}>{assistant.avatarText}</p>
-              {assistant.state === 'listening' && (
-                <div style={s.dots}>
-                  <div style={s.dot} />
-                  <div style={{ ...s.dot, animationDelay: '0.2s' }} />
-                  <div style={{ ...s.dot, animationDelay: '0.4s' }} />
+            {/* QR + info */}
+            <div style={s.qrRow}>
+              <div style={s.qrBox}>
+                {qrDataUrl
+                  ? <img src={qrDataUrl} alt="QR" style={s.qrImg} />
+                  : <div style={s.spinner} />
+                }
+              </div>
+              <div style={s.qrInfo}>
+                <p style={s.qrTitle}>¡Tu retrato está listo!</p>
+                <p style={s.qrSub}>Escanea para descargarlo</p>
+                <div style={s.timerBar}>
+                  <div style={{ ...s.timerFill, width: `${(secondsLeft / 180) * 100}%` }} />
                 </div>
+                <p style={s.timerText}>Volviendo al inicio en {secondsLeft}s</p>
+                <button style={s.newBtn} onClick={onReset}>Nueva foto</button>
+              </div>
+            </div>
+
+            {/* Botón escribir + burbuja */}
+            <div style={s.bubbleCol}>
+              <button style={s.writeBtn} onClick={() => setShowText(v => !v)}>
+                {showText ? 'cerrar' : 'escribir'}
+              </button>
+
+              {showText && (
+                <>
+                  {assistant.avatarText && (
+                    <div style={s.bubble}>
+                      <p style={s.assistantName}>
+                        Luna · Asistente Virtual
+                        {assistant.state === 'listening' && <span style={s.listeningDot}> 🎙️</span>}
+                      </p>
+                      <p style={s.bubbleText}>{assistant.avatarText}</p>
+                      {assistant.state === 'listening' && (
+                        <div style={s.dots}>
+                          <div style={s.dot} />
+                          <div style={{ ...s.dot, animationDelay: '0.2s' }} />
+                          <div style={{ ...s.dot, animationDelay: '0.4s' }} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {assistant.state === 'listening' && (
+                    <input
+                      ref={inputRef}
+                      style={s.keyboardInput}
+                      value={keyboardInput}
+                      onChange={e => setKeyboardInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && keyboardInput.trim()) {
+                          assistant.sendManualInput(keyboardInput.trim())
+                          setKeyboardInput('')
+                          setShowText(false)
+                        }
+                      }}
+                      placeholder="Escribe tu respuesta y presiona Enter..."
+                      autoFocus
+                    />
+                  )}
+                </>
               )}
             </div>
-          )}
 
-          {assistant.state === 'listening' && (
-            <input
-              ref={inputRef}
-              style={s.keyboardInput}
-              value={keyboardInput}
-              onChange={e => setKeyboardInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && keyboardInput.trim()) {
-                  assistant.sendManualInput(keyboardInput.trim())
-                  setKeyboardInput('')
-                }
-              }}
-              placeholder="Escribe tu respuesta y presiona Enter..."
-              autoFocus
-            />
-          )}
+          </div>
         </div>
-      </div>
 
+      </div>{/* /inner */}
     </div>
   )
 }
@@ -143,8 +162,15 @@ const s = {
     position: 'absolute', inset: 0, zIndex: 1,
     background: 'linear-gradient(to bottom, rgba(0,5,30,0.4) 0%, rgba(0,5,30,0.2) 50%, rgba(0,5,30,0.6) 100%)',
   },
-  header: {
+  inner: {
     position: 'relative', zIndex: 2,
+    width: '100%', maxWidth: '1000px',
+    height: '100%', minHeight: 0,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center',
+  },
+  header: {
+    flexShrink: 0,
     width: '100%', padding: '28px 28px 0',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
@@ -154,49 +180,68 @@ const s = {
   logoGenofy: {
     height: '26px', objectFit: 'contain',
   },
-  content: {
-    flex: 1, zIndex: 2,
-    display: 'flex', gap: '24px',
-    alignItems: 'center', justifyContent: 'center',
-    padding: '16px 28px 0',
+  cardZone: {
+    flex: 1, minHeight: 0, zIndex: 2,
+    display: 'flex', alignItems: 'stretch',
+    padding: '16px 32px 0',
     width: '100%',
   },
-  photoCard: {
-    width: '260px', flexShrink: 0,
-    borderRadius: '20px', overflow: 'hidden',
+  card: {
+    flex: 1, minHeight: 0,
+    borderRadius: '28px',
+    overflow: 'hidden',
     border: '1.5px solid rgba(100,160,255,0.35)',
-    boxShadow: '0 0 40px rgba(30,100,255,0.2)',
+    boxShadow: '0 0 60px rgba(30,100,255,0.2)',
+    position: 'relative',
+    background: '#000',
   },
-  photo: {
-    width: '100%', display: 'block',
+  bottomZone: {
+    flexShrink: 0,
+    zIndex: 2,
+    width: '100%', padding: '12px 32px 28px',
+    display: 'flex', alignItems: 'flex-end', gap: '12px',
+  },
+  pipWrap: {
+    position: 'relative',
+    width: 180, height: 230,
+    borderRadius: '16px', overflow: 'hidden', flexShrink: 0,
+    border: '2px solid rgba(100,160,255,0.5)',
+    boxShadow: '0 0 20px rgba(30,100,255,0.4)',
+    background: '#000',
+  },
+  pipPhoto: {
+    width: '100%', height: '100%',
     objectFit: 'cover',
     transform: 'scaleX(-1)',
   },
-  qrSection: {
-    flex: 1,
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', gap: '12px',
+  rightCol: {
+    flex: 1, display: 'flex', flexDirection: 'column', gap: '8px',
   },
-  qrTitle: {
-    fontSize: '22px', fontWeight: 800,
-    color: '#fff', textAlign: 'center',
-  },
-  qrSub: {
-    fontSize: '13px', color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center', lineHeight: 1.5,
+  qrRow: {
+    display: 'flex', alignItems: 'center', gap: '14px',
   },
   qrBox: {
-    width: '180px', height: '180px',
-    background: '#fff', borderRadius: '16px', padding: '10px',
+    width: '110px', height: '110px', flexShrink: 0,
+    background: '#fff', borderRadius: '12px', padding: '8px',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 0 30px rgba(96,165,250,0.3)',
+    boxShadow: '0 0 20px rgba(96,165,250,0.3)',
   },
   qrImg: { width: '100%', height: '100%', objectFit: 'contain' },
   spinner: {
-    width: '36px', height: '36px', borderRadius: '50%',
+    width: '28px', height: '28px', borderRadius: '50%',
     border: '3px solid rgba(96,165,250,0.2)',
     borderTopColor: '#60a5fa',
     animation: 'spin 0.8s linear infinite',
+  },
+  qrInfo: {
+    flex: 1, display: 'flex', flexDirection: 'column', gap: '5px',
+  },
+  qrTitle: {
+    fontSize: '16px', fontWeight: 800,
+    color: '#fff',
+  },
+  qrSub: {
+    fontSize: '12px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.4,
   },
   timerBar: {
     width: '100%', height: '2px',
@@ -208,28 +253,28 @@ const s = {
     transition: 'width 1s linear',
   },
   timerText: {
-    fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px',
+    fontSize: '10px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px',
   },
   newBtn: {
+    alignSelf: 'flex-start',
     background: 'transparent',
     border: '1px solid rgba(96,165,250,0.5)',
-    color: '#60a5fa', padding: '10px 32px',
-    fontSize: '13px', fontWeight: 700, letterSpacing: '2px',
+    color: '#60a5fa', padding: '6px 20px',
+    fontSize: '11px', fontWeight: 700, letterSpacing: '2px',
     borderRadius: '50px', cursor: 'pointer', textTransform: 'uppercase',
   },
-  bottomZone: {
-    zIndex: 2,
-    width: '100%', padding: '12px 20px 28px',
-    display: 'flex', alignItems: 'flex-end', gap: '12px',
-  },
-  avatarWrap: {
-    width: 120, height: 150,
-    borderRadius: '16px', overflow: 'hidden', flexShrink: 0,
-    border: '1.5px solid rgba(100,160,255,0.4)',
-    boxShadow: '0 0 24px rgba(30,100,255,0.3)',
-  },
   bubbleCol: {
-    flex: 1, display: 'flex', flexDirection: 'column', gap: '8px',
+    display: 'flex', flexDirection: 'column', gap: '8px',
+  },
+  writeBtn: {
+    alignSelf: 'flex-start',
+    background: 'rgba(168,85,247,0.15)',
+    border: '1px solid rgba(168,85,247,0.5)',
+    color: 'rgba(255,255,255,0.85)',
+    padding: '6px 18px', borderRadius: '50px',
+    cursor: 'pointer', fontSize: '12px',
+    fontWeight: 600, letterSpacing: '1px',
+    backdropFilter: 'blur(8px)',
   },
   bubble: {
     background: 'rgba(255,255,255,0.95)',

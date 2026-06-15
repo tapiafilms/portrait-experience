@@ -87,16 +87,21 @@ async function speakElevenLabs(text, { voiceId, onStart } = {}) {
 
   const arrayBuffer = await res.arrayBuffer()
   console.log('[ElevenLabs] Audio recibido, bytes:', arrayBuffer.byteLength)
-  const audioCtx = new AudioContext()
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
-  const source = audioCtx.createBufferSource()
-  source.buffer = audioBuffer
-  source.connect(audioCtx.destination)
+
+  // Usar <Audio> + blob URL — más confiable que AudioContext en Windows/Electron
+  const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
+  const url = URL.createObjectURL(blob)
+  const audio = new Audio(url)
 
   return new Promise(resolve => {
-    source.onended = resolve
-    source.start()
-    onStart?.()
+    const cleanup = () => { URL.revokeObjectURL(url); resolve() }
+    // Timeout de seguridad de 60s por si onended nunca dispara
+    const safetyTimer = setTimeout(cleanup, 60_000)
+    audio.onended = () => { clearTimeout(safetyTimer); cleanup() }
+    audio.onerror = (e) => { console.warn('[ElevenLabs] Audio error:', e); clearTimeout(safetyTimer); cleanup() }
+    audio.play()
+      .then(() => onStart?.())
+      .catch(e => { console.warn('[ElevenLabs] play() error:', e); clearTimeout(safetyTimer); cleanup() })
   })
 }
 
