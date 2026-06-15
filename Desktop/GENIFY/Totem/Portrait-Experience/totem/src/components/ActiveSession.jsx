@@ -3,7 +3,7 @@ import { useSharedCamera } from '../context/CameraContext'
 import { usePhotographer } from '../hooks/usePhotographer'
 import CameraFeed from './CameraFeed'
 import CountdownCapture from './CountdownCapture'
-import AvatarVideo from './AvatarVideo'
+import AvatarDisplay from './AvatarDisplay'
 import { useEvent } from '../context/EventContext'
 import { uploadCapture } from '../services/api'
 
@@ -96,9 +96,9 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       {/* Tarjeta central — avatar del fotógrafo */}
       <div style={s.cardZone}>
         <div style={s.card}>
-          <AvatarVideo
-            isSpeaking={conversation.isSpeaking}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          <AvatarDisplay
+            state={conversation.state}
+            size="100%"
           />
 
           {phase === 'countdown' && (
