@@ -50,6 +50,7 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
       clearTimeout(timeoutRef.current)
       r.onresult = null; r.onerror = null; r.onend = null
       try { r.abort() } catch {}
+      cancelSpeech()
       const t = Array.from(e.results)
         .flatMap(res => Array.from(res).map(a => a.transcript))
         .join(' ').toLowerCase().trim()

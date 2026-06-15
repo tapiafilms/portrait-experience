@@ -47,6 +47,8 @@ function speakBrowser(text, { lang = 'es-ES', rate = 0.92, pitch = 1.05 } = {}) 
 
 // ---------- ElevenLabs ----------
 
+let currentAudio = null
+
 function normalizeText(text) {
   return text
     .replace(/\b(\d+):(\d{2})\s*hrs?\b/gi, (_, h, m) => `${h}${m === '00' ? '' : ' y ' + m} horas`)
@@ -91,6 +93,7 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
   const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
   const url = URL.createObjectURL(blob)
   const audio = new Audio(url)
+  currentAudio = audio
 
   return new Promise(resolve => {
     let animFrameId = null
@@ -168,6 +171,11 @@ export const VOICE_IDS = {
 
 export function cancelSpeech() {
   if (PROVIDER === 'browser') window.speechSynthesis?.cancel()
+  if (currentAudio) {
+    currentAudio.pause()
+    currentAudio.currentTime = 0
+    currentAudio = null
+  }
 }
 
 // Frases del avatar por contexto
