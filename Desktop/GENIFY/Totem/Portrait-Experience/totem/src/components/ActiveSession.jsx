@@ -105,7 +105,12 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
             <div style={s.scanLine} />
           </div>
 
-          <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '130%', height: '130%', zIndex: 1 }}>
+          <div style={{
+            position: 'absolute', bottom: 0, left: '50%', width: '130%', height: '130%', zIndex: 1,
+            transform: `translateX(-50%) scale(${conversation.state === 'countdown' || phase === 'countdown' ? 1.18 : 1})`,
+            transformOrigin: 'bottom center',
+            transition: 'transform 1.2s cubic-bezier(0.34, 1.1, 0.64, 1)',
+          }}>
             <AvatarDisplay
               state={conversation.state === 'countdown' || phase === 'countdown' ? 'countdown' : conversation.isSpeaking ? 'talking' : conversation.state}
               size="100%"
