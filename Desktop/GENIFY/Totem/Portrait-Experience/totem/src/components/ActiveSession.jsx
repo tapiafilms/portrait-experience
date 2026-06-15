@@ -96,7 +96,16 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
       {/* Tarjeta central — avatar del fotógrafo */}
       <div style={s.cardZone}>
         <div style={s.card}>
-          <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '130%', height: '130%' }}>
+
+          {/* Fondo futurista */}
+          <div style={s.avatarBg}>
+            <div style={s.blob1} />
+            <div style={s.blob2} />
+            <div style={s.blob3} />
+            <div style={s.scanLine} />
+          </div>
+
+          <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '130%', height: '130%', zIndex: 1 }}>
             <AvatarDisplay
               state={conversation.state === 'countdown' || phase === 'countdown' ? 'countdown' : conversation.isSpeaking ? 'talking' : conversation.state}
               size="100%"
@@ -239,7 +248,44 @@ const s = {
     border: '1.5px solid rgba(100,160,255,0.35)',
     boxShadow: '0 0 60px rgba(30,100,255,0.2)',
     position: 'relative',
-    background: '#000',
+    background: '#020818',
+  },
+  avatarBg: {
+    position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden',
+  },
+  blob1: {
+    position: 'absolute',
+    width: '70%', height: '70%',
+    top: '5%', left: '15%',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(30,80,255,0.12) 0%, transparent 70%)',
+    filter: 'blur(40px)',
+    animation: 'avatarBlob1 10s ease-in-out infinite',
+  },
+  blob2: {
+    position: 'absolute',
+    width: '50%', height: '50%',
+    bottom: '10%', right: '5%',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(0,180,255,0.10) 0%, transparent 70%)',
+    filter: 'blur(35px)',
+    animation: 'avatarBlob2 13s ease-in-out infinite',
+  },
+  blob3: {
+    position: 'absolute',
+    width: '40%', height: '40%',
+    top: '40%', left: '5%',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(80,40,200,0.08) 0%, transparent 70%)',
+    filter: 'blur(30px)',
+    animation: 'avatarBlob3 9s ease-in-out infinite',
+  },
+  scanLine: {
+    position: 'absolute',
+    left: 0, right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent, rgba(100,180,255,0.15), transparent)',
+    animation: 'avatarScan 6s ease-in-out infinite',
   },
   cardOverlay: {
     position: 'absolute', inset: 0,
