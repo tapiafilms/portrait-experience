@@ -461,9 +461,9 @@ const s = {
   },
   headlineXL: {
     fontFamily: "'Montserrat', sans-serif",
-    fontSize: 'clamp(2.5rem, 5vw, 5rem)',
-    fontWeight: 900, lineHeight: 1.1,
-    letterSpacing: '-0.03em', color: 'white', margin: 0,
+    fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+    fontWeight: 700, lineHeight: 1,
+    letterSpacing: '-0.01em', color: 'white', margin: 0,
   },
 
   /* FEATURE FULL */
