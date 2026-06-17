@@ -80,7 +80,9 @@ function HeroParallaxBg() {
   return (
     <div style={s.heroBgWrap}>
       <div ref={ref} style={s.heroBgParallax}>
-        <img src="img/hero.png"></img>
+        <img src="img/hero.png"/>
+          
+          <ImgPlaceholder label="FOTO TÓTEM HERO" hint="Imagen full-screen del tótem encendido en un evento" />
       </div>
     </div>
   )
