@@ -128,38 +128,22 @@ const HIGHLIGHTS = [
   {
     title: 'El tótem te recibe por tu nombre.',
     desc: 'Un fotógrafo con IA y voz humana crea el momento perfecto para tu retrato.',
-    label: 'FOTO TÓTEM 01',
-    hint: 'Tótem encendido con pantalla de bienvenida',
+    youtubeId: 'WBt-8sru6ZQ',
   },
   {
     title: 'Tu foto se convierte en arte en segundos.',
     desc: 'La IA transforma tu retrato en un personaje de calidad cinematográfica.',
-    label: 'FOTO TÓTEM 02',
-    hint: 'Pantalla mostrando la transformación en proceso',
+    youtubeId: 'WBt-8sru6ZQ',
   },
   {
     title: 'Tu retrato, en tu celular al instante.',
     desc: 'Escanea el QR y descarga tu imagen. Sin apps, sin esperas.',
-    label: 'FOTO TÓTEM 03',
-    hint: 'Invitado escaneando QR con celular',
+    youtubeId: 'WBt-8sru6ZQ',
   },
   {
     title: 'Sé parte de la pantalla del evento.',
     desc: 'Tus fotos aparecen proyectadas para que todos las vean en tiempo real.',
-    label: 'FOTO PANTALLA 01',
-    hint: 'Pantalla gigante con galería de retratos',
-  },
-  {
-    title: 'Todos los retratos del evento, en vivo.',
-    desc: 'Un feed exclusivo que va creciendo con cada invitado que pasa por el tótem.',
-    label: 'FOTO MÓVIL 01',
-    hint: 'Celular mostrando feed de retratos en tiempo real',
-  },
-  {
-    title: 'Vuelve las veces que quieras.',
-    desc: 'Sin restricciones. Más estilos, más momentos, más recuerdos del evento.',
-    label: 'FOTO TÓTEM 04',
-    hint: 'Invitado volviendo al tótem sonriendo',
+    youtubeId: 'WBt-8sru6ZQ',
   },
 ]
 
@@ -245,11 +229,16 @@ function HighlightsGallery() {
               <h3 style={s.hlCardTitle}>{h.title}</h3>
               <p style={s.hlCardDesc}>{h.desc}</p>
             </div>
-            {/* Image area (bottom ~60%) */}
+            {/* Video */}
             <div style={s.hlCardImg}>
-              <div style={s.hlCardImgGlow} />
-              <span style={s.hlCardImgLabel}>{h.label}</span>
-              <span style={s.hlCardImgHint}>{h.hint}</span>
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1`}
+                style={s.hlCardVideo}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+                title={h.title}
+              />
             </div>
           </div>
         ))}
@@ -728,10 +717,13 @@ const s = {
   hlCardImg: {
     position: 'relative',
     height: 'clamp(240px, 44vw, 580px)',
-    background: 'linear-gradient(160deg, #0f0f1a 0%, #111122 50%, #0a0a14 100%)',
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center',
-    gap: 12, overflow: 'hidden',
+    overflow: 'hidden',
+    background: '#000',
+  },
+  hlCardVideo: {
+    position: 'absolute', inset: 0,
+    width: '100%', height: '100%',
+    border: 'none',
   },
   hlCardImgGlow: {
     position: 'absolute', inset: 0,
