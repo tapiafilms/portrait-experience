@@ -341,22 +341,19 @@ function HighlightsGallery() {
             ref={el => cardRefs.current[i] = el}
             style={s.hlCard}
           >
-            {/* Text overlay at top */}
-            <div style={s.hlCardText}>
-              <h3 style={s.hlCardTitle}>{h.title}</h3>
-              <p style={s.hlCardDesc}>{h.desc}</p>
-            </div>
-            {/* Video */}
+            {/* Video full card */}
             <div style={s.hlCardImg}>
               <iframe
                 ref={el => iframeRefs.current[i] = el}
-                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&enablejsapi=1&mute=1`}
+                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&enablejsapi=1&mute=1&controls=0&iv_load_policy=3&disablekb=1&playsinline=1`}
                 style={s.hlCardVideo}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 loading="lazy"
                 title={h.title}
               />
+              {/* Title overlay — top right */}
+              <div style={s.hlCardOverlay}>{h.title}</div>
             </div>
           </div>
         ))}
@@ -826,38 +823,34 @@ const s = {
   hlCard: {
     flexShrink: 0,
     width: 'clamp(320px, 86vw, 1100px)',
+    height: 'clamp(240px, 44vw, 580px)',
     scrollSnapAlign: 'start',
     borderRadius: 22,
-    background: '#1a1a1a',
     overflow: 'hidden',
-    display: 'flex', flexDirection: 'column',
-  },
-  hlCardText: {
-    padding: '2.2rem 2.8rem 1.6rem',
-    display: 'flex', flexDirection: 'column', gap: 10,
-    textAlign: 'center', alignItems: 'center',
-  },
-  hlCardTitle: {
-    fontFamily: "'Montserrat', sans-serif",
-    fontSize: 'clamp(1.2rem, 2vw, 1.7rem)',
-    fontWeight: 700, lineHeight: 1.25,
-    letterSpacing: '-0.01em', margin: 0, color: 'white',
-    maxWidth: 620,
-  },
-  hlCardDesc: {
-    fontSize: 14, color: GRAY, lineHeight: 1.65, margin: 0,
-    maxWidth: 480,
+    position: 'relative',
+    background: '#000',
   },
   hlCardImg: {
-    position: 'relative',
-    height: 'clamp(240px, 44vw, 580px)',
+    position: 'absolute', inset: 0,
     overflow: 'hidden',
-    background: '#000',
   },
   hlCardVideo: {
     position: 'absolute', inset: 0,
     width: '100%', height: '100%',
     border: 'none',
+    pointerEvents: 'none',
+  },
+  hlCardOverlay: {
+    position: 'absolute', top: 16, right: 20,
+    zIndex: 2,
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 13, fontWeight: 600,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'right',
+    maxWidth: 220, lineHeight: 1.35,
+    textShadow: '0 1px 8px rgba(0,0,0,0.7)',
+    letterSpacing: '-0.01em',
+    pointerEvents: 'none',
   },
   hlCardImgGlow: {
     position: 'absolute', inset: 0,
