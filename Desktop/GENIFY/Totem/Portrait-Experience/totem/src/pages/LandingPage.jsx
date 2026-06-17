@@ -393,9 +393,9 @@ const s = {
   },
   heroTitle: {
     fontFamily: "'Montserrat', sans-serif",
-    fontSize: 'clamp(2.8rem, 5.5vw, 5.5rem)',
-    fontWeight: 900, lineHeight: 1.08,
-    letterSpacing: '-0.03em', margin: 0,
+    fontSize: 'clamp(2.8rem, 5.5vw, 4.5rem)',
+    fontWeight: 700, lineHeight: 1.0,
+    letterSpacing: '-0.01em', margin: 0,
     color: 'white',
   },
   heroGrad: {
