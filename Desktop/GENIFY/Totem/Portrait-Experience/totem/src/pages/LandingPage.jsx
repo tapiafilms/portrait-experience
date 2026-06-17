@@ -355,13 +355,6 @@ export default function LandingPage() {
 
       {/* ── Feature full-width ── */}
       <section id="flujo" style={s.featureFull}>
-        <div style={s.featureFullImg}>
-          <ParallaxImg
-            label="FOTO TÓTEM 01"
-            hint="Tótem encendido de frente, pantalla con bienvenida visible"
-            tall
-          />
-        </div>
         <div style={s.featureFullText}>
           <p style={s.eyebrowAccent}>Flujo de experiencia</p>
           <h2 style={s.featureH2}>Simple para el invitado.<br />Impresionante para todos.</h2>
@@ -539,7 +532,7 @@ const s = {
     backdropFilter: 'blur(20px)',
     borderBottom: `1px solid ${BORDER}`,
   },
-  navLogo: { height: 38, objectFit: 'contain' },
+  navLogo: { height: 126, objectFit: 'contain' },
   navLinks: { display: 'flex', alignItems: 'center', gap: 32 },
   navLink: {
     color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 500,
