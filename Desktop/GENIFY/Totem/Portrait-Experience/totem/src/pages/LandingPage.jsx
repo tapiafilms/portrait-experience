@@ -92,22 +92,23 @@ const FontLoader = () => (
         left: 50%;
         transform: translateX(-50%);
         z-index: 1000;
+        width: 95%;
         background: rgba(15, 15, 20, 0.85);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 999px;
-        padding: 8px 8px;
+        padding: 6px;
         gap: 4px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.5);
       }
 
       .mbn-item {
+        flex: 1;
         display: flex;
-        flex-direction: column;
         align-items: center;
-        gap: 3px;
-        padding: 8px 18px;
+        justify-content: center;
+        padding: 14px 8px;
         border-radius: 999px;
         text-decoration: none;
         transition: background 0.2s;
@@ -116,40 +117,26 @@ const FontLoader = () => (
         background: transparent;
       }
 
-      .mbn-icon {
-        font-size: 16px;
-        line-height: 1;
-        color: rgba(255,255,255,0.4);
-        transition: color 0.2s;
-      }
+      .mbn-icon { display: none; }
 
       .mbn-label {
         font-family: 'Montserrat', sans-serif;
-        font-size: 9px;
+        font-size: 12px;
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.03em;
         color: rgba(255,255,255,0.4);
         white-space: nowrap;
         transition: color 0.2s;
       }
 
       .mbn-item-active {
-        background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(168,85,247,0.2));
-        border: 1px solid rgba(168,85,247,0.3);
+        background: linear-gradient(135deg, rgba(124,58,237,0.35), rgba(168,85,247,0.25));
+        border: 1px solid rgba(168,85,247,0.35);
       }
-      .mbn-item-active .mbn-icon,
-      .mbn-item-active .mbn-label {
-        color: #fff;
-      }
-      .mbn-item-active .mbn-icon {
-        background: linear-gradient(135deg, #A855F7, #06B6D4);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
+      .mbn-item-active .mbn-label { color: #fff; }
 
       .mbn-item-soon {
-        opacity: 0.45;
+        opacity: 0.4;
         cursor: default;
       }
     }
