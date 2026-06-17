@@ -48,6 +48,48 @@ const FontLoader = () => (
       box-shadow: 0 0 28px rgba(124,58,237,0.7);
       transform: translateY(-1px);
     }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      .site-nav { padding: 0 20px !important; height: 56px !important; }
+      .nav-links { display: none !important; }
+
+      .stats-bar { grid-template-columns: repeat(2, 1fr) !important; }
+      .stat-border-r { border-right: none !important; }
+      .stat-border-b { border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
+
+      .step-split {
+        grid-template-columns: 1fr !important;
+        direction: ltr !important;
+        min-height: unset !important;
+      }
+      .step-text {
+        padding: 2.5rem 1.5rem !important;
+      }
+      .step-img { min-height: 260px; }
+
+      .mobile-section {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+        padding: 0 1.5rem 4rem !important;
+      }
+      .mobile-img { margin-bottom: 2rem; }
+
+      .tech-grid { grid-template-columns: 1fr !important; }
+      .tech-card { border-right: none !important; }
+
+      .site-footer {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        padding: 24px 20px !important;
+        gap: 8px !important;
+      }
+
+      .text-break { padding: 5rem 1.5rem !important; }
+      .contact-section { padding: 6rem 1.5rem !important; }
+      .contact-btns { flex-direction: column !important; align-items: center !important; }
+    }
   `}</style>
 )
 
@@ -306,9 +348,9 @@ export default function LandingPage() {
       <FontLoader />
 
       {/* ── Nav ── */}
-      <nav style={s.nav}>
+      <nav style={s.nav} className="site-nav">
         <img src="/logo-gen-ex.png" alt="Genofy" style={s.navLogo} />
-        <div style={s.navLinks}>
+        <div style={s.navLinks} className="nav-links">
           <a href="#flujo"    className="nav-link" onClick={e => smoothScroll(e, 'flujo')}>Cómo funciona</a>
           <a href="#movil"    className="nav-link" onClick={e => smoothScroll(e, 'movil')}>App del invitado</a>
           <a href="#tech"     className="nav-link" onClick={e => smoothScroll(e, 'tech')}>Qué incluye</a>
@@ -336,14 +378,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Stats ── */}
-      <div style={s.statsBar}>
+      <div style={s.statsBar} className="stats-bar">
         {[
           { num: '+500',  label: 'Eventos realizados' },
           { num: '<30s',  label: 'Por transformación' },
           { num: '99.9%', label: 'Uptime garantizado' },
           { num: '4.9★',  label: 'Satisfacción promedio' },
         ].map((st, i) => (
-          <div key={st.label} style={{ ...s.stat, ...(i < 3 ? s.statBorder : {}) }}>
+          <div key={st.label} style={{ ...s.stat, ...(i < 3 ? s.statBorder : {}) }} className={`${i < 3 ? 'stat-border-r' : ''} ${i < 2 ? 'stat-border-b' : ''}`}>
             <span style={s.statNum}>{st.num}</span>
             <span style={s.statLabel}>{st.label}</span>
           </div>
@@ -393,11 +435,11 @@ export default function LandingPage() {
             desc: 'Comparte fotos desde tu celular que aparecen en la pantalla del evento. Tú y todos los demás, en el centro de la noche.',
           },
         ].map(step => (
-          <div key={step.n} style={{ ...s.stepSplit, ...(step.reverse ? s.stepSplitReverse : {}) }}>
-            <div style={s.stepImg}>
+          <div key={step.n} style={{ ...s.stepSplit, ...(step.reverse ? s.stepSplitReverse : {}) }} className="step-split">
+            <div style={s.stepImg} className="step-img">
               <ParallaxImg label={step.label} hint={step.hint} speed={0.08} />
             </div>
-            <div style={s.stepText}>
+            <div style={s.stepText} className="step-text">
               <span style={s.stepNum}>{step.n}</span>
               <h3 style={s.stepTitle}>{step.title}</h3>
               <p style={s.stepDesc}>{step.desc}</p>
@@ -407,14 +449,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Text break 2 ── */}
-      <section style={{ ...s.textBreak, background: '#050508' }} id="movil">
+      <section style={{ ...s.textBreak, background: '#050508' }} id="movil" className="text-break">
         <p style={s.eyebrowCenter}>App del invitado</p>
         <h2 style={s.headlineXL}>Una experiencia completa<br />desde tu bolsillo.</h2>
       </section>
 
       {/* ── Mobile section ── */}
-      <section style={s.mobileSection}>
-        <div style={s.mobileImg}>
+      <section style={s.mobileSection} className="mobile-section">
+        <div style={s.mobileImg} className="mobile-img">
           <ParallaxImg
             label="FOTO MÓVIL 01"
             hint="Mano sosteniendo celular con el retrato Pixar en pantalla"
@@ -441,14 +483,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Text break 3 ── */}
-      <section style={s.textBreak} id="tech">
+      <section style={s.textBreak} id="tech" className="text-break">
         <p style={s.eyebrowCenter}>Tecnología</p>
         <h2 style={s.headlineXL}>Todo funciona solo.<br />Tú solo enchufas el tótem.</h2>
       </section>
 
       {/* ── Tech grid ── */}
       <section style={s.techSection}>
-        <div style={s.techGrid}>
+        <div style={s.techGrid} className="tech-grid">
           {[
             { icon: '🤖', title: 'Reconocimiento por nombre',      desc: 'La IA identifica a cada invitado por nombre desde una lista precargada y personaliza toda la experiencia.' },
             { icon: '🎨', title: 'Transformación Pixar',           desc: 'Flux Pro convierte cada foto en un personaje 3D de calidad cinematográfica en menos de 30 segundos.' },
@@ -457,7 +499,7 @@ export default function LandingPage() {
             { icon: '📱', title: 'QR instantáneo',                 desc: 'El código QR aparece en pantalla al terminar. El invitado escanea y descarga su retrato desde el celular.' },
             { icon: '🔑', title: 'Acceso seguro por evento',       desc: 'Cada evento tiene su código único con expiración automática. Sin instalaciones ni configuración técnica.' },
           ].map((f, i) => (
-            <div key={f.title} style={{ ...s.techCard, ...(i % 3 !== 2 ? s.techCardBorderR : {}), ...(i < 3 ? s.techCardBorderB : {}) }}>
+            <div key={f.title} style={{ ...s.techCard, ...(i % 3 !== 2 ? s.techCardBorderR : {}), ...(i < 3 ? s.techCardBorderB : {}) }} className="tech-card">
               <span style={s.techIcon}>{f.icon}</span>
               <h4 style={s.techTitle}>{f.title}</h4>
               <p style={s.techDesc}>{f.desc}</p>
@@ -467,14 +509,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Contacto ── */}
-      <section id="contacto" style={s.contactSection}>
+      <section id="contacto" style={s.contactSection} className="contact-section">
         <p style={s.eyebrowCenter}>Contáctanos</p>
         <h2 style={s.headlineXL}>Hagámoslo realidad.</h2>
         <p style={s.contactSub}>
           Cuéntanos tu fecha y en menos de 24 horas tienes todo listo.<br />
           Sin complicaciones técnicas de tu parte.
         </p>
-        <div style={s.contactBtns}>
+        <div style={s.contactBtns} className="contact-btns">
           <a
             href="https://wa.me/56999999999?text=Hola,%20quiero%20contratar%20AI%20Portrait%20Experience%20para%20mi%20evento"
             target="_blank" rel="noopener noreferrer"
@@ -490,7 +532,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer style={s.footer}>
+      <footer style={s.footer} className="site-footer">
         <img src="/logo-gen-ex.png" alt="Genofy" style={{ height: 28 }} />
         <p style={s.footerText}>© 2025 Genofy · Gen Experiences</p>
         <a href="https://www.genofy.cl" style={s.footerLink} target="_blank" rel="noopener noreferrer">
