@@ -150,7 +150,8 @@ const FontLoader = () => (
         background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.5) 100%) !important;
       }
       .hero-title { font-size: 2.1rem !important; }
-      .hero-section { height: 50vh !important; min-height: 350px !important; }
+      .hero-section { height: 70vh !important; min-height: 350px !important; }
+      .hero-ctas { display: none !important; }
 
       .stats-bar { grid-template-columns: repeat(2, 1fr) !important; }
       .stat-border-r { border-right: none !important; }
@@ -476,7 +477,7 @@ export default function LandingPage() {
             del evento.
           </h1>
         </div>
-        <div style={s.heroCtas}>
+        <div style={s.heroCtas} className="hero-ctas">
           <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Solicitar Demo</a>
           <a href="#flujo"    style={s.ctaSecondary} onClick={e => smoothScroll(e, 'flujo')}>Ver experiencia</a>
         </div>
