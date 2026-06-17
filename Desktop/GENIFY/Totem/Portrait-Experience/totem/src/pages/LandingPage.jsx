@@ -822,7 +822,7 @@ const s = {
   },
   hlCard: {
     flexShrink: 0,
-    width: 'clamp(320px, 86vw, 1100px)',
+    width: 'clamp(320px, 86vw, 1030px)',
     height: 'clamp(240px, 44vw, 580px)',
     scrollSnapAlign: 'start',
     borderRadius: 22,
