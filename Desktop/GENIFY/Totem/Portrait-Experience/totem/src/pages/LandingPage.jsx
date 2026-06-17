@@ -79,10 +79,89 @@ const FontLoader = () => (
       white-space: nowrap;
     }
 
+    /* ── MOBILE BOTTOM NAV ── */
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: rgba(15, 15, 20, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 999px;
+        padding: 8px 8px;
+        gap: 4px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      }
+
+      .mbn-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 8px 18px;
+        border-radius: 999px;
+        text-decoration: none;
+        transition: background 0.2s;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+      }
+
+      .mbn-icon {
+        font-size: 16px;
+        line-height: 1;
+        color: rgba(255,255,255,0.4);
+        transition: color 0.2s;
+      }
+
+      .mbn-label {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: rgba(255,255,255,0.4);
+        white-space: nowrap;
+        transition: color 0.2s;
+      }
+
+      .mbn-item-active {
+        background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(168,85,247,0.2));
+        border: 1px solid rgba(168,85,247,0.3);
+      }
+      .mbn-item-active .mbn-icon,
+      .mbn-item-active .mbn-label {
+        color: #fff;
+      }
+      .mbn-item-active .mbn-icon {
+        background: linear-gradient(135deg, #A855F7, #06B6D4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .mbn-item-soon {
+        opacity: 0.45;
+        cursor: default;
+      }
+    }
+
     /* ── MOBILE ── */
     @media (max-width: 768px) {
-      .site-nav { padding: 0 20px !important; height: 56px !important; }
+      .site-nav { padding: 0 20px !important; height: 56px !important; justify-content: center !important; }
       .nav-links { display: none !important; }
+
+      .hero-overlay {
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.5) 100%) !important;
+      }
 
       .stats-bar { grid-template-columns: repeat(2, 1fr) !important; }
       .stat-border-r { border-right: none !important; }
@@ -112,7 +191,7 @@ const FontLoader = () => (
         flex-direction: column !important;
         align-items: center !important;
         text-align: center !important;
-        padding: 24px 20px !important;
+        padding: 24px 20px 100px !important;
         gap: 8px !important;
       }
 
@@ -402,7 +481,7 @@ export default function LandingPage() {
       {/* ── Hero ── */}
       <section style={s.hero}>
         <HeroParallaxBg />
-        <div style={s.heroOverlay} />
+        <div style={s.heroOverlay} className="hero-overlay" />
         <div style={s.heroContent}>
          
           <h1 style={s.heroTitle}>
@@ -570,6 +649,22 @@ export default function LandingPage() {
         </div>
         <a href="/totem" style={s.totemLink}>¿Ya tienes tu clave? → Iniciar tótem</a>
       </section>
+
+      {/* ── Mobile Bottom Nav ── */}
+      <nav className="mobile-bottom-nav">
+        <a href="/" className="mbn-item mbn-item-active">
+          <span className="mbn-icon">✦</span>
+          <span className="mbn-label">AI Portrait</span>
+        </a>
+        <span className="mbn-item mbn-item-soon">
+          <span className="mbn-icon">◎</span>
+          <span className="mbn-label">Cuenta Joy</span>
+        </span>
+        <span className="mbn-item mbn-item-soon">
+          <span className="mbn-icon">◈</span>
+          <span className="mbn-label">mirrAI</span>
+        </span>
+      </nav>
 
       {/* ── Footer ── */}
       <footer style={s.footer} className="site-footer">
