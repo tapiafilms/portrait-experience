@@ -1,7 +1,7 @@
 {
-  "name": "AI Portrait Experience",
-  "short_name": "Portrait",
-  "description": "Experiencia interactiva de retratos con IA para eventos corporativos",
+  "name": "Gen Experiences by Genofy",
+  "short_name": "Gen Experiences",
+  "description": "Gen Experiences transforma a tus invitados en protagonistas del evento con retratos generados por IA en tiempo real.",
   "start_url": "/totem",
   "scope": "/",
   "display": "fullscreen",
