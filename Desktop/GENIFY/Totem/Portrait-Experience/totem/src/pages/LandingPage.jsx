@@ -123,7 +123,7 @@ export default function LandingPage() {
         <HeroParallaxBg />
         <div style={s.heroOverlay} />
         <div style={s.heroContent}>
-          <div style={s.badge}>✦ Powered by Genofy</div>
+         
           <h1 style={s.heroTitle}>
             Transforma a tus<br />
             <span style={s.heroGrad}>invitados en protagonistas</span><br />
