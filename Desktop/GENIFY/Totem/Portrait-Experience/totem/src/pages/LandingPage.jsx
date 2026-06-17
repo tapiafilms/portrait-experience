@@ -81,7 +81,7 @@ function HeroParallaxBg() {
     <div style={s.heroBgWrap}>
       <div ref={ref} style={s.heroBgParallax}>
         <img
-  src="/img/hero.png"
+  src="/img/hero.jpg"
   alt="Tótem en evento"
   style={{
     width: '100%',
