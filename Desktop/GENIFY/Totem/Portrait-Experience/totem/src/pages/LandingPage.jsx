@@ -150,6 +150,7 @@ const FontLoader = () => (
         background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.5) 100%) !important;
       }
       .hero-title { font-size: 2.1rem !important; }
+      .hero-section { height: 50vh !important; min-height: 350px !important; }
 
       .stats-bar { grid-template-columns: repeat(2, 1fr) !important; }
       .stat-border-r { border-right: none !important; }
@@ -464,7 +465,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ── */}
-      <section style={s.hero}>
+      <section style={s.hero} className="hero-section">
         <HeroParallaxBg />
         <div style={s.heroOverlay} className="hero-overlay" />
         <div style={s.heroContent}>
