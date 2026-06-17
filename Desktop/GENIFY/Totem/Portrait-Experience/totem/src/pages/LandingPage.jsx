@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 const FontLoader = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+    .hl-track::-webkit-scrollbar { display: none; }
   `}</style>
 )
 
@@ -35,6 +36,153 @@ function useParallax(speed = 0.1) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [speed])
   return ref
+}
+
+/* ── Highlights Gallery (Apple-style) ── */
+const HIGHLIGHTS = [
+  {
+    title: 'El tótem te recibe por tu nombre.',
+    desc: 'Un fotógrafo con IA y voz humana crea el momento perfecto para tu retrato.',
+    label: 'FOTO TÓTEM 01',
+    hint: 'Tótem encendido con pantalla de bienvenida',
+  },
+  {
+    title: 'Tu foto se convierte en arte en segundos.',
+    desc: 'La IA transforma tu retrato en un personaje de calidad cinematográfica.',
+    label: 'FOTO TÓTEM 02',
+    hint: 'Pantalla mostrando la transformación en proceso',
+  },
+  {
+    title: 'Tu retrato, en tu celular al instante.',
+    desc: 'Escanea el QR y descarga tu imagen. Sin apps, sin esperas.',
+    label: 'FOTO TÓTEM 03',
+    hint: 'Invitado escaneando QR con celular',
+  },
+  {
+    title: 'Sé parte de la pantalla del evento.',
+    desc: 'Tus fotos aparecen proyectadas para que todos las vean en tiempo real.',
+    label: 'FOTO PANTALLA 01',
+    hint: 'Pantalla gigante con galería de retratos',
+  },
+  {
+    title: 'Todos los retratos del evento, en vivo.',
+    desc: 'Un feed exclusivo que va creciendo con cada invitado que pasa por el tótem.',
+    label: 'FOTO MÓVIL 01',
+    hint: 'Celular mostrando feed de retratos en tiempo real',
+  },
+  {
+    title: 'Vuelve las veces que quieras.',
+    desc: 'Sin restricciones. Más estilos, más momentos, más recuerdos del evento.',
+    label: 'FOTO TÓTEM 04',
+    hint: 'Invitado volviendo al tótem sonriendo',
+  },
+]
+
+function HighlightsGallery() {
+  const [active, setActive] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const trackRef = useRef(null)
+  const cardRefs = useRef([])
+  const intervalRef = useRef(null)
+
+  const scrollTo = (i) => {
+    const idx = Math.max(0, Math.min(HIGHLIGHTS.length - 1, i))
+    setActive(idx)
+    cardRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+  }
+
+  const togglePlay = () => {
+    setPlaying(p => !p)
+  }
+
+  useEffect(() => {
+    if (playing) {
+      intervalRef.current = setInterval(() => {
+        setActive(prev => {
+          const next = (prev + 1) % HIGHLIGHTS.length
+          cardRefs.current[next]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+          return next
+        })
+      }, 3000)
+    } else {
+      clearInterval(intervalRef.current)
+    }
+    return () => clearInterval(intervalRef.current)
+  }, [playing])
+
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+    const onScroll = () => {
+      const cards = cardRefs.current
+      let closest = 0, minDist = Infinity
+      cards.forEach((card, i) => {
+        if (!card) return
+        const rect = card.getBoundingClientRect()
+        const trackRect = track.getBoundingClientRect()
+        const dist = Math.abs(rect.left - trackRect.left)
+        if (dist < minDist) { minDist = dist; closest = i }
+      })
+      setActive(closest)
+    }
+    track.addEventListener('scroll', onScroll, { passive: true })
+    return () => track.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return (
+    <section style={s.hlSection}>
+      {/* Header */}
+      <div style={s.hlHeader}>
+        <p style={s.eyebrowCenter}>La experiencia</p>
+        <h2 style={s.hlTitle}>
+          Tu evento se convierte<br />en una experiencia<br />de película.
+        </h2>
+      </div>
+
+      {/* Cards track */}
+      <div ref={trackRef} style={s.hlTrack} className="hl-track">
+        {HIGHLIGHTS.map((h, i) => (
+          <div
+            key={i}
+            ref={el => cardRefs.current[i] = el}
+            style={s.hlCard}
+          >
+            {/* Text overlay at top */}
+            <div style={s.hlCardText}>
+              <h3 style={s.hlCardTitle}>{h.title}</h3>
+              <p style={s.hlCardDesc}>{h.desc}</p>
+            </div>
+            {/* Image area (bottom ~60%) */}
+            <div style={s.hlCardImg}>
+              <div style={s.hlCardImgGlow} />
+              <span style={s.hlCardImgLabel}>{h.label}</span>
+              <span style={s.hlCardImgHint}>{h.hint}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom nav — centered pill dots + play */}
+      <div style={s.hlNav}>
+        <div style={s.hlNavInner}>
+          {HIGHLIGHTS.map((_, i) => (
+            <button
+              key={i}
+              style={{ ...s.hlDot, ...(i === active ? s.hlDotActive : {}) }}
+              onClick={() => scrollTo(i)}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+          <button style={s.hlPlayBtn} onClick={togglePlay} aria-label={playing ? 'Pausar' : 'Reproducir'}>
+            {playing
+              ? <span style={{ display: 'inline-block', width: 10, height: 10, borderLeft: '3px solid #fff', borderRight: '3px solid #fff' }} />
+              : <span style={{ display: 'inline-block', width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '10px solid #fff', marginLeft: 2 }} />
+            }
+          </button>
+        </div>
+      </div>
+    </section>
+  )
 }
 
 /* ── Image Placeholder ── */
@@ -151,13 +299,8 @@ export default function LandingPage() {
         ))}
       </div>
 
-      {/* ── Text break 1 ── */}
-      <section style={s.textBreak}>
-        <p style={s.eyebrowCenter}>La experiencia</p>
-        <h2 style={s.headlineXL}>
-          Tu evento se convierte<br />en una experiencia<br />de película.
-        </h2>
-      </section>
+      {/* ── Highlights Gallery ── */}
+      <HighlightsGallery />
 
       {/* ── Feature full-width ── */}
       <section id="flujo" style={s.featureFull}>
@@ -443,6 +586,113 @@ const s = {
     backgroundClip: 'text',
   },
   statLabel: { fontSize: 12, color: MUTED, fontWeight: 500 },
+
+  /* HIGHLIGHTS GALLERY */
+  hlSection: {
+    background: '#111',
+    padding: '7rem 0 5rem',
+    overflow: 'hidden',
+  },
+  hlHeader: {
+    padding: '0 5vw',
+    marginBottom: '2.5rem',
+    textAlign: 'left',
+  },
+  hlTitle: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+    fontWeight: 700, lineHeight: 1,
+    letterSpacing: '-0.01em', color: 'white', margin: 0,
+  },
+  hlTrack: {
+    display: 'flex', gap: '1.2vw',
+    overflowX: 'auto', scrollSnapType: 'x mandatory',
+    paddingLeft: '5vw', paddingRight: '5vw',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+    WebkitOverflowScrolling: 'touch',
+  },
+  hlCard: {
+    flexShrink: 0,
+    width: 'clamp(320px, 86vw, 1100px)',
+    scrollSnapAlign: 'start',
+    borderRadius: 22,
+    background: '#1a1a1a',
+    overflow: 'hidden',
+    display: 'flex', flexDirection: 'column',
+  },
+  hlCardText: {
+    padding: '2.2rem 2.8rem 1.6rem',
+    display: 'flex', flexDirection: 'column', gap: 10,
+    textAlign: 'center', alignItems: 'center',
+  },
+  hlCardTitle: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 'clamp(1.2rem, 2vw, 1.7rem)',
+    fontWeight: 700, lineHeight: 1.25,
+    letterSpacing: '-0.01em', margin: 0, color: 'white',
+    maxWidth: 620,
+  },
+  hlCardDesc: {
+    fontSize: 14, color: GRAY, lineHeight: 1.65, margin: 0,
+    maxWidth: 480,
+  },
+  hlCardImg: {
+    position: 'relative',
+    height: 'clamp(240px, 44vw, 580px)',
+    background: 'linear-gradient(160deg, #0f0f1a 0%, #111122 50%, #0a0a14 100%)',
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 12, overflow: 'hidden',
+  },
+  hlCardImgGlow: {
+    position: 'absolute', inset: 0,
+    background: 'radial-gradient(ellipse 70% 55% at 50% 60%, rgba(124,58,237,0.12) 0%, transparent 70%)',
+  },
+  hlCardImgLabel: {
+    fontSize: 12, fontWeight: 700, letterSpacing: '0.1em',
+    color: 'rgba(168,85,247,0.9)',
+    background: 'rgba(124,58,237,0.14)',
+    border: '1px solid rgba(124,58,237,0.25)',
+    padding: '5px 14px', borderRadius: 999,
+    position: 'relative', zIndex: 1,
+  },
+  hlCardImgHint: {
+    fontSize: 11, color: MUTED, textAlign: 'center',
+    maxWidth: 240, lineHeight: 1.5,
+    position: 'relative', zIndex: 1,
+  },
+  /* bottom nav */
+  hlNav: {
+    display: 'flex', justifyContent: 'center',
+    marginTop: '2rem',
+  },
+  hlNavInner: {
+    display: 'flex', alignItems: 'center', gap: 8,
+    background: 'rgba(255,255,255,0.1)',
+    backdropFilter: 'blur(12px)',
+    borderRadius: 999,
+    padding: '10px 16px',
+  },
+  hlDot: {
+    width: 8, height: 8, borderRadius: 999,
+    background: 'rgba(255,255,255,0.4)',
+    border: 'none', cursor: 'pointer', padding: 0,
+    transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
+    flexShrink: 0,
+  },
+  hlDotActive: {
+    width: 28,
+    background: 'white',
+  },
+  hlPlayBtn: {
+    width: 32, height: 32, borderRadius: '50%',
+    background: 'rgba(255,255,255,0.15)',
+    border: 'none', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    marginLeft: 4, flexShrink: 0,
+    color: 'white',
+  },
 
   /* TEXT BREAKS */
   textBreak: {
