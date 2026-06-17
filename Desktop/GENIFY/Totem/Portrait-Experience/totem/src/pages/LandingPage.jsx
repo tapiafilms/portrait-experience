@@ -152,6 +152,7 @@ const FontLoader = () => (
       .hero-title { font-size: 2.1rem !important; }
       .hero-section { height: 70vh !important; min-height: 350px !important; }
       .hero-ctas { display: none !important; }
+      .hide-mobile { display: none !important; }
 
       .stats-bar { grid-template-columns: repeat(2, 1fr) !important; }
       .stat-border-r { border-right: none !important; }
@@ -484,7 +485,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Stats ── */}
-      <div style={s.statsBar} className="stats-bar">
+      <div style={s.statsBar} className="stats-bar hide-mobile">
         {[
           { num: '+500',  label: 'Eventos realizados' },
           { num: '<30s',  label: 'Por transformación' },
