@@ -49,6 +49,36 @@ const FontLoader = () => (
       transform: translateY(-1px);
     }
 
+    .nav-link-active {
+      color: rgba(255,255,255,1) !important;
+    }
+    .nav-link-active::after {
+      transform: scaleX(1) !important;
+    }
+
+    .nav-link-soon {
+      opacity: 0.35;
+      cursor: default;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .nav-link-soon::after { display: none; }
+
+    .nav-soon-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #A855F7;
+      background: rgba(168,85,247,0.12);
+      border: 1px solid rgba(168,85,247,0.3);
+      border-radius: 999px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
     /* ── MOBILE ── */
     @media (max-width: 768px) {
       .site-nav { padding: 0 20px !important; height: 56px !important; }
@@ -152,6 +182,7 @@ function HighlightsGallery() {
   const [playing, setPlaying] = useState(false)
   const trackRef = useRef(null)
   const cardRefs = useRef([])
+  const iframeRefs = useRef([])
   const intervalRef = useRef(null)
 
   const scrollTo = (i) => {
@@ -186,6 +217,25 @@ function HighlightsGallery() {
     }
     return () => clearInterval(intervalRef.current)
   }, [playing])
+
+  // Autoplay on viewport enter, pause on exit
+  useEffect(() => {
+    const observers = []
+    iframeRefs.current.forEach((iframe) => {
+      if (!iframe) return
+      const send = (func) =>
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ event: 'command', func, args: '' }), '*'
+        )
+      const observer = new IntersectionObserver(
+        ([entry]) => { entry.isIntersecting ? send('playVideo') : send('pauseVideo') },
+        { threshold: 0.5 }
+      )
+      observer.observe(iframe)
+      observers.push(observer)
+    })
+    return () => observers.forEach(o => o.disconnect())
+  }, [])
 
   useEffect(() => {
     const track = trackRef.current
@@ -232,7 +282,8 @@ function HighlightsGallery() {
             {/* Video */}
             <div style={s.hlCardImg}>
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1`}
+                ref={el => iframeRefs.current[i] = el}
+                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&enablejsapi=1&mute=1`}
                 style={s.hlCardVideo}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -340,9 +391,9 @@ export default function LandingPage() {
       <nav style={s.nav} className="site-nav">
         <img src="/logo-gen-ex.png" alt="Genofy" style={s.navLogo} />
         <div style={s.navLinks} className="nav-links">
-          <a href="#flujo"    className="nav-link" onClick={e => smoothScroll(e, 'flujo')}>Cómo funciona</a>
-          <a href="#movil"    className="nav-link" onClick={e => smoothScroll(e, 'movil')}>App del invitado</a>
-          <a href="#tech"     className="nav-link" onClick={e => smoothScroll(e, 'tech')}>Qué incluye</a>
+          <a href="/" className="nav-link nav-link-active">AI Portrait Experience</a>
+          <span className="nav-link nav-link-soon">Cuenta Joy<span className="nav-soon-badge">Próximamente</span></span>
+          <span className="nav-link nav-link-soon">mirrAI<span className="nav-soon-badge">Próximamente</span></span>
           <a href="#contacto" className="nav-link" onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
           <a href="/totem" className="nav-cta">Iniciar tótem →</a>
         </div>
