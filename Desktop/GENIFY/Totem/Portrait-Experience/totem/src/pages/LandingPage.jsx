@@ -80,9 +80,8 @@ const FontLoader = () => (
     }
 
     /* ── MOBILE BOTTOM NAV ── */
-    .mobile-bottom-nav {
-      display: none;
-    }
+    .mobile-bottom-nav { display: none; }
+    .mobile-cta-bar { display: none; }
 
     @media (max-width: 768px) {
       .mobile-bottom-nav {
@@ -153,6 +152,28 @@ const FontLoader = () => (
       .hero-section { height: 70vh !important; min-height: 350px !important; }
       .hero-ctas { display: none !important; }
       .hide-mobile { display: none !important; }
+
+      .mobile-cta-bar {
+        display: flex;
+        justify-content: center;
+        padding: 24px 0;
+        background: #000;
+      }
+      .mobile-cta-btn {
+        display: block;
+        width: 70%;
+        text-align: center;
+        background: linear-gradient(135deg, #7C3AED, #A855F7);
+        color: #fff;
+        padding: 16px 0;
+        border-radius: 12px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 4px 24px rgba(124,58,237,0.45);
+        letter-spacing: 0.01em;
+      }
 
       .stats-bar { grid-template-columns: repeat(2, 1fr) !important; }
       .stat-border-r { border-right: none !important; }
@@ -497,6 +518,11 @@ export default function LandingPage() {
             <span style={s.statLabel}>{st.label}</span>
           </div>
         ))}
+      </div>
+
+      {/* ── Mobile CTA ── */}
+      <div className="mobile-cta-bar">
+        <a href="/totem" className="mobile-cta-btn">Iniciar tótem →</a>
       </div>
 
       {/* ── Highlights Gallery ── */}
