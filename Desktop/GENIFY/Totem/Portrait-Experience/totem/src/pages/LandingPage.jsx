@@ -149,6 +149,7 @@ const FontLoader = () => (
       .hero-overlay {
         background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.5) 100%) !important;
       }
+      .hero-title { font-size: 2.1rem !important; }
 
       .stats-bar { grid-template-columns: repeat(2, 1fr) !important; }
       .stat-border-r { border-right: none !important; }
@@ -471,7 +472,7 @@ export default function LandingPage() {
         <div style={s.heroOverlay} className="hero-overlay" />
         <div style={s.heroContent}>
          
-          <h1 style={s.heroTitle}>
+          <h1 style={s.heroTitle} className="hero-title">
             Transforma a tus<br />
             <span style={s.heroGrad}>invitados en protagonistas</span><br />
             del evento.
