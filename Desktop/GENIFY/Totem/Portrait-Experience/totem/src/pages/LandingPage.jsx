@@ -532,7 +532,7 @@ const s = {
     backdropFilter: 'blur(20px)',
     borderBottom: `1px solid ${BORDER}`,
   },
-  navLogo: { height: 126, objectFit: 'contain' },
+  navLogo: { height: 45, objectFit: 'contain' },
   navLinks: { display: 'flex', alignItems: 'center', gap: 32 },
   navLink: {
     color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 500,
@@ -651,8 +651,9 @@ const s = {
   hlTrack: {
     display: 'flex', gap: '1.2vw',
     overflowX: 'auto', scrollSnapType: 'x mandatory',
-    paddingLeft: '7vw', paddingRight: '7vw',
-    scrollPaddingLeft: '7vw',
+    paddingLeft: 'calc((100vw - clamp(320px, 86vw, 1100px)) / 2)',
+    paddingRight: 'calc((100vw - clamp(320px, 86vw, 1100px)) / 2)',
+    scrollPaddingLeft: 'calc((100vw - clamp(320px, 86vw, 1100px)) / 2)',
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
     WebkitOverflowScrolling: 'touch',
@@ -763,7 +764,7 @@ const s = {
 
   /* FEATURE FULL */
   featureFull: {
-    background: BG, padding: '0 2rem 6rem',
+    background: BG, padding: '7rem 2rem 6rem',
   },
   featureFullImg: {
     maxWidth: 1100, margin: '0 auto 3rem',
