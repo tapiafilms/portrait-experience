@@ -3,8 +3,51 @@ import { useState, useEffect, useRef } from 'react'
 /* ── Google Fonts ── */
 const FontLoader = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
     .hl-track::-webkit-scrollbar { display: none; }
+
+    .nav-link {
+      position: relative;
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      padding-bottom: 3px;
+      transition: color 0.2s;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%; height: 1.5px;
+      background: linear-gradient(90deg, #A855F7, #06B6D4);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 999px;
+    }
+    .nav-link:hover { color: rgba(255,255,255,1); }
+    .nav-link:hover::after { transform: scaleX(1); }
+
+    .nav-cta {
+      background: linear-gradient(135deg, #7C3AED, #A855F7);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      box-shadow: 0 0 16px rgba(124,58,237,0.4);
+      transition: box-shadow 0.25s, transform 0.2s;
+    }
+    .nav-cta:hover {
+      box-shadow: 0 0 28px rgba(124,58,237,0.7);
+      transform: translateY(-1px);
+    }
   `}</style>
 )
 
@@ -266,11 +309,11 @@ export default function LandingPage() {
       <nav style={s.nav}>
         <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.navLogo} />
         <div style={s.navLinks}>
-          <a href="#flujo"    style={s.navLink} onClick={e => smoothScroll(e, 'flujo')}>Cómo funciona</a>
-          <a href="#movil"    style={s.navLink} onClick={e => smoothScroll(e, 'movil')}>App del invitado</a>
-          <a href="#tech"     style={s.navLink} onClick={e => smoothScroll(e, 'tech')}>Qué incluye</a>
-          <a href="#contacto" style={s.navLink} onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
-          <a href="/totem" style={s.navCta}>Iniciar tótem →</a>
+          <a href="#flujo"    className="nav-link" onClick={e => smoothScroll(e, 'flujo')}>Cómo funciona</a>
+          <a href="#movil"    className="nav-link" onClick={e => smoothScroll(e, 'movil')}>App del invitado</a>
+          <a href="#tech"     className="nav-link" onClick={e => smoothScroll(e, 'tech')}>Qué incluye</a>
+          <a href="#contacto" className="nav-link" onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
+          <a href="/totem" className="nav-cta">Iniciar tótem →</a>
         </div>
       </nav>
 
@@ -491,12 +534,12 @@ const s = {
   nav: {
     position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '0 48px', height: 52,
+    padding: '0 48px', height: 64,
     background: 'rgba(0,0,0,0.8)',
     backdropFilter: 'blur(20px)',
     borderBottom: `1px solid ${BORDER}`,
   },
-  navLogo: { height: 26, objectFit: 'contain' },
+  navLogo: { height: 38, objectFit: 'contain' },
   navLinks: { display: 'flex', alignItems: 'center', gap: 32 },
   navLink: {
     color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 500,
