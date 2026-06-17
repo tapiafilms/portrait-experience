@@ -307,7 +307,7 @@ export default function LandingPage() {
 
       {/* ── Nav ── */}
       <nav style={s.nav}>
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.navLogo} />
+        <img src="/logo-gen-ex.png" alt="Genofy" style={s.navLogo} />
         <div style={s.navLinks}>
           <a href="#flujo"    className="nav-link" onClick={e => smoothScroll(e, 'flujo')}>Cómo funciona</a>
           <a href="#movil"    className="nav-link" onClick={e => smoothScroll(e, 'movil')}>App del invitado</a>
@@ -491,8 +491,8 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer style={s.footer}>
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={{ height: 28 }} />
-        <p style={s.footerText}>© 2025 Genofy · AI Portrait Experience</p>
+        <img src="/logo-gen-ex.png" alt="Genofy" style={{ height: 28 }} />
+        <p style={s.footerText}>© 2025 Genofy · Gen Experiences</p>
         <a href="https://www.genofy.cl" style={s.footerLink} target="_blank" rel="noopener noreferrer">
           genofy.cl →
         </a>
