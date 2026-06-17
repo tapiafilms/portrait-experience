@@ -2,22 +2,23 @@
   "name": "Gen Experiences by Genofy",
   "short_name": "Gen Experiences",
   "description": "Gen Experiences transforma a tus invitados en protagonistas del evento con retratos generados por IA en tiempo real.",
-  "start_url": "/totem",
+  "start_url": "/",
   "scope": "/",
-  "display": "fullscreen",
-  "orientation": "portrait",
+  "display": "standalone",
   "background_color": "#050810",
   "theme_color": "#050810",
   "icons": [
     {
-      "src": "/logo.webp",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/webp"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/logo.webp",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/webp"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
