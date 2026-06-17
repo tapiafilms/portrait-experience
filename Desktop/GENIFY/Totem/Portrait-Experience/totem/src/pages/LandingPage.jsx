@@ -88,7 +88,11 @@ function HighlightsGallery() {
   const scrollTo = (i) => {
     const idx = Math.max(0, Math.min(HIGHLIGHTS.length - 1, i))
     setActive(idx)
-    cardRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+    const card = cardRefs.current[idx]
+    const track = trackRef.current
+    if (card && track) {
+      track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' })
+    }
   }
 
   const togglePlay = () => {
@@ -100,7 +104,11 @@ function HighlightsGallery() {
       intervalRef.current = setInterval(() => {
         setActive(prev => {
           const next = (prev + 1) % HIGHLIGHTS.length
-          cardRefs.current[next]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+          const card = cardRefs.current[next]
+          const track = trackRef.current
+          if (card && track) {
+            track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' })
+          }
           return next
         })
       }, 3000)
@@ -596,7 +604,7 @@ const s = {
   hlHeader: {
     padding: '0 5vw',
     marginBottom: '2.5rem',
-    textAlign: 'left',
+    textAlign: 'center',
   },
   hlTitle: {
     fontFamily: "'Montserrat', sans-serif",
@@ -607,7 +615,8 @@ const s = {
   hlTrack: {
     display: 'flex', gap: '1.2vw',
     overflowX: 'auto', scrollSnapType: 'x mandatory',
-    paddingLeft: '5vw', paddingRight: '5vw',
+    paddingLeft: '7vw', paddingRight: '7vw',
+    scrollPaddingLeft: '7vw',
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
     WebkitOverflowScrolling: 'touch',
