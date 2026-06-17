@@ -1,23 +1,108 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
+/* ── Google Fonts ── */
+const FontLoader = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+  `}</style>
+)
+
+/* ── Smooth scroll ── */
 function smoothScroll(e, id) {
   e.preventDefault()
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+/* ── Parallax hook ── */
+function useParallax(speed = 0.1) {
+  const ref = useRef(null)
+  useEffect(() => {
+    let ticking = false
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          if (!ref.current) return
+          const rect = ref.current.parentElement.getBoundingClientRect()
+          const center = (rect.top + rect.height / 2) - window.innerHeight / 2
+          ref.current.style.transform = `translateY(${center * speed}px)`
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [speed])
+  return ref
+}
+
+/* ── Image Placeholder ── */
+function ImgPlaceholder({ label, hint, tall }) {
+  return (
+    <div style={{ ...s.imgPlaceholder, ...(tall ? s.imgPlaceholderTall : {}) }}>
+      <div style={s.imgPlaceholderInner} />
+      <span style={s.imgLabel}>📸 {label}</span>
+      {hint && <span style={s.imgHint}>{hint}</span>}
+    </div>
+  )
+}
+
+/* ── Parallax Image wrapper ── */
+function ParallaxImg({ label, hint, tall, speed = 0.1 }) {
+  const ref = useParallax(speed)
+  return (
+    <div style={s.parallaxOuter}>
+      <div ref={ref} style={s.parallaxInner}>
+        <ImgPlaceholder label={label} hint={hint} tall={tall} />
+      </div>
+    </div>
+  )
+}
+
+/* ── Hero with parallax bg ── */
+function HeroParallaxBg() {
+  const ref = useRef(null)
+  useEffect(() => {
+    let ticking = false
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          if (ref.current) ref.current.style.transform = `translateY(${window.scrollY * 0.3}px)`
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  return (
+    <div style={s.heroBgWrap}>
+      <div ref={ref} style={s.heroBgParallax}>
+        <ImgPlaceholder label="FOTO TÓTEM HERO" hint="Imagen full-screen del tótem encendido en un evento" />
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════ */
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div style={s.root}>
+      <FontLoader />
 
       {/* ── Nav ── */}
       <nav style={s.nav}>
         <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.navLogo} />
         <div style={s.navLinks}>
-          <a href="#como-funciona" style={s.navLink} onClick={e => smoothScroll(e, 'como-funciona')}>Cómo funciona</a>
-          <a href="#en-tu-celular" style={s.navLink} onClick={e => smoothScroll(e, 'en-tu-celular')}>En tu celular</a>
-          <a href="#features" style={s.navLink} onClick={e => smoothScroll(e, 'features')}>Features</a>
+          <a href="#flujo"    style={s.navLink} onClick={e => smoothScroll(e, 'flujo')}>Cómo funciona</a>
+          <a href="#movil"    style={s.navLink} onClick={e => smoothScroll(e, 'movil')}>App del invitado</a>
+          <a href="#tech"     style={s.navLink} onClick={e => smoothScroll(e, 'tech')}>Qué incluye</a>
           <a href="#contacto" style={s.navLink} onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
           <a href="/totem" style={s.navCta}>Iniciar tótem →</a>
         </div>
@@ -25,205 +110,186 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section style={s.hero}>
-        <div style={s.heroBg} />
-        <div style={s.heroGlow} />
-
+        <HeroParallaxBg />
+        <div style={s.heroOverlay} />
         <div style={s.heroContent}>
           <div style={s.badge}>✦ Powered by Genofy</div>
-
           <h1 style={s.heroTitle}>
-            Transforma a tus{' '}
-            <span style={s.heroGrad}>invitados en protagonistas</span>
-            {' '}del evento
+            Transforma a tus<br />
+            <span style={s.heroGrad}>invitados en protagonistas</span><br />
+            del evento.
           </h1>
-
-          <p style={s.heroSub}>
-            Un fotógrafo virtual crea retratos IA personalizados, mientras una galería colaborativa proyecta en tiempo real los mejores momentos del evento en una pantalla gigante.
-          </p>
-
-          <div style={s.heroCtas}>
-            <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Solicitar Demo</a>
-            <a href="#como-funciona" style={s.ctaSecondary} onClick={e => smoothScroll(e, 'como-funciona')}>Ver Experiencia</a>
-          </div>
         </div>
-
-        {/* Video demo placeholder */}
-        <div style={s.heroVideo}>
-          <div style={s.videoFrame}>
-            <div style={s.videoPlaceholder}>
-              <div style={s.playBtn}>▶</div>
-              <p style={s.videoLabel}>Demo en vivo</p>
-            </div>
-          </div>
+        <div style={s.heroCtas}>
+          <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Solicitar Demo</a>
+          <a href="#flujo"    style={s.ctaSecondary} onClick={e => smoothScroll(e, 'flujo')}>Ver experiencia</a>
         </div>
       </section>
 
-      {/* ── Cómo funciona ── */}
-      <section id="como-funciona" style={s.section}>
-        <p style={s.sectionTag}>FLUJO DE EXPERIENCIA</p>
-        <h2 style={s.sectionTitle}>Simple para el invitado.<br />Impresionante para todos.</h2>
+      {/* ── Stats ── */}
+      <div style={s.statsBar}>
+        {[
+          { num: '+500',  label: 'Eventos realizados' },
+          { num: '<30s',  label: 'Por transformación' },
+          { num: '99.9%', label: 'Uptime garantizado' },
+          { num: '4.9★',  label: 'Satisfacción promedio' },
+        ].map((st, i) => (
+          <div key={st.label} style={{ ...s.stat, ...(i < 3 ? s.statBorder : {}) }}>
+            <span style={s.statNum}>{st.num}</span>
+            <span style={s.statLabel}>{st.label}</span>
+          </div>
+        ))}
+      </div>
 
-        <div style={s.steps}>
-          {[
-            { n: '01', icon: '🎙️', title: 'El tótem saluda', desc: 'Un fotógrafo virtual con voz natural saluda al invitado, lo identifica y lo prepara para la foto.' },
-            { n: '02', icon: '📸', title: 'Captura y transforma', desc: 'Se toma la foto y la IA la convierte en un personaje Pixar en tiempo real, preservando los rasgos de la persona.' },
-            { n: '03', icon: '📱', title: 'Escanea el QR', desc: 'Aparece el código QR en pantalla. El invitado lo escanea con su celular y accede a su retrato al instante.' },
-            { n: '04', icon: '🎉', title: 'Participa en el evento', desc: 'Desde el celular puede descargar su foto, ver el carrusel de retratos de otros asistentes y subir fotos a la pantalla grande.' },
-          ].map(step => (
-            <div key={step.n} style={s.step}>
-              <div style={s.stepNum}>{step.n}</div>
-              <div style={s.stepIcon}>{step.icon}</div>
+      {/* ── Text break 1 ── */}
+      <section style={s.textBreak}>
+        <p style={s.eyebrowCenter}>La experiencia</p>
+        <h2 style={s.headlineXL}>
+          Tu evento se convierte<br />en una experiencia<br />de película.
+        </h2>
+      </section>
+
+      {/* ── Feature full-width ── */}
+      <section id="flujo" style={s.featureFull}>
+        <div style={s.featureFullImg}>
+          <ParallaxImg
+            label="FOTO TÓTEM 01"
+            hint="Tótem encendido de frente, pantalla con bienvenida visible"
+            tall
+          />
+        </div>
+        <div style={s.featureFullText}>
+          <p style={s.eyebrowAccent}>Flujo de experiencia</p>
+          <h2 style={s.featureH2}>Simple para el invitado.<br />Impresionante para todos.</h2>
+          <p style={s.bodyText}>
+            Cada invitado se transforma en un personaje Pixar y aparece en la pantalla gigante.
+            Todo en tiempo real, sin fotógrafo, sin apps, sin complicaciones.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 4 Steps (splits 50/50) ── */}
+      <section style={s.stepsSection}>
+        {[
+          {
+            n: '01', reverse: false,
+            label: 'FOTO TÓTEM 02', hint: 'Invitado frente al tótem siendo recibido por el avatar',
+            title: 'El tótem te da la bienvenida',
+            desc: 'Un fotógrafo con IA y voz humana te recibe por tu nombre, te guía y crea el momento perfecto para tu retrato.',
+          },
+          {
+            n: '02', reverse: true,
+            label: 'FOTO TÓTEM 03', hint: 'Pantalla mostrando la transformación Pixar en proceso',
+            title: 'Tu foto se convierte en arte',
+            desc: 'La IA transforma tu retrato en un personaje Pixar en menos de 30 segundos, preservando tus rasgos únicos.',
+          },
+          {
+            n: '03', reverse: false,
+            label: 'FOTO TÓTEM 04', hint: 'Invitado escaneando el QR con su celular, sonriendo',
+            title: 'Tu retrato, en tu celular',
+            desc: 'Escanea el QR y al instante tienes tu retrato guardado. Sin descargar ninguna app.',
+          },
+          {
+            n: '04', reverse: true,
+            label: 'FOTO PANTALLA 01', hint: 'Pantalla gigante del evento con galería de retratos proyectada',
+            title: 'Sé parte de la pantalla gigante',
+            desc: 'Comparte fotos desde tu celular que aparecen en la pantalla del evento. Tú y todos los demás, en el centro de la noche.',
+          },
+        ].map(step => (
+          <div key={step.n} style={{ ...s.stepSplit, ...(step.reverse ? s.stepSplitReverse : {}) }}>
+            <div style={s.stepImg}>
+              <ParallaxImg label={step.label} hint={step.hint} speed={0.08} />
+            </div>
+            <div style={s.stepText}>
+              <span style={s.stepNum}>{step.n}</span>
               <h3 style={s.stepTitle}>{step.title}</h3>
               <p style={s.stepDesc}>{step.desc}</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </section>
 
-      {/* ── En tu celular ── */}
-      <section id="en-tu-celular" style={{ ...s.section, background: 'rgba(255,255,255,0.02)', maxWidth: '100%', padding: '100px 48px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-          <p style={s.sectionTag}>EXPERIENCIA MÓVIL</p>
-          <h2 style={s.sectionTitle}>Lo que ve el invitado<br />en su celular.</h2>
+      {/* ── Text break 2 ── */}
+      <section style={{ ...s.textBreak, background: '#050508' }} id="movil">
+        <p style={s.eyebrowCenter}>App del invitado</p>
+        <h2 style={s.headlineXL}>Una experiencia completa<br />desde tu bolsillo.</h2>
+      </section>
 
-          <div style={s.phoneRow}>
-
-            {/* Mockup teléfono */}
-            <div style={s.phoneMockup}>
-              <div style={s.phoneScreen}>
-                <div style={s.mockHeader}>
-                  <div style={s.mockLogo} />
-                </div>
-                <div style={s.mockPhoto} />
-                <div style={s.mockBtn} />
-                <div style={s.mockCarouselRow}>
-                  {[0,1,2].map(i => <div key={i} style={s.mockThumb} />)}
-                </div>
-                <div style={{ ...s.mockBtn, background: 'rgba(6,182,212,0.25)', marginTop: 8 }} />
+      {/* ── Mobile section ── */}
+      <section style={s.mobileSection}>
+        <div style={s.mobileImg}>
+          <ParallaxImg
+            label="FOTO MÓVIL 01"
+            hint="Mano sosteniendo celular con el retrato Pixar en pantalla"
+            tall
+            speed={0.08}
+          />
+        </div>
+        <div style={s.mobileFeatures}>
+          {[
+            { n: '01', title: 'Tu retrato, listo para compartir',  desc: 'Tu transformación Pixar aparece de inmediato. Un toque y queda guardado en tu galería.' },
+            { n: '02', title: 'Todos los retratos, en vivo',       desc: 'Ve cómo van llegando los retratos del resto de los invitados en tiempo real. Un feed exclusivo del evento.' },
+            { n: '03', title: 'Sube tus fotos al evento',          desc: 'Abre la cámara y captura el momento. Si pasa la moderación, aparece en la pantalla gigante en segundos.' },
+            { n: '04', title: 'Vuelve las veces que quieras',      desc: 'Sin límites. Pasa por el tótem de nuevo, toma más fotos, comparte más momentos.' },
+          ].map((item, i) => (
+            <div key={item.n} style={{ ...s.mobileItem, ...(i === 0 ? s.mobileItemFirst : {}) }}>
+              <span style={s.mobileNum}>{item.n}</span>
+              <div>
+                <h4 style={s.mobileItemTitle}>{item.title}</h4>
+                <p style={s.mobileItemDesc}>{item.desc}</p>
               </div>
             </div>
-
-            {/* Steps móvil */}
-            <div style={s.mobileSteps}>
-              {[
-                {
-                  n: '01', icon: '🖼️',
-                  title: 'Su retrato Pixar',
-                  desc: 'Lo primero que ve es su retrato transformado, con un botón para guardarlo en su galería con un toque.',
-                },
-                {
-                  n: '02', icon: '🎠',
-                  title: 'Carrusel del evento',
-                  desc: 'Debajo aparece el carrusel en tiempo real con los retratos de todos los asistentes que pasaron por el tótem.',
-                },
-                {
-                  n: '03', icon: '📸',
-                  title: 'Tomar fotos para la pantalla grande',
-                  desc: 'El invitado puede abrir la cámara y tomar fotos durante el evento. Las aprobadas aparecen en la pantalla grande en segundos.',
-                },
-                {
-                  n: '04', icon: '🔁',
-                  title: 'Repetir cuando quiera',
-                  desc: 'Puede tomar varias fotos durante la noche. Cada una pasa por moderación automática antes de publicarse.',
-                },
-              ].map(step => (
-                <div key={step.n} style={s.mobileStep}>
-                  <div style={s.mobileStepLeft}>
-                    <div style={s.mobileStepNum}>{step.n}</div>
-                    <div style={s.mobileStepLine} />
-                  </div>
-                  <div style={s.mobileStepRight}>
-                    <div style={s.mobileStepIconRow}>
-                      <span style={{ fontSize: 22 }}>{step.icon}</span>
-                      <h3 style={s.mobileStepTitle}>{step.title}</h3>
-                    </div>
-                    <p style={s.mobileStepDesc}>{step.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section id="features" style={{ ...s.section, background: 'rgba(255,255,255,0.02)' }}>
-        <p style={s.sectionTag}>TECNOLOGÍA</p>
-        <h2 style={s.sectionTitle}>Todo funciona solo.<br />Tú solo enchufas el tótem.</h2>
+      {/* ── Text break 3 ── */}
+      <section style={s.textBreak} id="tech">
+        <p style={s.eyebrowCenter}>Tecnología</p>
+        <h2 style={s.headlineXL}>Todo funciona solo.<br />Tú solo enchufas el tótem.</h2>
+      </section>
 
-        <div style={s.features}>
+      {/* ── Tech grid ── */}
+      <section style={s.techSection}>
+        <div style={s.techGrid}>
           {[
-            { icon: '🤖', title: 'IA Conversacional', desc: 'Claude AI identifica al invitado por nombre, busca su perfil y personaliza toda la experiencia en tiempo real.' },
-            { icon: '🎨', title: 'Transformación Pixar', desc: 'Flux Pro convierte cada foto en un personaje 3D de calidad cinematográfica en menos de 30 segundos.' },
-            { icon: '🎙️', title: 'Voz Natural', desc: 'ElevenLabs genera voces humanas para el fotógrafo y la asistente, sincronizadas con el avatar animado.' },
-            { icon: '📊', title: 'Base de invitados', desc: 'Carga el Excel del cliente antes del evento. El sistema identifica a cada persona por nombre automáticamente.' },
-            { icon: '📱', title: 'QR instantáneo', desc: 'El código QR aparece en pantalla al terminar. El invitado escanea y descarga su retrato desde el celular.' },
-            { icon: '🔑', title: 'Clave por evento', desc: 'Cada evento tiene su propia clave de acceso con expiración automática. Sin configuración técnica en el lugar.' },
-          ].map(f => (
-            <div key={f.title} style={s.featureCard}>
-              <span style={s.featureIcon}>{f.icon}</span>
-              <h3 style={s.featureTitle}>{f.title}</h3>
-              <p style={s.featureDesc}>{f.desc}</p>
+            { icon: '🤖', title: 'Reconocimiento por nombre',      desc: 'La IA identifica a cada invitado por nombre desde una lista precargada y personaliza toda la experiencia.' },
+            { icon: '🎨', title: 'Transformación Pixar',           desc: 'Flux Pro convierte cada foto en un personaje 3D de calidad cinematográfica en menos de 30 segundos.' },
+            { icon: '🎙️', title: 'Fotógrafo con voz humana',       desc: 'ElevenLabs genera una voz natural que guía al invitado durante la experiencia, sincronizada con el avatar animado.' },
+            { icon: '📊', title: 'Lista de invitados precargada',  desc: 'Carga el Excel con los asistentes antes del evento. El tótem reconoce a cada persona automáticamente.' },
+            { icon: '📱', title: 'QR instantáneo',                 desc: 'El código QR aparece en pantalla al terminar. El invitado escanea y descarga su retrato desde el celular.' },
+            { icon: '🔑', title: 'Acceso seguro por evento',       desc: 'Cada evento tiene su código único con expiración automática. Sin instalaciones ni configuración técnica.' },
+          ].map((f, i) => (
+            <div key={f.title} style={{ ...s.techCard, ...(i % 3 !== 2 ? s.techCardBorderR : {}), ...(i < 3 ? s.techCardBorderB : {}) }}>
+              <span style={s.techIcon}>{f.icon}</span>
+              <h4 style={s.techTitle}>{f.title}</h4>
+              <p style={s.techDesc}>{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Casos de uso ── */}
-      <section style={s.section}>
-        <p style={s.sectionTag}>CASOS DE USO</p>
-        <h2 style={s.sectionTitle}>Ideal para cualquier<br />evento corporativo.</h2>
-
-        <div style={s.useCases}>
-          {[
-            { emoji: '🏆', label: 'Galas y premios' },
-            { emoji: '🚀', label: 'Lanzamientos de producto' },
-            { emoji: '🎓', label: 'Graduaciones corporativas' },
-            { emoji: '🤝', label: 'Convenciones y congresos' },
-            { emoji: '🎉', label: 'Fiestas de fin de año' },
-            { emoji: '💼', label: 'Cenas ejecutivas' },
-          ].map(u => (
-            <div key={u.label} style={s.useCase}>
-              <span style={{ fontSize: 32 }}>{u.emoji}</span>
-              <p style={s.useCaseLabel}>{u.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CTA / Contacto ── */}
-      <section id="contacto" style={s.ctaSection}>
-        <div style={s.ctaGlow} />
-        <div style={s.ctaContent}>
-          <p style={s.sectionTag}>CONTÁCTANOS</p>
-          <h2 style={{ ...s.sectionTitle, marginBottom: 12 }}>
-            ¿Tienes un evento próximo?
-          </h2>
-          <p style={{ ...s.heroSub, marginBottom: 36 }}>
-            Cuéntanos la fecha y el tipo de evento. Configuramos todo en menos de 24 horas.
-          </p>
-
-          <div style={s.contactBtns}>
-            <a
-              href="https://wa.me/56999999999?text=Hola,%20quiero%20contratar%20AI%20Portrait%20Experience%20para%20mi%20evento"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={s.ctaPrimary}
-            >
-              💬 Escribir por WhatsApp
-            </a>
-            <a href="mailto:hola@genofy.cl" style={s.ctaSecondary}>
-              ✉️ Enviar email
-            </a>
-          </div>
-
-          <div style={s.divider} />
-
-          <a href="/totem" style={s.totemLink}>
-            ¿Ya tienes tu clave? → Iniciar tótem
+      {/* ── Contacto ── */}
+      <section id="contacto" style={s.contactSection}>
+        <p style={s.eyebrowCenter}>Contáctanos</p>
+        <h2 style={s.headlineXL}>Hagámoslo realidad.</h2>
+        <p style={s.contactSub}>
+          Cuéntanos tu fecha y en menos de 24 horas tienes todo listo.<br />
+          Sin complicaciones técnicas de tu parte.
+        </p>
+        <div style={s.contactBtns}>
+          <a
+            href="https://wa.me/56999999999?text=Hola,%20quiero%20contratar%20AI%20Portrait%20Experience%20para%20mi%20evento"
+            target="_blank" rel="noopener noreferrer"
+            style={s.btnWhatsapp}
+          >
+            💬 Escribir por WhatsApp
+          </a>
+          <a href="mailto:hola@genofy.cl" style={s.btnEmail}>
+            ✉️ Enviar email
           </a>
         </div>
+        <a href="/totem" style={s.totemLink}>¿Ya tienes tu clave? → Iniciar tótem</a>
       </section>
 
       {/* ── Footer ── */}
@@ -234,324 +300,328 @@ export default function LandingPage() {
           genofy.cl →
         </a>
       </footer>
-
     </div>
   )
 }
 
-const GRAD = 'linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4)'
+/* ══════════════════════════════════════════
+   STYLES
+══════════════════════════════════════════ */
+const PURPLE   = '#7C3AED'
+const PURPLE_L = '#A855F7'
+const CYAN     = '#06B6D4'
+const GRAD     = `linear-gradient(135deg, ${PURPLE_L}, ${CYAN})`
+const BLACK    = '#000000'
+const BG       = '#080808'
+const BORDER   = 'rgba(255,255,255,0.08)'
+const GRAY     = '#94A3B8'
+const MUTED    = '#475569'
 
 const s = {
   root: {
     minHeight: '100vh',
-    background: '#050810',
-    color: '#fff',
+    background: BLACK,
+    color: '#F8FAFC',
     fontFamily: "'Inter', system-ui, sans-serif",
     overflowX: 'hidden',
   },
 
-  // Nav
+  /* NAV */
   nav: {
-    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '16px 48px',
-    background: 'rgba(5,8,16,0.85)',
+    padding: '0 48px', height: 52,
+    background: 'rgba(0,0,0,0.8)',
     backdropFilter: 'blur(20px)',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: `1px solid ${BORDER}`,
   },
-  navLogo: { height: 28, objectFit: 'contain' },
+  navLogo: { height: 26, objectFit: 'contain' },
   navLinks: { display: 'flex', alignItems: 'center', gap: 32 },
   navLink: {
-    color: 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 500,
-    textDecoration: 'none', transition: 'color 0.2s',
+    color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 500,
+    textDecoration: 'none',
   },
   navCta: {
-    background: GRAD, color: '#fff',
-    padding: '8px 20px', borderRadius: 50,
-    fontSize: 14, fontWeight: 700,
-    textDecoration: 'none', letterSpacing: '0.02em',
+    background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE_L})`,
+    color: '#fff', padding: '8px 18px', borderRadius: 8,
+    fontSize: 13, fontWeight: 600, textDecoration: 'none',
+    boxShadow: `0 0 16px rgba(124,58,237,0.4)`,
   },
 
-  // Hero
+  /* HERO */
   hero: {
-    minHeight: '100vh',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    gap: 64, padding: '120px 48px 80px',
-    position: 'relative', flexWrap: 'wrap',
+    position: 'relative',
+    height: '100vh', minHeight: 700,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'flex-end',
+    paddingBottom: 80, overflow: 'hidden',
   },
-  heroBg: {
-    position: 'absolute', inset: 0, zIndex: 0,
-    backgroundImage: 'url(/bg-totem.png)',
-    backgroundSize: 'cover', backgroundPosition: 'center',
-    opacity: 0.15,
+  heroBgWrap: {
+    position: 'absolute', inset: 0, overflow: 'hidden',
   },
-  heroGlow: {
-    position: 'absolute', top: '20%', left: '50%',
-    transform: 'translateX(-50%)',
-    width: 600, height: 600, borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)',
-    pointerEvents: 'none', zIndex: 0,
+  heroBgParallax: {
+    position: 'absolute', top: '-10%', left: 0, right: 0,
+    height: '120%', willChange: 'transform',
+  },
+  heroOverlay: {
+    position: 'absolute', inset: 0,
+    background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.3) 100%)',
+    zIndex: 1,
   },
   heroContent: {
-    zIndex: 1, maxWidth: 560, flex: '1 1 400px',
+    position: 'relative', zIndex: 2,
+    textAlign: 'center', padding: '0 2rem',
   },
   badge: {
-    display: 'inline-block',
-    background: 'rgba(139,92,246,0.15)',
-    border: '1px solid rgba(139,92,246,0.4)',
-    color: '#a78bfa', fontSize: 12, fontWeight: 700,
-    letterSpacing: '0.1em', padding: '6px 16px', borderRadius: 50,
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
+    color: PURPLE_L,
+    border: `1px solid rgba(168,85,247,0.35)`,
+    borderRadius: 999, padding: '5px 14px',
+    background: 'rgba(168,85,247,0.1)',
     marginBottom: 24,
   },
   heroTitle: {
-    fontSize: 56, fontWeight: 900, lineHeight: 1.1,
-    margin: '0 0 20px', letterSpacing: '-0.02em',
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 'clamp(2.8rem, 5.5vw, 5.5rem)',
+    fontWeight: 900, lineHeight: 1.08,
+    letterSpacing: '-0.03em', margin: 0,
+    color: 'white',
   },
   heroGrad: {
     background: GRAD,
     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
   },
-  heroSub: {
-    fontSize: 18, color: 'rgba(255,255,255,0.6)',
-    lineHeight: 1.7, margin: '0 0 36px', maxWidth: 480,
+  heroCtas: {
+    position: 'relative', zIndex: 2,
+    display: 'flex', gap: 16, marginTop: 40,
+    justifyContent: 'center',
   },
-  heroCtas: { display: 'flex', gap: 16, flexWrap: 'wrap' },
   ctaPrimary: {
-    background: GRAD, color: '#fff',
-    padding: '14px 28px', borderRadius: 50,
-    fontSize: 15, fontWeight: 700,
-    textDecoration: 'none', letterSpacing: '0.02em',
-    boxShadow: '0 8px 32px rgba(139,92,246,0.4)',
+    background: `linear-gradient(135deg, ${PURPLE}, ${PURPLE_L})`,
+    color: '#fff', padding: '14px 32px', borderRadius: 10,
+    fontSize: 15, fontWeight: 700, textDecoration: 'none',
+    boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
   },
   ctaSecondary: {
-    background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: 'rgba(255,255,255,0.8)',
-    padding: '14px 28px', borderRadius: 50,
-    fontSize: 15, fontWeight: 600,
-    textDecoration: 'none',
+    background: 'rgba(255,255,255,0.08)',
+    backdropFilter: 'blur(10px)',
+    color: 'rgba(255,255,255,0.85)',
+    padding: '14px 32px', borderRadius: 10,
+    fontSize: 15, fontWeight: 600, textDecoration: 'none',
+    border: `1px solid rgba(255,255,255,0.15)`,
   },
 
-  // Hero video
-  heroVideo: {
-    zIndex: 1, flex: '1 1 320px', display: 'flex',
-    justifyContent: 'center',
+  /* STATS */
+  statsBar: {
+    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+    borderTop: `1px solid ${BORDER}`,
+    borderBottom: `1px solid ${BORDER}`,
+    background: 'rgba(255,255,255,0.02)',
   },
-  videoFrame: {
-    width: 340, height: 600,
-    borderRadius: 28,
-    border: '1.5px solid rgba(100,160,255,0.3)',
-    boxShadow: '0 0 80px rgba(59,130,246,0.2)',
-    overflow: 'hidden',
-    background: 'rgba(0,10,40,0.8)',
+  stat: {
+    padding: '2.5rem 1rem', textAlign: 'center',
+    display: 'flex', flexDirection: 'column', gap: 6,
   },
-  videoPlaceholder: {
-    width: '100%', height: '100%',
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center', gap: 16,
-  },
-  playBtn: {
-    width: 64, height: 64, borderRadius: '50%',
+  statBorder: { borderRight: `1px solid ${BORDER}` },
+  statNum: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: '2.4rem', fontWeight: 900, lineHeight: 1,
     background: GRAD,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 22, cursor: 'pointer',
-    boxShadow: '0 0 32px rgba(139,92,246,0.5)',
+    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
   },
-  videoLabel: {
-    fontSize: 14, color: 'rgba(255,255,255,0.4)',
-    letterSpacing: '0.1em', margin: 0,
+  statLabel: { fontSize: 12, color: MUTED, fontWeight: 500 },
+
+  /* TEXT BREAKS */
+  textBreak: {
+    padding: '8rem 2rem', textAlign: 'center',
+    background: BLACK,
+  },
+  eyebrowCenter: {
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.2em',
+    textTransform: 'uppercase', color: PURPLE_L,
+    marginBottom: 24, display: 'block',
+  },
+  eyebrowAccent: {
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.18em',
+    textTransform: 'uppercase', color: PURPLE_L,
+    marginBottom: 16, display: 'block',
+  },
+  headlineXL: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 'clamp(2.5rem, 5vw, 5rem)',
+    fontWeight: 900, lineHeight: 1.1,
+    letterSpacing: '-0.03em', color: 'white', margin: 0,
   },
 
-  // Sections
-  section: {
-    padding: '100px 48px',
-    maxWidth: 1100, margin: '0 auto',
-    textAlign: 'center',
+  /* FEATURE FULL */
+  featureFull: {
+    background: BG, padding: '0 2rem 6rem',
   },
-  sectionTag: {
-    fontSize: 11, fontWeight: 700, letterSpacing: '0.15em',
-    color: '#6d28d9', textTransform: 'uppercase', margin: '0 0 16px',
+  featureFullImg: {
+    maxWidth: 1100, margin: '0 auto 3rem',
+    overflow: 'hidden', borderRadius: 20,
   },
-  sectionTitle: {
-    fontSize: 42, fontWeight: 900, lineHeight: 1.15,
-    margin: '0 0 56px', letterSpacing: '-0.02em',
+  featureFullText: {
+    maxWidth: 700, margin: '0 auto', textAlign: 'center',
   },
+  featureH2: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 'clamp(2rem, 3.5vw, 3.2rem)',
+    fontWeight: 800, lineHeight: 1.15,
+    letterSpacing: '-0.025em', marginBottom: 20, color: 'white',
+  },
+  bodyText: { fontSize: 17, color: GRAY, lineHeight: 1.7, margin: 0 },
 
-  // Steps
-  steps: {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: 32,
+  /* STEPS */
+  stepsSection: { background: BLACK },
+  stepSplit: {
+    display: 'grid', gridTemplateColumns: '1fr 1fr',
+    minHeight: 500, overflow: 'hidden',
   },
-  step: {
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 20, padding: '36px 28px',
-    textAlign: 'left', position: 'relative',
+  stepSplitReverse: { direction: 'rtl' },
+  stepImg: { overflow: 'hidden' },
+  stepText: {
+    direction: 'ltr',
+    padding: '5rem',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 20,
+    background: BLACK,
   },
   stepNum: {
-    fontSize: 11, fontWeight: 800, letterSpacing: '0.1em',
-    color: '#6d28d9', marginBottom: 16,
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: '3.5rem', fontWeight: 900, lineHeight: 1,
+    background: GRAD,
+    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text', opacity: 0.6,
   },
-  stepIcon: { fontSize: 36, marginBottom: 16 },
-  stepTitle: { fontSize: 20, fontWeight: 800, margin: '0 0 12px' },
-  stepDesc: { fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, margin: 0 },
+  stepTitle: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 'clamp(1.6rem, 2.5vw, 2.2rem)',
+    fontWeight: 800, lineHeight: 1.2,
+    letterSpacing: '-0.02em', margin: 0,
+  },
+  stepDesc: { fontSize: 16, color: GRAY, lineHeight: 1.75, margin: 0, maxWidth: 420 },
 
-  // Mobile experience section
-  phoneRow: {
-    display: 'flex', gap: 64, alignItems: 'center',
-    justifyContent: 'center', flexWrap: 'wrap',
-    marginTop: 0,
+  /* MOBILE */
+  mobileSection: {
+    display: 'grid', gridTemplateColumns: '1fr 1fr',
+    maxWidth: 1200, margin: '0 auto',
+    padding: '0 2rem 6rem', gap: 64, alignItems: 'start',
   },
-  phoneMockup: {
-    flexShrink: 0,
-    width: 220, background: '#0a0d1a',
-    borderRadius: 36,
-    border: '1.5px solid rgba(100,160,255,0.25)',
-    boxShadow: '0 0 60px rgba(59,130,246,0.15), inset 0 0 0 1px rgba(255,255,255,0.04)',
-    padding: '24px 14px',
-    display: 'flex', flexDirection: 'column', gap: 10,
+  mobileImg: { overflow: 'hidden', borderRadius: 16 },
+  mobileFeatures: { display: 'flex', flexDirection: 'column', paddingTop: 32 },
+  mobileItem: {
+    display: 'flex', gap: 24, padding: '2rem 0',
+    borderBottom: `1px solid ${BORDER}`,
   },
-  phoneScreen: {
-    display: 'flex', flexDirection: 'column', gap: 10,
+  mobileItemFirst: { borderTop: `1px solid ${BORDER}` },
+  mobileNum: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 13, fontWeight: 800, color: PURPLE_L,
+    minWidth: 28, paddingTop: 3,
   },
-  mockHeader: {
-    display: 'flex', justifyContent: 'center',
-    paddingBottom: 4,
+  mobileItemTitle: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 16, fontWeight: 700, margin: '0 0 8px',
   },
-  mockLogo: {
-    width: 80, height: 10, borderRadius: 4,
-    background: 'rgba(255,255,255,0.15)',
-  },
-  mockPhoto: {
-    width: '100%', height: 160, borderRadius: 16,
-    background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(34,211,238,0.2))',
-    border: '1px solid rgba(99,102,241,0.2)',
-  },
-  mockBtn: {
-    width: '100%', height: 36, borderRadius: 50,
-    background: 'linear-gradient(135deg, rgba(59,130,246,0.4), rgba(109,40,217,0.4))',
-    border: '1px solid rgba(99,102,241,0.2)',
-  },
-  mockCarouselRow: {
-    display: 'flex', gap: 6,
-  },
-  mockThumb: {
-    flex: 1, height: 52, borderRadius: 8,
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.08)',
-  },
+  mobileItemDesc: { fontSize: 14, color: GRAY, lineHeight: 1.65, margin: 0 },
 
-  // Mobile steps
-  mobileSteps: {
-    flex: '1 1 320px', maxWidth: 480,
-    display: 'flex', flexDirection: 'column', gap: 0,
-    textAlign: 'left',
+  /* TECH */
+  techSection: { background: BG, padding: '0 2rem 8rem' },
+  techGrid: {
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+    maxWidth: 1100, margin: '0 auto',
+    border: `1px solid ${BORDER}`, borderRadius: 20, overflow: 'hidden',
   },
-  mobileStep: {
-    display: 'flex', gap: 16,
+  techCard: {
+    background: BG, padding: '2.5rem 2rem',
+    display: 'flex', flexDirection: 'column', gap: 12,
   },
-  mobileStepLeft: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    paddingTop: 4, flexShrink: 0,
+  techCardBorderR: { borderRight: `1px solid ${BORDER}` },
+  techCardBorderB: { borderBottom: `1px solid ${BORDER}` },
+  techIcon: { fontSize: 28 },
+  techTitle: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 15, fontWeight: 700, margin: 0,
   },
-  mobileStepNum: {
-    width: 32, height: 32, borderRadius: '50%',
-    background: 'rgba(99,102,241,0.15)',
-    border: '1px solid rgba(99,102,241,0.4)',
-    color: '#818cf8', fontSize: 11, fontWeight: 800,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    letterSpacing: '0.05em', flexShrink: 0,
-  },
-  mobileStepLine: {
-    flex: 1, width: 1, minHeight: 24,
-    background: 'rgba(99,102,241,0.15)',
-    margin: '4px 0',
-  },
-  mobileStepRight: {
-    paddingBottom: 28,
-  },
-  mobileStepIconRow: {
-    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6,
-  },
-  mobileStepTitle: {
-    fontSize: 17, fontWeight: 800, margin: 0,
-  },
-  mobileStepDesc: {
-    fontSize: 14, color: 'rgba(255,255,255,0.55)',
-    lineHeight: 1.7, margin: 0,
-  },
+  techDesc: { fontSize: 14, color: GRAY, lineHeight: 1.65, margin: 0 },
 
-  // Features
-  features: {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: 24,
+  /* CONTACT */
+  contactSection: {
+    padding: '10rem 2rem', textAlign: 'center',
+    background: BLACK,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32,
   },
-  featureCard: {
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 16, padding: '28px 24px', textAlign: 'left',
+  contactSub: { fontSize: 16, color: GRAY, lineHeight: 1.7, maxWidth: 480, margin: 0 },
+  contactBtns: { display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  btnWhatsapp: {
+    background: 'rgba(37,211,102,0.12)',
+    border: '1px solid rgba(37,211,102,0.3)',
+    color: '#4ade80', textDecoration: 'none',
+    padding: '14px 28px', borderRadius: 12,
+    fontWeight: 600, fontSize: 15,
   },
-  featureIcon: { fontSize: 28, display: 'block', marginBottom: 12 },
-  featureTitle: { fontSize: 17, fontWeight: 800, margin: '0 0 8px' },
-  featureDesc: { fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, margin: 0 },
-
-  // Use cases
-  useCases: {
-    display: 'flex', flexWrap: 'wrap', gap: 16,
-    justifyContent: 'center',
-  },
-  useCase: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 16, padding: '20px 28px',
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', gap: 8, minWidth: 140,
-  },
-  useCaseLabel: {
-    fontSize: 14, fontWeight: 600,
-    color: 'rgba(255,255,255,0.7)', margin: 0, textAlign: 'center',
-  },
-
-  // CTA section
-  ctaSection: {
-    padding: '100px 48px',
-    textAlign: 'center',
-    position: 'relative',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
-  },
-  ctaGlow: {
-    position: 'absolute', top: 0, left: '50%',
-    transform: 'translateX(-50%)',
-    width: 600, height: 400, borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)',
-    pointerEvents: 'none',
-  },
-  ctaContent: { position: 'relative', zIndex: 1 },
-  contactBtns: {
-    display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap',
-  },
-  divider: {
-    width: 1, height: 40, background: 'rgba(255,255,255,0.1)',
-    margin: '40px auto',
+  btnEmail: {
+    background: `rgba(124,58,237,0.12)`,
+    border: `1px solid rgba(124,58,237,0.3)`,
+    color: PURPLE_L, textDecoration: 'none',
+    padding: '14px 28px', borderRadius: 12,
+    fontWeight: 600, fontSize: 15,
   },
   totemLink: {
-    fontSize: 14, color: 'rgba(255,255,255,0.4)',
-    textDecoration: 'none', letterSpacing: '0.05em',
+    color: GRAY, textDecoration: 'none', fontSize: 14, fontWeight: 500,
+    border: `1px solid ${BORDER}`, padding: '10px 24px', borderRadius: 999,
   },
 
-  // Footer
+  /* FOOTER */
   footer: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: '24px 48px',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
-    flexWrap: 'wrap', gap: 12,
+    borderTop: `1px solid ${BORDER}`,
+    background: BLACK, flexWrap: 'wrap', gap: 12,
   },
-  footerText: {
-    fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0,
+  footerText: { fontSize: 13, color: MUTED, margin: 0 },
+  footerLink: { fontSize: 13, color: MUTED, textDecoration: 'none' },
+
+  /* PLACEHOLDER */
+  imgPlaceholder: {
+    width: '100%', height: '100%', minHeight: 400,
+    background: 'linear-gradient(135deg, #0f0f1a, #111122, #0a0a14)',
+    border: '1px dashed rgba(124,58,237,0.3)',
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 12, borderRadius: 16, padding: 32,
+    position: 'relative', overflow: 'hidden',
   },
-  footerLink: {
-    fontSize: 13, color: 'rgba(255,255,255,0.4)',
-    textDecoration: 'none',
+  imgPlaceholderTall: { minHeight: 560 },
+  imgPlaceholderInner: {
+    position: 'absolute', inset: 0,
+    background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(124,58,237,0.08) 0%, transparent 70%)',
+    borderRadius: 16,
+  },
+  imgLabel: {
+    fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
+    color: 'rgba(168,85,247,0.9)',
+    background: 'rgba(124,58,237,0.12)',
+    border: '1px solid rgba(124,58,237,0.25)',
+    padding: '6px 16px', borderRadius: 999,
+    position: 'relative', zIndex: 1,
+  },
+  imgHint: {
+    fontSize: 12, color: MUTED, textAlign: 'center',
+    maxWidth: 280, lineHeight: 1.5,
+    position: 'relative', zIndex: 1,
+  },
+
+  /* PARALLAX */
+  parallaxOuter: {
+    overflow: 'hidden', width: '100%', height: '100%', minHeight: 480,
+  },
+  parallaxInner: {
+    width: '100%', height: '115%',
+    marginTop: '-7.5%',
+    willChange: 'transform',
   },
 }
