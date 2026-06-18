@@ -107,9 +107,11 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
     const cleanup = () => { stopAnalyser(); URL.revokeObjectURL(url); resolve() }
     const safetyTimer = setTimeout(cleanup, 60_000)
 
-    const startAnalyser = () => {
+    const startAnalyser = async () => {
       try {
         audioCtx = new AudioContext()
+        // Windows arranca el AudioContext en estado 'suspended' — forzar resume
+        if (audioCtx.state === 'suspended') await audioCtx.resume()
         const source = audioCtx.createMediaElementSource(audio)
         const analyser = audioCtx.createAnalyser()
         analyser.fftSize = 256
@@ -150,7 +152,7 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
     audio.play()
       .then(() => {
         onStart?.()
-        if (onPause || onResume) startAnalyser()
+        if (onPause || onResume) startAnalyser()  // startAnalyser es async, el error lo captura su propio try/catch
       })
       .catch(e => { console.warn('[ElevenLabs] play() error:', e); clearTimeout(safetyTimer); cleanup() })
   })
