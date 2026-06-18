@@ -249,7 +249,7 @@ const HIGHLIGHTS = [
   {
     title: 'El tótem te recibe por tu nombre.',
     desc: 'Un fotógrafo con IA y voz humana crea el momento perfecto para tu retrato.',
-    youtubeId: 'WBt-8sru6ZQ',
+    youtubeId: 'dbw41KbMdI0',
   },
   {
     title: 'Tu foto se convierte en arte en segundos.',
