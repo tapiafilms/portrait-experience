@@ -247,7 +247,7 @@ function useParallax(speed = 0.1) {
 /* ── Highlights Gallery (Apple-style) ── */
 const HIGHLIGHTS = [
   {
-    title: 'El tótem te recibe por tu nombre.',
+    title: '',
     desc: 'Un fotógrafo con IA y voz humana crea el momento perfecto para tu retrato.',
     youtubeId: 'dbw41KbMdI0',
   },
@@ -369,7 +369,7 @@ function HighlightsGallery() {
             <div style={s.hlCardImg}>
               <iframe
                 ref={el => iframeRefs.current[i] = el}
-                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&enablejsapi=1&mute=1&controls=0&iv_load_policy=3&disablekb=1&playsinline=1`}
+                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&enablejsapi=1&mute=1&controls=0&iv_load_policy=3&disablekb=1&playsinline=1&loop=1`}
                 style={s.hlCardVideo}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
