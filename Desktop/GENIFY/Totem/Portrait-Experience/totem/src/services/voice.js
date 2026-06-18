@@ -133,69 +133,18 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
 
   return new Promise(resolve => {
     currentResolve = resolve
-    let animFrameId = null
-    let audioCtx = null
-
-    const stopAnalyser = () => {
-      if (animFrameId) cancelAnimationFrame(animFrameId)
-      if (audioCtx) audioCtx.close().catch(() => {})
-    }
 
     const cleanup = () => {
       currentResolve = null
-      stopAnalyser()
       URL.revokeObjectURL(url)
       resolve()
     }
     const safetyTimer = setTimeout(cleanup, 60_000)
 
-    const startAnalyser = async () => {
-      try {
-        audioCtx = new AudioContext()
-        // Windows arranca el AudioContext en estado 'suspended' — forzar resume
-        if (audioCtx.state === 'suspended') await audioCtx.resume()
-        const source = audioCtx.createMediaElementSource(audio)
-        const analyser = audioCtx.createAnalyser()
-        analyser.fftSize = 256
-        analyser.smoothingTimeConstant = 0.4
-        source.connect(analyser)
-        analyser.connect(audioCtx.destination)
-
-        const dataArray = new Uint8Array(analyser.frequencyBinCount)
-        const THRESHOLD = 15     // amplitud mínima para considerar "hablando"
-        const SILENCE_MS = 300   // ms de silencio antes de disparar pausa
-        let talkingNow = true
-        let silenceStart = null
-
-        const tick = () => {
-          analyser.getByteFrequencyData(dataArray)
-          const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
-
-          if (avg > THRESHOLD) {
-            silenceStart = null
-            if (!talkingNow) { talkingNow = true; onResume?.() }
-          } else {
-            if (!silenceStart) silenceStart = Date.now()
-            if (talkingNow && Date.now() - silenceStart > SILENCE_MS) {
-              talkingNow = false
-              onPause?.()
-            }
-          }
-          animFrameId = requestAnimationFrame(tick)
-        }
-        animFrameId = requestAnimationFrame(tick)
-      } catch (e) {
-        console.warn('[AudioAnalyser]', e)
-      }
-    }
-
     audio.onended = () => { clearTimeout(safetyTimer); cleanup() }
     audio.onerror = (e) => { console.warn('[ElevenLabs] Audio error:', e); clearTimeout(safetyTimer); cleanup() }
     audio.play()
-      .then(() => {
-        onStart?.()
-        if (onPause || onResume) startAnalyser()  // startAnalyser es async, el error lo captura su propio try/catch
-      })
+      .then(() => { onStart?.() })
       .catch(e => { console.warn('[ElevenLabs] play() error:', e); clearTimeout(safetyTimer); cleanup() })
   })
 }
