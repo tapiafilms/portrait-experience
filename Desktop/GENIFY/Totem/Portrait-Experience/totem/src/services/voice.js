@@ -145,14 +145,25 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
     audio.onerror = (e) => { console.warn('[ElevenLabs] Audio error:', e); clearTimeout(safetyTimer); cleanup() }
     audio.play()
       .then(() => { console.log('[ElevenLabs] play() OK → onStart'); onStart?.() })
-      .catch(e => { console.warn('[ElevenLabs] play() FALLÓ:', e.name, e.message); clearTimeout(safetyTimer); cleanup() })
+      .catch(e => {
+        console.warn('[ElevenLabs] play() FALLÓ:', e.name, e.message)
+        onStart?.()  // animar avatar aunque el audio no salga
+        clearTimeout(safetyTimer)
+        cleanup()
+      })
   })
 }
 
 // ---------- API pública ----------
 
 export function speak(text, options = {}) {
-  if (PROVIDER === 'elevenlabs') return speakElevenLabs(text, options)
+  if (PROVIDER === 'elevenlabs') {
+    return speakElevenLabs(text, options).catch(err => {
+      console.warn('[ElevenLabs] falló, usando browser TTS:', err.message)
+      options.onStart?.()
+      return speakBrowser(text, options).catch(() => {})
+    })
+  }
   options.onStart?.()
   return speakBrowser(text, options)
 }
