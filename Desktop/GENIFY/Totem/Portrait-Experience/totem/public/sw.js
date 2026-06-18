@@ -1,4 +1,4 @@
-const CACHE = 'portrait-v2'
+const CACHE = 'portrait-v3'
 
 // Solo cachear assets estáticos (imágenes, video, fuentes) — nunca HTML ni JS
 const STATIC_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.ico', '.woff', '.woff2']

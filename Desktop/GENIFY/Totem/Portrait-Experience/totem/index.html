@@ -19,7 +19,12 @@
     <meta name="twitter:title" content="Gen Experiences by Genofy" />
     <meta name="twitter:description" content="Transforma a tus invitados en protagonistas del evento. Retratos con IA en menos de 30 segundos." />
     <style>
-      html, body { background: #050810; margin: 0; padding: 0; }
+      html, body {
+        background: #050810;
+        margin: 0;
+        padding: 0;
+        overscroll-behavior-y: auto;
+      }
     </style>
   </head>
   <body>
@@ -28,7 +33,19 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            // Revisar actualizaciones cada vez que la app vuelve al foco
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') reg.update()
+            })
+            // Cuando hay nuevo SW listo, recargar automáticamente
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'activated') window.location.reload()
+              })
+            })
+          })
         })
       }
     </script>
