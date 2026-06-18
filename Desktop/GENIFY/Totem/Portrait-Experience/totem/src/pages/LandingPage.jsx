@@ -866,7 +866,7 @@ const s = {
   },
   hlHeader: {
     padding: '0 5vw',
-    marginBottom: '2.5rem',
+    marginBottom: '5.5rem',
     textAlign: 'center',
   },
   hlTitle: {
