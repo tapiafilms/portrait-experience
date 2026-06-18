@@ -271,6 +271,7 @@ const HIGHLIGHTS = [
 function HighlightsGallery() {
   const [active, setActive] = useState(0)
   const [playing, setPlaying] = useState(false)
+  const [endedStates, setEndedStates] = useState(Array(HIGHLIGHTS.length).fill(false))
   const trackRef = useRef(null)
   const cardRefs = useRef([])
   const iframeRefs = useRef([])
@@ -308,6 +309,32 @@ function HighlightsGallery() {
     }
     return () => clearInterval(intervalRef.current)
   }, [playing])
+
+  // Detectar fin de video via YouTube iframe API messages
+  useEffect(() => {
+    const onMessage = (e) => {
+      try {
+        const data = JSON.parse(e.data)
+        const isEnded =
+          (data.event === 'infoDelivery' && data.info?.playerState === 0) ||
+          (data.event === 'onStateChange' && data.info === 0)
+        if (!isEnded) return
+        const idx = iframeRefs.current.findIndex(f => f?.contentWindow === e.source)
+        if (idx !== -1) {
+          setEndedStates(prev => prev.map((v, i) => i === idx ? true : v))
+        }
+      } catch {}
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
+
+  const replayVideo = (i) => {
+    setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
+    iframeRefs.current[i]?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func: 'playVideo', args: '' }), '*'
+    )
+  }
 
   // Autoplay on viewport enter, pause on exit
   useEffect(() => {
@@ -378,6 +405,15 @@ function HighlightsGallery() {
               />
               {/* Title overlay — top right */}
               <div style={s.hlCardOverlay}>{h.title}</div>
+
+              {/* End-of-video overlay */}
+              {endedStates[i] && (
+                <div style={s.hlVideoEndOverlay} onClick={() => replayVideo(i)}>
+                  <div style={s.hlVideoReplayBtn}>
+                    <span style={s.hlVideoReplayIcon} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -880,6 +916,29 @@ const s = {
     textShadow: '0 1px 8px rgba(0,0,0,0.7)',
     letterSpacing: '-0.01em',
     pointerEvents: 'none',
+  },
+  hlVideoEndOverlay: {
+    position: 'absolute', inset: 0,
+    background: '#000',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer',
+    zIndex: 10,
+  },
+  hlVideoReplayBtn: {
+    width: 72, height: 72,
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.12)',
+    border: '1.5px solid rgba(255,255,255,0.25)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    transition: 'transform 0.2s, background 0.2s',
+  },
+  hlVideoReplayIcon: {
+    display: 'inline-block',
+    width: 0, height: 0,
+    borderTop: '14px solid transparent',
+    borderBottom: '14px solid transparent',
+    borderLeft: '22px solid rgba(255,255,255,0.85)',
+    marginLeft: 6,
   },
   hlCardImgGlow: {
     position: 'absolute', inset: 0,
