@@ -28,6 +28,7 @@ function Totem() {
   const [captureData, setCaptureData] = useState(null)
   const [revealData, setRevealData] = useState(null)
   const [userName, setUserName] = useState(null)
+  const [transformError, setTransformError] = useState(null)
 
   const handlePresenceDetected = useCallback(() => {
     if (screen === 'idle') setScreen('active')
@@ -51,14 +52,8 @@ function Totem() {
       setScreen('revealing')
     } catch (err) {
       console.error('Transform error:', err)
-      setRevealData({
-        originalImageUrl: data.imageUrl,
-        transformedImageUrl: data.imageUrl,
-        qrDataUrl: data.qrDataUrl,
-        downloadUrl: data.downloadUrl,
-        guestId,
-      })
-      setScreen('revealing')
+      setTransformError(err.message || 'Error desconocido')
+      setScreen('transform-error')
     }
   }, [])
 
@@ -68,6 +63,7 @@ function Totem() {
     setCaptureData(null)
     setRevealData(null)
     setUserName(null)
+    setTransformError(null)
     setScreen('idle')
   }, [])
 
@@ -84,6 +80,10 @@ function Totem() {
 
       {screen === 'transforming' && (
         <TransformingScreen userName={userName} />
+      )}
+
+      {screen === 'transform-error' && (
+        <TransformErrorScreen error={transformError} onReset={handleReset} />
       )}
 
       {screen === 'revealing' && revealData && (
@@ -159,4 +159,41 @@ const ts = {
   footer: { zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
   footerTag: { fontSize: '9px', letterSpacing: '4px', color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase' },
   logoGenofy: { height: '34px', objectFit: 'contain' },
+}
+
+function TransformErrorScreen({ error, onReset }) {
+  useEffect(() => {
+    speak('Lo sentimos, ocurrió un error al procesar tu retrato. Por favor intenta nuevamente.', {
+      voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID_PHOTOGRAPHER,
+    }).catch(() => {})
+    // Auto-reset después de 12 segundos
+    const t = setTimeout(onReset, 12_000)
+    return () => clearTimeout(t)
+  }, [onReset])
+
+  return (
+    <div style={es.root}>
+      <img src="/bg-totem.png" alt="" style={es.bg} />
+      <div style={es.bgOverlay} />
+      <div style={es.content}>
+        <div style={es.icon}>⚠</div>
+        <p style={es.title}>Error al procesar la imagen</p>
+        <p style={es.sub}>Ocurrió un problema con la transformación IA.<br />Por favor intenta nuevamente.</p>
+        {error && <p style={es.detail}>{error}</p>}
+        <button style={es.btn} onClick={onReset}>Volver al inicio</button>
+      </div>
+    </div>
+  )
+}
+
+const es = {
+  root: { width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' },
+  bg: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 },
+  bgOverlay: { position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.75)' },
+  content: { position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '40px', textAlign: 'center' },
+  icon: { fontSize: '64px', lineHeight: 1 },
+  title: { fontSize: '28px', fontWeight: 800, color: '#f87171', letterSpacing: '1px' },
+  sub: { fontSize: '16px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 },
+  detail: { fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '8px' },
+  btn: { marginTop: '12px', background: 'transparent', border: '1px solid rgba(248,113,113,0.5)', color: '#f87171', padding: '12px 32px', fontSize: '14px', fontWeight: 700, letterSpacing: '2px', borderRadius: '50px', cursor: 'pointer', textTransform: 'uppercase' },
 }
