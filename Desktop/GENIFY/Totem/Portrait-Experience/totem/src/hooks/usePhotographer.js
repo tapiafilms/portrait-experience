@@ -185,6 +185,9 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
     try { recognRef.current?.abort() } catch {}
     setState('idle')
     setAvatar(null)
+    // Limpiar historial en servidor para evitar memory leak
+    const sid = sessionId.current
+    if (sid) fetch(`${BASE}/api/photographer/${sid}`, { method: 'DELETE' }).catch(() => {})
   }, [])
 
   // Inyectar texto manualmente (teclado / modo debug)
