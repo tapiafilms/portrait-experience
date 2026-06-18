@@ -252,19 +252,19 @@ const HIGHLIGHTS = [
     youtubeId: 'dbw41KbMdI0',
   },
   {
-    title: 'Tu foto se convierte en arte en segundos.',
+    title: '',
     desc: 'La IA transforma tu retrato en un personaje de calidad cinematográfica.',
-    youtubeId: 'WBt-8sru6ZQ',
+    youtubeId: 'dbw41KbMdI0',
   },
   {
-    title: 'Tu retrato, en tu celular al instante.',
+    title: '',
     desc: 'Escanea el QR y descarga tu imagen. Sin apps, sin esperas.',
-    youtubeId: 'WBt-8sru6ZQ',
+    youtubeId: 'dbw41KbMdI0',
   },
   {
-    title: 'Sé parte de la pantalla del evento.',
+    title: '',
     desc: 'Tus fotos aparecen proyectadas para que todos las vean en tiempo real.',
-    youtubeId: 'WBt-8sru6ZQ',
+    youtubeId: 'dbw41KbMdI0',
   },
 ]
 
