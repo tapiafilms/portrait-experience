@@ -74,6 +74,7 @@ function speakBrowser(text, { lang = 'es-ES', rate = 0.92, pitch = 1.05 } = {}) 
 // ---------- ElevenLabs ----------
 
 let currentAudio = null
+let currentResolve = null  // para poder resolver la Promise desde cancelSpeech
 
 function normalizeText(text) {
   return text
@@ -94,18 +95,27 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
     || import.meta.env.VITE_ELEVENLABS_VOICE_ID
     || 'EXAVITQu4vr4xnSDxMaL'
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${resolvedVoiceId}/stream`, {
-    method: 'POST',
-    headers: {
-      'xi-api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_multilingual_v2',
-      voice_settings: { stability: 0.5, similarity_boost: 0.8 },
-    }),
-  })
+  const fetchController = new AbortController()
+  const fetchTimeout = setTimeout(() => fetchController.abort(), 12_000)
+
+  let res
+  try {
+    res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${resolvedVoiceId}/stream`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.8 },
+      }),
+      signal: fetchController.signal,
+    })
+  } finally {
+    clearTimeout(fetchTimeout)
+  }
 
   if (!res.ok) {
     const body = await res.text()
@@ -122,6 +132,7 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
   currentAudio = audio
 
   return new Promise(resolve => {
+    currentResolve = resolve
     let animFrameId = null
     let audioCtx = null
 
@@ -130,7 +141,12 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
       if (audioCtx) audioCtx.close().catch(() => {})
     }
 
-    const cleanup = () => { stopAnalyser(); URL.revokeObjectURL(url); resolve() }
+    const cleanup = () => {
+      currentResolve = null
+      stopAnalyser()
+      URL.revokeObjectURL(url)
+      resolve()
+    }
     const safetyTimer = setTimeout(cleanup, 60_000)
 
     const startAnalyser = async () => {
@@ -203,6 +219,11 @@ export function cancelSpeech() {
     currentAudio.pause()
     currentAudio.currentTime = 0
     currentAudio = null
+  }
+  if (currentResolve) {
+    const r = currentResolve
+    currentResolve = null
+    r()
   }
 }
 
