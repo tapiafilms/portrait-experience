@@ -90,27 +90,17 @@ function normalizeText(text) {
 
 async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {}) {
   text = normalizeText(text)
-  const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
-  const resolvedVoiceId = voiceId
-    || import.meta.env.VITE_ELEVENLABS_VOICE_ID
-    || 'EXAVITQu4vr4xnSDxMaL'
 
+  const BASE = import.meta.env.VITE_API_URL || ''
   const fetchController = new AbortController()
-  const fetchTimeout = setTimeout(() => fetchController.abort(), 12_000)
+  const fetchTimeout = setTimeout(() => fetchController.abort(), 15_000)
 
   let res
   try {
-    res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${resolvedVoiceId}/stream`, {
+    res = await fetch(`${BASE}/api/tts`, {
       method: 'POST',
-      headers: {
-        'xi-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.5, similarity_boost: 0.8 },
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voiceId }),
       signal: fetchController.signal,
     })
   } finally {
@@ -119,8 +109,8 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
 
   if (!res.ok) {
     const body = await res.text()
-    console.error('[ElevenLabs] Error:', res.status, body)
-    throw new Error(`ElevenLabs error: ${res.status}`)
+    console.error('[TTS] Error:', res.status, body)
+    throw new Error(`TTS error: ${res.status}`)
   }
 
   const arrayBuffer = await res.arrayBuffer()
