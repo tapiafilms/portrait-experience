@@ -1,14 +1,20 @@
 import { useSharedCamera } from '../context/CameraContext'
 import { usePresenceDetection } from '../hooks/usePresenceDetection'
+import { unlockAudio } from '../services/voice'
 import AvatarVideo from './AvatarVideo'
 
 export default function IdleScreen({ onPresenceDetected }) {
   const { videoRef, rawRef, ready } = useSharedCamera()
 
+  const handlePresence = () => {
+    unlockAudio()
+    onPresenceDetected()
+  }
+
   usePresenceDetection({
     videoRef: rawRef,
     active: ready,
-    onPresence: onPresenceDetected,
+    onPresence: handlePresence,
   })
 
   return (
