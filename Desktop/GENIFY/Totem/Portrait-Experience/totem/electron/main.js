@@ -34,10 +34,22 @@ app.whenReady().then(async () => {
     await systemPreferences.askForMediaAccess('microphone')
   }
 
+  // En Windows, asegurarse de que la app declare uso de micrófono
+  // (no hay API directa como en macOS — el permiso lo concede el OS al primer getUserMedia)
+  // Forzar que Chromium no bloquee el micrófono en el renderer
+  app.commandLine.appendSwitch('use-fake-ui-for-media-stream', 'false')
+  app.commandLine.appendSwitch('enable-speech-input')
+
   // Aprobar permisos de micrófono automáticamente en la webview
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
     const allowed = ['microphone', 'media', 'audioCapture', 'speech-recognition']
     callback(allowed.includes(permission))
+  })
+
+  // Aprobar también checkPermission (Electron 20+)
+  session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    const allowed = ['microphone', 'media', 'audioCapture', 'speech-recognition']
+    return allowed.includes(permission)
   })
 
   createWindow()
