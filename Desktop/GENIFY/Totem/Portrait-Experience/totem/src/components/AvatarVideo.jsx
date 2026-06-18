@@ -14,13 +14,19 @@ export default function AvatarVideo({ isSpeaking = true, style = {} }) {
   }, [isSpeaking])
 
   return (
-    <video
-      ref={videoRef}
-      src="/loop.mp4"
-      loop
-      muted
-      playsInline
-      style={{ width: '100%', height: '100%', objectFit: 'cover', ...style }}
-    />
+    <div style={{
+      width: '100%', height: '100%',
+      background: '#000',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <video
+        ref={videoRef}
+        src="/loop.mp4"
+        loop
+        muted
+        playsInline
+        style={{ width: '40%', height: 'auto' }}
+      />
+    </div>
   )
 }
