@@ -57,10 +57,11 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
     }
   }, [cameraReady])
 
+  // Reiniciar el idle timeout cada vez que hay actividad en la conversación
   useEffect(() => {
     const t = setTimeout(onReset, IDLE_TIMEOUT)
     return () => clearTimeout(t)
-  }, [onReset])
+  }, [onReset, conversation.state])
 
   const handleCountdownCapture = useCallback(async () => {
     setPhase('uploading')
