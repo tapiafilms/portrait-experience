@@ -12,6 +12,7 @@ export function unlockAudio() {
   if (_audioUnlocked) return
   _audioUnlocked = true
   try {
+    // Unlock AudioContext (para el analizador de voz)
     const ctx = new AudioContext()
     const buf = ctx.createBuffer(1, 1, 22050)
     const src = ctx.createBufferSource()
@@ -19,6 +20,13 @@ export function unlockAudio() {
     src.connect(ctx.destination)
     src.start(0)
     ctx.resume().catch(() => {})
+  } catch {}
+  try {
+    // Unlock HTML Audio element — Chrome los trata por separado del AudioContext.
+    // Necesario para que ElevenLabs pueda llamar audio.play() fuera del gesto.
+    const a = new Audio()
+    a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='
+    a.play().catch(() => {})
   } catch {}
 }
 
