@@ -6,16 +6,16 @@ import AvatarVideo from './AvatarVideo'
 export default function IdleScreen({ onPresenceDetected }) {
   const { videoRef, rawRef, ready } = useSharedCamera()
 
-  const handlePresence = () => {
-    unlockAudio()
-    onPresenceDetected()
-  }
-
   usePresenceDetection({
     videoRef: rawRef,
     active: ready,
-    onPresence: handlePresence,
+    onPresence: () => {}, // mantener cámara activa pero no disparar automático
   })
+
+  const handleTouch = () => {
+    unlockAudio()
+    onPresenceDetected()
+  }
 
   return (
     <div style={s.root}>
@@ -38,14 +38,16 @@ export default function IdleScreen({ onPresenceDetected }) {
         </div>
       </div>
 
-      {/* CTA */}
+      {/* CTA — botón táctil */}
       <div style={s.ctaZone}>
-        <p style={s.ctaLabel}>PÁRATE AQUÍ</p>
-        <div style={s.ctaDots}>
-          <div style={s.dot} />
-          <div style={{ ...s.dot, animationDelay: '0.2s' }} />
-          <div style={{ ...s.dot, animationDelay: '0.4s' }} />
-        </div>
+        <button style={s.ctaBtn} onClick={handleTouch} onTouchStart={handleTouch}>
+          <span style={s.ctaBtnText}>TOCA PARA COMENZAR</span>
+          <div style={s.ctaDots}>
+            <div style={s.dot} />
+            <div style={{ ...s.dot, animationDelay: '0.2s' }} />
+            <div style={{ ...s.dot, animationDelay: '0.4s' }} />
+          </div>
+        </button>
       </div>
 
       {/* Logo Genofy */}
@@ -102,9 +104,21 @@ const s = {
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', gap: '8px',
   },
-  ctaLabel: {
+  ctaBtn: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1.5px solid rgba(100,180,255,0.5)',
+    borderRadius: '50px',
+    padding: '18px 48px',
+    cursor: 'pointer',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 0 30px rgba(96,165,250,0.2)',
+    transition: 'all 0.2s ease',
+    WebkitTapHighlightColor: 'transparent',
+  },
+  ctaBtnText: {
     fontSize: '16px', fontWeight: 800, letterSpacing: '5px',
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.9)',
   },
   ctaDots: {
     display: 'flex', gap: '8px',
