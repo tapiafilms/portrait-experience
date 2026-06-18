@@ -141,11 +141,11 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
     }
     const safetyTimer = setTimeout(cleanup, 60_000)
 
-    audio.onended = () => { clearTimeout(safetyTimer); cleanup() }
+    audio.onended = () => { console.log('[ElevenLabs] audio.onended'); clearTimeout(safetyTimer); cleanup() }
     audio.onerror = (e) => { console.warn('[ElevenLabs] Audio error:', e); clearTimeout(safetyTimer); cleanup() }
     audio.play()
-      .then(() => { onStart?.() })
-      .catch(e => { console.warn('[ElevenLabs] play() error:', e); clearTimeout(safetyTimer); cleanup() })
+      .then(() => { console.log('[ElevenLabs] play() OK → onStart'); onStart?.() })
+      .catch(e => { console.warn('[ElevenLabs] play() FALLÓ:', e.name, e.message); clearTimeout(safetyTimer); cleanup() })
   })
 }
 
