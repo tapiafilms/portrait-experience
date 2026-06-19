@@ -257,7 +257,7 @@ function TabMomentos({ event, password }) {
   useEffect(() => {
     if (!event?.id) return
     const poll = async () => {
-      const r = await fetch(`${BASE}/api/sorteo/state?eventId=${event.id}`)
+      const r = await fetch(`${BASE}/api/sorteo?action=state&eventId=${event.id}`)
       const d = await r.json()
       setSorteoState(d.state || 'inactive')
     }
@@ -269,7 +269,7 @@ function TabMomentos({ event, password }) {
   const activateSorteo = async () => {
     setLoading(true)
     try {
-      const r = await fetch(`${BASE}/api/sorteo/activate`, {
+      const r = await fetch(`${BASE}/api/sorteo?action=activate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: event.id, password }),
       })
@@ -282,7 +282,7 @@ function TabMomentos({ event, password }) {
   const startCountdown = async () => {
     setLoading(true)
     try {
-      const r = await fetch(`${BASE}/api/sorteo/countdown`, {
+      const r = await fetch(`${BASE}/api/sorteo?action=countdown`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: event.id, password, seconds: 5 }),
       })

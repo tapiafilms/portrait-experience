@@ -269,7 +269,7 @@ function SorteoSection({ sessionId, eventId }) {
   useEffect(() => {
     const poll = async () => {
       try {
-        const r = await fetch(`${BASE}/api/sorteo/state?eventId=${eventId}`)
+        const r = await fetch(`${BASE}/api/sorteo?action=state&eventId=${eventId}`)
         const d = await r.json()
         const serverState = d.state || 'inactive'
 
@@ -361,7 +361,7 @@ function SorteoSection({ sessionId, eventId }) {
 
     setPhase('uploading')
     try {
-      const r = await fetch(`${BASE}/api/sorteo/photo`, {
+      const r = await fetch(`${BASE}/api/sorteo?action=photo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId, sessionId, selfie: selfieData }),
@@ -387,7 +387,7 @@ function SorteoSection({ sessionId, eventId }) {
     const startedAt = Date.now()
     pairPollRef.current = setInterval(async () => {
       try {
-        const r = await fetch(`${BASE}/api/sorteo/pair-status?sessionId=${sessionId}`)
+        const r = await fetch(`${BASE}/api/sorteo?action=pair-status&sessionId=${sessionId}`)
         const d = await r.json()
         if (d.status === 'paired') {
           clearInterval(pairPollRef.current)
@@ -456,7 +456,7 @@ function SorteoSection({ sessionId, eventId }) {
   const confirmFound = async (scannedSessionId) => {
     setPhase('uploading')
     try {
-      const r = await fetch(`${BASE}/api/sorteo/confirm`, {
+      const r = await fetch(`${BASE}/api/sorteo?action=confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scannerSessionId: sessionId, scannedSessionId }),

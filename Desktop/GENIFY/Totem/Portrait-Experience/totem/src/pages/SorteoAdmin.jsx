@@ -18,7 +18,7 @@ export default function SorteoAdmin() {
     if (!authed || !eventId) return
     const poll = async () => {
       try {
-        const r = await fetch(`${BASE}/api/sorteo/state?eventId=${eventId}`)
+        const r = await fetch(`${BASE}/api/sorteo?action=state&eventId=${eventId}`)
         const d = await r.json()
         setState(d.state || 'inactive')
       } catch {}
@@ -31,7 +31,7 @@ export default function SorteoAdmin() {
   const activate = async () => {
     setLoading(true)
     try {
-      const r = await fetch(`${BASE}/api/sorteo/activate`, {
+      const r = await fetch(`${BASE}/api/sorteo?action=activate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId, password }),
@@ -45,7 +45,7 @@ export default function SorteoAdmin() {
   const startCountdown = async () => {
     setLoading(true)
     try {
-      const r = await fetch(`${BASE}/api/sorteo/countdown`, {
+      const r = await fetch(`${BASE}/api/sorteo?action=countdown`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId, password, seconds: 5 }),
