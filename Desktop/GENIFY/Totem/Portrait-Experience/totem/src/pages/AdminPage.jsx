@@ -123,7 +123,7 @@ export default function AdminPage({ eventId = null }) {
     <div style={s.root}>
       {/* Sidebar */}
       <aside style={s.sidebar}>
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logo} />
+        <img src="/logo-gen-ex.png" alt="Gen Experience" style={s.logo} />
 
         {/* Selector de evento — solo en modo Genofy */}
         {!eventId && events.length > 1 && (
@@ -716,7 +716,7 @@ const s = {
     display: 'flex', flexDirection: 'column',
     padding: '28px 16px', gap: 24,
   },
-  logo: { height: 28, objectFit: 'contain', alignSelf: 'flex-start', marginLeft: 8 },
+  logo: { height: 48, objectFit: 'contain', alignSelf: 'flex-start', marginLeft: 8 },
   eventSelector: { display: 'flex', flexDirection: 'column', gap: 6 },
   sideLabel: { fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 },
   select: {
