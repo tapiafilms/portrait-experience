@@ -250,21 +250,25 @@ const HIGHLIGHTS = [
     title: '',
     desc: 'Un fotógrafo con IA y voz humana crea el momento perfecto para tu retrato.',
     youtubeId: 'dbw41KbMdI0',
+    thumbnail: '/thumb-1.jpg',
   },
   {
     title: '',
     desc: 'La IA transforma tu retrato en un personaje de calidad cinematográfica.',
     youtubeId: 'dbw41KbMdI0',
+    thumbnail: '/thumb-2.jpg',
   },
   {
     title: '',
     desc: 'Escanea el QR y descarga tu imagen. Sin apps, sin esperas.',
     youtubeId: 'dbw41KbMdI0',
+    thumbnail: '/thumb-3.jpg',
   },
   {
     title: '',
     desc: 'Tus fotos aparecen proyectadas para que todos las vean en tiempo real.',
     youtubeId: 'dbw41KbMdI0',
+    thumbnail: '/thumb-4.jpg',
   },
 ]
 
