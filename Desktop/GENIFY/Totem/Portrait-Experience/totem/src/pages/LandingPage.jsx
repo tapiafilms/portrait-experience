@@ -277,6 +277,7 @@ function HighlightsGallery() {
   const [playing, setPlaying] = useState(false)
   const [endedStates, setEndedStates] = useState(Array(HIGHLIGHTS.length).fill(false))
   const [playingStates, setPlayingStates] = useState(Array(HIGHLIGHTS.length).fill(false))
+  const playingRef = useRef(Array(HIGHLIGHTS.length).fill(false))
   const trackRef = useRef(null)
   const cardRefs = useRef([])
   const iframeRefs = useRef([])
@@ -315,25 +316,21 @@ function HighlightsGallery() {
     return () => clearInterval(intervalRef.current)
   }, [playing])
 
-  // Detectar estado del player via YouTube iframe API messages
+  // Detectar fin de video via YouTube iframe API messages
   useEffect(() => {
     const onMessage = (e) => {
       try {
         const data = JSON.parse(e.data)
-        const idx = iframeRefs.current.findIndex(f => f?.contentWindow === e.source)
-        if (idx === -1) return
-
-        // playerState: -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued
         let state = null
         if (data.event === 'onStateChange') state = data.info
         if (data.event === 'infoDelivery' && data.info?.playerState != null) state = data.info.playerState
+        if (state !== 0) return  // solo nos importa el fin (0 = ended)
 
-        if (state === null) return
-        const isPlaying = state === 1 || state === 3
-        const isEnded   = state === 0
-
-        setPlayingStates(prev => prev.map((v, i) => i === idx ? isPlaying : v))
-        if (isEnded) setEndedStates(prev => prev.map((v, i) => i === idx ? true : v))
+        const idx = playingRef.current.findIndex(v => v === true)
+        if (idx === -1) return
+        playingRef.current = playingRef.current.map((v, i) => i === idx ? false : v)
+        setPlayingStates([...playingRef.current])
+        setEndedStates(prev => prev.map((v, i) => i === idx ? true : v))
       } catch {}
     }
     window.addEventListener('message', onMessage)
@@ -360,11 +357,13 @@ function HighlightsGallery() {
         ([entry]) => {
           if (entry.isIntersecting) {
             send('playVideo')
-            setPlayingStates(prev => prev.map((v, idx) => idx === i ? true : v))
+            playingRef.current = playingRef.current.map((v, idx) => idx === i ? true : v)
+            setPlayingStates([...playingRef.current])
             setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
           } else {
             send('pauseVideo')
-            setPlayingStates(prev => prev.map((v, idx) => idx === i ? false : v))
+            playingRef.current = playingRef.current.map((v, idx) => idx === i ? false : v)
+            setPlayingStates([...playingRef.current])
           }
         },
         { threshold: 0.5 }
