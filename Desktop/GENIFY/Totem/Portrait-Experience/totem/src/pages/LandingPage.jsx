@@ -272,6 +272,7 @@ function HighlightsGallery() {
   const [active, setActive] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [endedStates, setEndedStates] = useState(Array(HIGHLIGHTS.length).fill(false))
+  const [playingStates, setPlayingStates] = useState(Array(HIGHLIGHTS.length).fill(false))
   const trackRef = useRef(null)
   const cardRefs = useRef([])
   const iframeRefs = useRef([])
@@ -310,19 +311,25 @@ function HighlightsGallery() {
     return () => clearInterval(intervalRef.current)
   }, [playing])
 
-  // Detectar fin de video via YouTube iframe API messages
+  // Detectar estado del player via YouTube iframe API messages
   useEffect(() => {
     const onMessage = (e) => {
       try {
         const data = JSON.parse(e.data)
-        const isEnded =
-          (data.event === 'infoDelivery' && data.info?.playerState === 0) ||
-          (data.event === 'onStateChange' && data.info === 0)
-        if (!isEnded) return
         const idx = iframeRefs.current.findIndex(f => f?.contentWindow === e.source)
-        if (idx !== -1) {
-          setEndedStates(prev => prev.map((v, i) => i === idx ? true : v))
-        }
+        if (idx === -1) return
+
+        // playerState: -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued
+        let state = null
+        if (data.event === 'onStateChange') state = data.info
+        if (data.event === 'infoDelivery' && data.info?.playerState != null) state = data.info.playerState
+
+        if (state === null) return
+        const isPlaying = state === 1 || state === 3
+        const isEnded   = state === 0
+
+        setPlayingStates(prev => prev.map((v, i) => i === idx ? isPlaying : v))
+        if (isEnded) setEndedStates(prev => prev.map((v, i) => i === idx ? true : v))
       } catch {}
     }
     window.addEventListener('message', onMessage)
@@ -403,6 +410,17 @@ function HighlightsGallery() {
                 loading="lazy"
                 title={h.title}
               />
+              {/* Thumbnail — visible cuando no está reproduciendo */}
+              {!playingStates[i] && !endedStates[i] && (
+                <div style={s.hlThumbnail}>
+                  <img
+                    src={h.thumbnail || '/video-thumbnail.jpg'}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </div>
+              )}
+
               {/* Title overlay — top right */}
               <div style={s.hlCardOverlay}>{h.title}</div>
 
@@ -903,6 +921,12 @@ const s = {
     position: 'absolute', inset: 0,
     width: '100%', height: '100%',
     border: 'none',
+    pointerEvents: 'none',
+  },
+  hlThumbnail: {
+    position: 'absolute', inset: 0, zIndex: 3,
+    background: '#000',
+    transition: 'opacity 0.4s ease',
     pointerEvents: 'none',
   },
   hlCardOverlay: {
