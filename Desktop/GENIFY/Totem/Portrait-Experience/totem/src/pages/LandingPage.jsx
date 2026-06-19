@@ -609,14 +609,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 4 Steps (splits 50/50) ── */}
+      {/* ── 5 Steps (splits 50/50) ── */}
       <section style={s.stepsSection}>
         {[
           {
             n: '01', reverse: false,
             label: 'FOTO TÓTEM 02', hint: 'Invitado frente al tótem siendo recibido por el avatar',
-            title: 'El tótem te da la bienvenida',
-            desc: 'Un fotógrafo con IA y voz humana te recibe por tu nombre, te guía y crea el momento perfecto para tu retrato.',
+            title: 'Alex te recibe por tu nombre',
+            desc: 'Un fotógrafo con IA y voz humana conoce tu nombre, conversa contigo y crea el momento perfecto para tu retrato. Cada experiencia es única.',
           },
           {
             n: '02', reverse: true,
@@ -632,9 +632,15 @@ export default function LandingPage() {
           },
           {
             n: '04', reverse: true,
+            label: 'FOTO TÓTEM 02', hint: 'Avatar femenino de Luna en pantalla del tótem',
+            title: 'Luna te orienta en el evento',
+            desc: 'Después de la foto, Luna — una asistente con voz femenina — te saluda por nombre, te dice tu mesa y responde cualquier pregunta sobre el evento.',
+          },
+          {
+            n: '05', reverse: false,
             label: 'FOTO PANTALLA 01', hint: 'Pantalla gigante del evento con galería de retratos proyectada',
             title: 'Sé parte de la pantalla gigante',
-            desc: 'Comparte fotos desde tu celular que aparecen en la pantalla del evento. Tú y todos los demás, en el centro de la noche.',
+            desc: 'Tu retrato aparece en la galería en vivo proyectada en el evento. Todos los invitados, en el centro de la noche.',
           },
         ].map(step => (
           <div key={step.n} style={{ ...s.stepSplit, ...(step.reverse ? s.stepSplitReverse : {}) }} className="step-split">
@@ -684,22 +690,63 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Text break 3 ── */}
-      <section style={s.textBreak} id="tech" className="text-break">
-        <p style={s.eyebrowCenter}>Tecnología</p>
-        <h2 style={s.headlineXL}>Todo funciona solo.<br />Tú solo enchufas el tótem.</h2>
+      {/* ── Sorteo ── */}
+      <section style={s.textBreak} id="sorteo" className="text-break">
+        <p style={s.eyebrowCenter}>Momento especial</p>
+        <h2 style={s.headlineXL}>El sorteo más innovador<br />que hayas visto en un evento.</h2>
+        <p style={{ ...s.bodyText, textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
+          La IA conecta a dos desconocidos en un momento imposible de olvidar. Un click del operador desencadena todo.
+        </p>
+      </section>
+
+      <section style={s.sorteoSection}>
+        {[
+          {
+            n: '01', icon: '🎯',
+            title: 'El operador activa el sorteo',
+            desc: 'Con un click desde el dashboard, el botón SORTEO aparece simultáneamente en todos los celulares del evento.',
+          },
+          {
+            n: '02', icon: '📸',
+            title: 'Todos disparan a la vez',
+            desc: 'El animador da la señal. Un countdown aparece en cada celular — 5, 4, 3, 2, 1 — y todos se sacan una selfie al mismo tiempo.',
+          },
+          {
+            n: '03', icon: '🤝',
+            title: 'La IA empareja a dos desconocidos',
+            desc: 'El algoritmo cruza las selfies y asigna una pareja aleatoria. Cada persona recibe en su celular el QR de su match.',
+          },
+          {
+            n: '04', icon: '✅',
+            title: 'Se encuentran y confirman',
+            desc: 'Buscan a su pareja en la sala, escanean el QR mutuamente y confirman el encuentro. El momento más memorable del evento.',
+          },
+        ].map((step, i) => (
+          <div key={step.n} style={s.sorteoCard}>
+            <div style={s.sorteoCardTop}>
+              <span style={s.sorteoNum}>{step.n}</span>
+              <span style={s.sorteoIcon}>{step.icon}</span>
+            </div>
+            <h4 style={s.sorteoTitle}>{step.title}</h4>
+            <p style={s.sorteoDesc}>{step.desc}</p>
+          </div>
+        ))}
       </section>
 
       {/* ── Tech grid ── */}
+      <section style={{ ...s.textBreak, paddingBottom: 0 }} id="tech" className="text-break">
+        <p style={s.eyebrowCenter}>Tecnología</p>
+        <h2 style={s.headlineXL}>Todo lo que necesitas.<br />Listo desde el primer día.</h2>
+      </section>
       <section style={s.techSection}>
         <div style={s.techGrid} className="tech-grid">
           {[
-            { icon: '🤖', title: 'Reconocimiento por nombre',      desc: 'La IA identifica a cada invitado por nombre desde una lista precargada y personaliza toda la experiencia.' },
-            { icon: '🎨', title: 'Transformación Pixar',           desc: 'Flux Pro convierte cada foto en un personaje 3D de calidad cinematográfica en menos de 30 segundos.' },
-            { icon: '🎙️', title: 'Fotógrafo con voz humana',       desc: 'ElevenLabs genera una voz natural que guía al invitado durante la experiencia, sincronizada con el avatar animado.' },
-            { icon: '📊', title: 'Lista de invitados precargada',  desc: 'Carga el Excel con los asistentes antes del evento. El tótem reconoce a cada persona automáticamente.' },
-            { icon: '📱', title: 'QR instantáneo',                 desc: 'El código QR aparece en pantalla al terminar. El invitado escanea y descarga su retrato desde el celular.' },
-            { icon: '🔑', title: 'Acceso seguro por evento',       desc: 'Cada evento tiene su código único con expiración automática. Sin instalaciones ni configuración técnica.' },
+            { icon: '🤖', title: 'Reconocimiento por nombre',     desc: 'La IA identifica a cada invitado por nombre desde una lista precargada y personaliza toda la experiencia.' },
+            { icon: '🎨', title: 'Transformación Pixar',          desc: 'Flux Pro convierte cada foto en un personaje 3D de calidad cinematográfica en menos de 30 segundos.' },
+            { icon: '🗣️', title: 'Dos IAs con voz',               desc: 'Alex, el fotógrafo, y Luna, la guía del evento. Cada una con personalidad y voz propias, sincronizadas con un avatar animado.' },
+            { icon: '📊', title: 'Dashboard del operador',        desc: 'Panel de control en tiempo real: activa momentos, monitorea métricas y proyecta la galería desde cualquier laptop.' },
+            { icon: '📱', title: 'QR instantáneo',                desc: 'El código QR aparece en pantalla al terminar. El invitado escanea y descarga su retrato desde el celular.' },
+            { icon: '🔑', title: 'Configuración en minutos',      desc: 'Crea el evento, sube la lista de invitados y listo. Sin instalaciones ni configuración técnica de tu parte.' },
           ].map((f, i) => (
             <div key={f.title} style={{ ...s.techCard, ...(i % 3 !== 2 ? s.techCardBorderR : {}), ...(i < 3 ? s.techCardBorderB : {}) }} className="tech-card">
               <span style={s.techIcon}>{f.icon}</span>
@@ -1134,7 +1181,36 @@ const s = {
   mobileItemDesc: { fontSize: 14, color: GRAY, lineHeight: 1.65, margin: 0 },
 
   /* TECH */
-  techSection: { background: BG, padding: '0 2rem 8rem' },
+  /* SORTEO */
+  sorteoSection: {
+    background: BG,
+    padding: '4rem 2rem 8rem',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: 24,
+    maxWidth: 1100,
+    margin: '0 auto',
+  },
+  sorteoCard: {
+    background: 'rgba(255,255,255,0.03)',
+    border: `1px solid ${BORDER}`,
+    borderRadius: 20,
+    padding: '28px 24px',
+    display: 'flex', flexDirection: 'column', gap: 12,
+  },
+  sorteoCardTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+  sorteoNum: {
+    fontSize: 11, fontWeight: 800, letterSpacing: '0.15em',
+    color: PURPLE_L, textTransform: 'uppercase',
+  },
+  sorteoIcon: { fontSize: 28 },
+  sorteoTitle: {
+    fontFamily: "'Montserrat', sans-serif",
+    fontSize: 16, fontWeight: 800, margin: 0, color: '#fff',
+  },
+  sorteoDesc: { fontSize: 14, color: GRAY, lineHeight: 1.65, margin: 0 },
+
+  techSection: { background: BG, padding: '4rem 2rem 8rem' },
   techGrid: {
     display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
     maxWidth: 1100, margin: '0 auto',
