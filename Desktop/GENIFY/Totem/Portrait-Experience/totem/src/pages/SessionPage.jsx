@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
 const BASE = ''
 
@@ -186,6 +186,11 @@ export default function SessionPage() {
         )}
       </div>
 
+      {/* Sección SORTEO */}
+      {data.eventId && (
+        <SorteoSection sessionId={sessionId} eventId={data.eventId} />
+      )}
+
       {/* Footer */}
       <div style={s.footer}>
         <p style={s.footerTag}>TECNOLOGÍA</p>
@@ -212,6 +217,556 @@ export default function SessionPage() {
       `}</style>
     </div>
   )
+}
+
+// ══════════════════════════════════════════
+// SORTEO SECTION — Momento 3
+// ══════════════════════════════════════════
+function SorteoSection({ sessionId, eventId }) {
+  // phase: 'inactive' | 'active' | 'camera' | 'countdown' | 'capturing' |
+  //        'uploading' | 'waiting' | 'paired' | 'hunting' | 'scanning' | 'confirmed'
+  const [phase, setPhase]           = useState('inactive')
+  const [countdown, setCountdown]   = useState(null)   // número actual del countdown
+  const [partnerSelfie, setPartnerSelfie] = useState(null)
+  const [partnerSessionId, setPartnerSessionId] = useState(null)
+  const [alertMsg, setAlertMsg]     = useState(null)
+
+  const videoRef    = useRef(null)
+  const streamRef   = useRef(null)
+  const canvasRef   = useRef(null)
+  const pollRef     = useRef(null)
+  const pairPollRef = useRef(null)
+  const countdownRef = useRef(null)
+  const scanVideoRef  = useRef(null)
+  const scanStreamRef = useRef(null)
+  const jsQRRef     = useRef(null)
+  const captureCalledRef = useRef(false)
+
+  const flash = (msg, ms = 3000) => { setAlertMsg(msg); setTimeout(() => setAlertMsg(null), ms) }
+
+  // ── Cargar jsQR para el escáner ──────────────────────────────────────────
+  useEffect(() => {
+    if (window.jsQR) { jsQRRef.current = window.jsQR; return }
+    const script = document.createElement('script')
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js'
+    script.onload = () => { jsQRRef.current = window.jsQR }
+    document.head.appendChild(script)
+  }, [])
+
+  // ── Poll estado del sorteo ────────────────────────────────────────────────
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const r = await fetch(`${BASE}/api/sorteo/state?eventId=${eventId}`)
+        const d = await r.json()
+        const serverState = d.state || 'inactive'
+
+        // Solo avanzar si el servidor nos lo dice (no retroceder fases ya activas)
+        if (serverState === 'active' && phase === 'inactive') setPhase('active')
+
+        if (serverState === 'countdown' && (phase === 'active' || phase === 'inactive')) {
+          // Calcular countdown restante desde el servidor
+          const startAt = new Date(d.countdown_start_at).getTime()
+          const totalMs = (d.countdown_seconds || 5) * 1000
+          const elapsed = Date.now() - startAt
+          const remaining = Math.ceil((totalMs - elapsed) / 1000)
+
+          if (remaining > 0) {
+            setPhase('countdown')
+            startCountdownTimer(remaining, startAt, totalMs)
+          } else {
+            // Ya pasó — capturar foto si todavía no lo hemos hecho
+            if (phase === 'active' || phase === 'inactive') captureAndUpload()
+          }
+        }
+      } catch {}
+    }
+    poll()
+    pollRef.current = setInterval(poll, 2500)
+    return () => clearInterval(pollRef.current)
+  }, [eventId, phase])
+
+  // ── Countdown timer ───────────────────────────────────────────────────────
+  const startCountdownTimer = useCallback((initial, startAt, totalMs) => {
+    clearInterval(countdownRef.current)
+    setCountdown(initial)
+    countdownRef.current = setInterval(() => {
+      const elapsed = Date.now() - startAt
+      const remaining = Math.ceil((totalMs - elapsed) / 1000)
+      if (remaining > 0) {
+        setCountdown(remaining)
+      } else {
+        clearInterval(countdownRef.current)
+        setCountdown(0)
+        captureAndUpload()
+      }
+    }, 200)
+  }, [])
+
+  // ── Abrir cámara selfie ───────────────────────────────────────────────────
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } },
+        audio: false,
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play()
+      }
+      setPhase('camera')
+    } catch (err) {
+      flash('No se pudo acceder a la cámara. Permite el acceso e intenta de nuevo.')
+    }
+  }
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
+  }
+
+  // ── Capturar foto y subir ─────────────────────────────────────────────────
+  const captureAndUpload = useCallback(async () => {
+    if (captureCalledRef.current) return
+    captureCalledRef.current = true
+    setPhase('capturing')
+    // Pequeño delay visual
+    await new Promise(r => setTimeout(r, 300))
+
+    let selfieData = null
+    if (videoRef.current && streamRef.current) {
+      const canvas = document.createElement('canvas')
+      const v = videoRef.current
+      canvas.width  = v.videoWidth  || 480
+      canvas.height = v.videoHeight || 480
+      canvas.getContext('2d').drawImage(v, 0, 0)
+      selfieData = canvas.toDataURL('image/jpeg', 0.8)
+      stopCamera()
+    }
+
+    if (!selfieData) { setPhase('camera'); return }
+
+    setPhase('uploading')
+    try {
+      const r = await fetch(`${BASE}/api/sorteo/photo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, sessionId, selfie: selfieData }),
+      })
+      const d = await r.json()
+      if (d.status === 'paired') {
+        setPartnerSelfie(d.partner_selfie_url)
+        setPartnerSessionId(d.partner_session_id)
+        setPhase('paired')
+      } else {
+        setPhase('waiting')
+        pollForPair()
+      }
+    } catch {
+      setPhase('camera')
+      flash('Error al subir la foto. Intenta de nuevo.')
+    }
+  }, [eventId, sessionId])
+
+  // ── Poll para saber si nos emparejaron ───────────────────────────────────
+  const pollForPair = useCallback(() => {
+    clearInterval(pairPollRef.current)
+    const startedAt = Date.now()
+    pairPollRef.current = setInterval(async () => {
+      try {
+        const r = await fetch(`${BASE}/api/sorteo/pair-status?sessionId=${sessionId}`)
+        const d = await r.json()
+        if (d.status === 'paired') {
+          clearInterval(pairPollRef.current)
+          setPartnerSelfie(d.partner_selfie_url)
+          setPartnerSessionId(d.partner_session_id)
+          setPhase('paired')
+        } else if (Date.now() - startedAt > 45_000) {
+          // Sin pareja después de 45s — número impar de participantes
+          clearInterval(pairPollRef.current)
+          setPhase('no-pair')
+        }
+      } catch {}
+    }, 2000)
+  }, [sessionId])
+
+  // ── Escáner QR ─────────────────────────────────────────────────────────────
+  const openQRScanner = async () => {
+    setPhase('scanning')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      })
+      scanStreamRef.current = stream
+      if (scanVideoRef.current) {
+        scanVideoRef.current.srcObject = stream
+        scanVideoRef.current.play()
+        scanQRFrames()
+      }
+    } catch {
+      flash('No se pudo abrir la cámara trasera.')
+      setPhase('paired')
+    }
+  }
+
+  const stopQRScanner = () => {
+    scanStreamRef.current?.getTracks().forEach(t => t.stop())
+    scanStreamRef.current = null
+  }
+
+  const scanQRFrames = () => {
+    const tick = () => {
+      if (!scanVideoRef.current || !scanStreamRef.current) return
+      const v = scanVideoRef.current
+      if (v.readyState !== v.HAVE_ENOUGH_DATA) { requestAnimationFrame(tick); return }
+      const canvas = document.createElement('canvas')
+      canvas.width = v.videoWidth; canvas.height = v.videoHeight
+      canvas.getContext('2d').drawImage(v, 0, 0)
+      const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height)
+      const qr = jsQRRef.current?.(imageData.data, canvas.width, canvas.height)
+      if (qr?.data) {
+        // Extraer sessionId de la URL escaneada
+        const match = qr.data.match(/\/session\/([^/?#]+)/)
+        if (match) {
+          const scannedId = match[1]
+          stopQRScanner()
+          confirmFound(scannedId)
+          return
+        }
+      }
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }
+
+  const confirmFound = async (scannedSessionId) => {
+    setPhase('uploading')
+    try {
+      const r = await fetch(`${BASE}/api/sorteo/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scannerSessionId: sessionId, scannedSessionId }),
+      })
+      const d = await r.json()
+      if (d.ok) setPhase('confirmed')
+      else { flash('QR incorrecto — escanea el teléfono de tu pareja.'); setPhase('hunting') }
+    } catch {
+      flash('Error al confirmar. Intenta de nuevo.')
+      setPhase('hunting')
+    }
+  }
+
+  useEffect(() => () => {
+    stopCamera()
+    stopQRScanner()
+    clearInterval(countdownRef.current)
+    clearInterval(pairPollRef.current)
+  }, [])
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  return (
+    <div style={ss.wrap}>
+      <div style={ss.divider}>
+        <div style={ss.dividerLine} />
+        <span style={ss.dividerText}>Sorteo</span>
+        <div style={ss.dividerLine} />
+      </div>
+
+      {alertMsg && <div style={ss.alert}>{alertMsg}</div>}
+
+      {/* INACTIVE — botón siempre visible pero desactivado */}
+      {(phase === 'inactive') && (
+        <button style={ss.sorteoBtn} onClick={() => flash('⏳ El sorteo comenzará más tarde. ¡Estate atento!')}>
+          <span style={ss.sorteoBtnIcon}>🎯</span>
+          <span style={ss.sorteoBtnText}>SORTEO</span>
+          <span style={ss.sorteoBtnSub}>Disponible más tarde en la noche</span>
+        </button>
+      )}
+
+      {/* ACTIVE — botón habilitado */}
+      {phase === 'active' && (
+        <button style={{ ...ss.sorteoBtn, ...ss.sorteoBtnActive }} onClick={openCamera}>
+          <span style={ss.sorteoBtnIcon}>🎯</span>
+          <span style={ss.sorteoBtnText}>SORTEO</span>
+          <span style={ss.sorteoBtnSub}>¡Toca para participar!</span>
+        </button>
+      )}
+
+      {/* CAMERA — selfie en vivo */}
+      {(phase === 'camera') && (
+        <div style={ss.cameraBox}>
+          <p style={ss.cameraInstr}>Apunta la cámara a tu cara y espera el countdown</p>
+          <div style={ss.selfieWrap}>
+            <video ref={videoRef} style={ss.selfieVideo} muted playsInline autoPlay />
+            <div style={ss.selfieFrame} />
+          </div>
+          <p style={ss.cameraWaiting}>⏳ Esperando que el animador inicie el sorteo...</p>
+        </div>
+      )}
+
+      {/* COUNTDOWN */}
+      {phase === 'countdown' && (
+        <div style={ss.cameraBox}>
+          <div style={ss.selfieWrap}>
+            <video ref={videoRef} style={ss.selfieVideo} muted playsInline autoPlay />
+            <div style={ss.countdownOverlay}>
+              <span style={ss.countdownNum}>{countdown}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CAPTURING */}
+      {phase === 'capturing' && (
+        <div style={ss.centerBox}>
+          <div style={ss.flashAnim} />
+          <p style={ss.centerText}>📸 ¡Foto tomada!</p>
+        </div>
+      )}
+
+      {/* UPLOADING */}
+      {phase === 'uploading' && (
+        <div style={ss.centerBox}>
+          <div style={ss.spinner} />
+          <p style={ss.centerText}>Procesando...</p>
+        </div>
+      )}
+
+      {/* WAITING — esperando pareja */}
+      {phase === 'waiting' && (
+        <div style={ss.centerBox}>
+          <div style={ss.spinner} />
+          <p style={ss.centerText}>Buscando tu pareja...</p>
+          <p style={ss.centerSub}>El servidor está emparejando a todos los participantes</p>
+        </div>
+      )}
+
+      {/* NO-PAIR — número impar, sin pareja disponible */}
+      {phase === 'no-pair' && (
+        <div style={ss.centerBox}>
+          <p style={{ fontSize: 40 }}>😔</p>
+          <p style={ss.centerText}>No encontramos pareja esta vez</p>
+          <p style={ss.centerSub}>Habla con el animador para reclamar tu premio de todas formas</p>
+        </div>
+      )}
+
+      {/* PAIRED — revelar pareja */}
+      {phase === 'paired' && partnerSelfie && (
+        <div style={ss.revealBox}>
+          <p style={ss.revealTitle}>¡Tu pareja del sorteo es...</p>
+          <div style={ss.partnerImgWrap}>
+            <img src={partnerSelfie} alt="Tu pareja" style={ss.partnerImg} />
+            <div style={ss.partnerGlow} />
+          </div>
+          <p style={ss.revealSub}>¡Encuéntrala en el evento!</p>
+          <button style={ss.huntBtn} onClick={() => setPhase('hunting')}>
+            🔍 Ir a buscarla
+          </button>
+        </div>
+      )}
+
+      {/* HUNTING — modo caza */}
+      {phase === 'hunting' && (
+        <div style={ss.huntBox}>
+          <div style={ss.huntMiniWrap}>
+            {partnerSelfie && <img src={partnerSelfie} alt="Tu pareja" style={ss.huntMiniImg} />}
+          </div>
+          <p style={ss.huntTitle}>¡Encuéntrala!</p>
+          <p style={ss.huntSub}>Cuando la encuentres, escanea el QR que aparece en su teléfono</p>
+          <button style={ss.scanBtn} onClick={openQRScanner}>
+            📷 Escanear su QR
+          </button>
+        </div>
+      )}
+
+      {/* SCANNING — escáner QR activo */}
+      {phase === 'scanning' && (
+        <div style={ss.cameraBox}>
+          <p style={ss.cameraInstr}>Apunta la cámara al QR en la pantalla de tu pareja</p>
+          <div style={ss.selfieWrap}>
+            <video ref={scanVideoRef} style={ss.selfieVideo} muted playsInline autoPlay />
+            <div style={ss.qrFrame} />
+          </div>
+          <button style={ss.cancelBtn} onClick={() => { stopQRScanner(); setPhase('hunting') }}>
+            Cancelar
+          </button>
+        </div>
+      )}
+
+      {/* CONFIRMED — ¡ganaron! */}
+      {phase === 'confirmed' && (
+        <div style={ss.confirmedBox}>
+          <div style={ss.trophy}>🏆</div>
+          <p style={ss.confirmedTitle}>¡Se encontraron!</p>
+          <p style={ss.confirmedSub}>¡Felicitaciones! Acércate al animador para reclamar tu premio.</p>
+        </div>
+      )}
+
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+    </div>
+  )
+}
+
+const ss = {
+  wrap: {
+    width: 'calc(100% - 48px)', maxWidth: 352,
+    margin: '0 0 0',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+  },
+  divider: {
+    display: 'flex', alignItems: 'center', gap: 12,
+    width: '100%', margin: '28px 0 20px',
+  },
+  dividerLine: { flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' },
+  dividerText: { fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', whiteSpace: 'nowrap' },
+  alert: {
+    width: '100%', padding: '10px 14px',
+    background: 'rgba(99,102,241,0.15)',
+    border: '1px solid rgba(99,102,241,0.3)',
+    borderRadius: 10, fontSize: 13,
+    textAlign: 'center', marginBottom: 12,
+  },
+  // Botón SORTEO
+  sorteoBtn: {
+    width: '100%', padding: '20px',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1.5px solid rgba(255,255,255,0.1)',
+    borderRadius: 20,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+    cursor: 'pointer', color: '#fff',
+    WebkitTapHighlightColor: 'transparent',
+  },
+  sorteoBtnActive: {
+    background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2))',
+    border: '1.5px solid rgba(168,85,247,0.5)',
+    boxShadow: '0 0 30px rgba(168,85,247,0.2)',
+    animation: 'sorteoPulse 2s ease-in-out infinite',
+  },
+  sorteoBtnIcon: { fontSize: 32 },
+  sorteoBtnText: { fontSize: 20, fontWeight: 900, letterSpacing: '0.1em' },
+  sorteoBtnSub: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 400 },
+  // Cámara
+  cameraBox: {
+    width: '100%',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+  },
+  cameraInstr: { fontSize: 14, color: 'rgba(255,255,255,0.7)', textAlign: 'center', margin: 0 },
+  cameraWaiting: { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: 'center', margin: 0 },
+  selfieWrap: {
+    position: 'relative', width: '100%', aspectRatio: '1',
+    borderRadius: 20, overflow: 'hidden',
+    border: '2px solid rgba(168,85,247,0.4)',
+  },
+  selfieVideo: { width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' },
+  selfieFrame: {
+    position: 'absolute', inset: 0,
+    border: '3px solid rgba(168,85,247,0.6)',
+    borderRadius: 18, pointerEvents: 'none',
+  },
+  qrFrame: {
+    position: 'absolute',
+    top: '20%', left: '20%', right: '20%', bottom: '20%',
+    border: '3px solid rgba(34,211,238,0.8)',
+    borderRadius: 8, pointerEvents: 'none',
+  },
+  // Countdown
+  countdownOverlay: {
+    position: 'absolute', inset: 0,
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  countdownNum: {
+    fontSize: 120, fontWeight: 900, color: '#fff',
+    textShadow: '0 0 40px rgba(168,85,247,0.8)',
+    lineHeight: 1,
+    animation: 'countPop 0.3s ease-out',
+  },
+  // Spinner / center
+  centerBox: {
+    width: '100%', padding: '32px 0',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+  },
+  spinner: {
+    width: 48, height: 48, borderRadius: '50%',
+    border: '3px solid rgba(168,85,247,0.2)',
+    borderTopColor: '#a855f7',
+    animation: 'spin 0.8s linear infinite',
+  },
+  flashAnim: {
+    width: 80, height: 80, borderRadius: '50%',
+    background: 'radial-gradient(circle, #fff 0%, rgba(255,255,255,0) 70%)',
+    animation: 'flashPop 0.4s ease-out forwards',
+  },
+  centerText: { fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 },
+  centerSub: { fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', margin: 0 },
+  // Reveal
+  revealBox: {
+    width: '100%',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+  },
+  revealTitle: {
+    fontSize: 18, fontWeight: 800, color: '#fff',
+    textAlign: 'center', margin: 0,
+  },
+  partnerImgWrap: {
+    position: 'relative', width: 200, height: 200,
+  },
+  partnerImg: {
+    width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%',
+    border: '3px solid rgba(168,85,247,0.6)',
+  },
+  partnerGlow: {
+    position: 'absolute', inset: -8,
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)',
+    animation: 'glowPulse 2s ease-in-out infinite',
+    pointerEvents: 'none',
+  },
+  revealSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: 0 },
+  huntBtn: {
+    width: '100%', padding: '16px',
+    background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+    border: 'none', borderRadius: 50,
+    color: '#fff', fontSize: 16, fontWeight: 800,
+    cursor: 'pointer',
+  },
+  // Hunting
+  huntBox: {
+    width: '100%',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+  },
+  huntMiniWrap: { position: 'relative' },
+  huntMiniImg: {
+    width: 100, height: 100, objectFit: 'cover', borderRadius: '50%',
+    border: '2px solid rgba(168,85,247,0.5)',
+  },
+  huntTitle: { fontSize: 22, fontWeight: 900, color: '#fff', margin: 0 },
+  huntSub: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: 0 },
+  scanBtn: {
+    width: '100%', padding: '16px',
+    background: 'linear-gradient(135deg, #0891b2, #06b6d4)',
+    border: 'none', borderRadius: 50,
+    color: '#fff', fontSize: 16, fontWeight: 800,
+    cursor: 'pointer',
+  },
+  cancelBtn: {
+    padding: '10px 28px',
+    background: 'transparent',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: 50, color: 'rgba(255,255,255,0.6)',
+    fontSize: 14, cursor: 'pointer',
+  },
+  // Confirmed
+  confirmedBox: {
+    width: '100%', padding: '32px 0',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+    textAlign: 'center',
+  },
+  trophy: { fontSize: 72 },
+  confirmedTitle: { fontSize: 26, fontWeight: 900, color: '#fff', margin: 0 },
+  confirmedSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 },
 }
 
 const s = {
