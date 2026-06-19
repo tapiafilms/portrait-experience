@@ -77,6 +77,7 @@ export function useAssistant({ guestId, onEnd, event }) {
         guestId,
         eventName: event?.eventName,
         guests: event?.guests,
+        documentUrl: event?.documentUrl || null,
       }),
     })
     const data = await res.json()
