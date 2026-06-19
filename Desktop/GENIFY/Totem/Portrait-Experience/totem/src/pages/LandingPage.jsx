@@ -424,7 +424,7 @@ function HighlightsGallery() {
                 title={h.title}
               />
               {/* Thumbnail — visible cuando no está reproduciendo */}
-              {!playingStates[i] && !endedStates[i] && (
+              {!playingStates[i] && (
                 <div style={s.hlThumbnail}>
                   <img
                     src={h.thumbnail || '/video-thumbnail.jpg'}
