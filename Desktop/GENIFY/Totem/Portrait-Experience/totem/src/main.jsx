@@ -5,14 +5,23 @@ import AdminPage from './pages/AdminPage'
 import LandingPage from './pages/LandingPage'
 import SessionPage from './pages/SessionPage'
 import GaleriaPage from './pages/GaleriaPage'
+import SorteoAdmin from './pages/SorteoAdmin'
 import { EventProvider } from './context/EventContext'
 import './styles/global.css'
 
 const path = window.location.pathname
 
+// Extraer eventId de rutas tipo /totem/[id] o /admin/[id]
+const totemMatch  = path.match(/^\/totem\/([^/]+)/)
+const adminMatch  = path.match(/^\/admin\/([^/]+)/)
+const totemEventId = totemMatch?.[1] || null
+const adminEventId = adminMatch?.[1] || null
+
 let root
-if (path.startsWith('/admin')) {
-  root = <AdminPage />
+if (path.startsWith('/sorteo-admin')) {
+  root = <SorteoAdmin />
+} else if (path.startsWith('/admin')) {
+  root = <AdminPage eventId={adminEventId} />
 } else if (path.startsWith('/session/')) {
   root = <SessionPage />
 } else if (path.startsWith('/galeria/')) {
@@ -24,7 +33,7 @@ if (path.startsWith('/admin')) {
     .then(stream => stream.getTracks().forEach(t => t.stop()))
     .catch(() => {})
   root = (
-    <EventProvider>
+    <EventProvider eventId={totemEventId}>
       <App />
     </EventProvider>
   )

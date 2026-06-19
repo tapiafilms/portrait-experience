@@ -52,19 +52,27 @@ function parseSheet(data) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function AdminPage() {
+export default function AdminPage({ eventId = null }) {
   const [events, setEvents]         = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [tab, setTab]               = useState('resumen')
 
   const supabase = useSupabase()
 
-  // ── Cargar lista de eventos ───────────────────────────────────────────────
+  // ── Cargar evento(s) ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!supabase) return
-    supabase.from('events').select('id, event_name, key, active, expires_at, created_at')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { if (data?.length) { setEvents(data); setSelectedEvent(data[0]) } })
+    if (eventId) {
+      // Modo operador: cargar solo este evento
+      supabase.from('events').select('id, event_name, key, active, expires_at, created_at, guests')
+        .eq('id', eventId).single()
+        .then(({ data }) => { if (data) { setEvents([data]); setSelectedEvent(data) } })
+    } else {
+      // Modo Genofy: cargar todos los eventos
+      supabase.from('events').select('id, event_name, key, active, expires_at, created_at, guests')
+        .order('created_at', { ascending: false })
+        .then(({ data }) => { if (data?.length) { setEvents(data); setSelectedEvent(data[0]) } })
+    }
   }, [])
 
   return (
@@ -73,28 +81,37 @@ export default function AdminPage() {
       <aside style={s.sidebar}>
         <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logo} />
 
-        {/* Selector de evento */}
-        <div style={s.eventSelector}>
-          <p style={s.sideLabel}>Evento activo</p>
-          <select
-            style={s.select}
-            value={selectedEvent?.id || ''}
-            onChange={e => setSelectedEvent(events.find(ev => ev.id === e.target.value) || null)}
-          >
-            {events.map(ev => (
-              <option key={ev.id} value={ev.id}>{ev.event_name}</option>
-            ))}
-          </select>
-        </div>
+        {/* Selector de evento — solo en modo Genofy */}
+        {!eventId && events.length > 1 && (
+          <div style={s.eventSelector}>
+            <p style={s.sideLabel}>Evento activo</p>
+            <select
+              style={s.select}
+              value={selectedEvent?.id || ''}
+              onChange={e => setSelectedEvent(events.find(ev => ev.id === e.target.value) || null)}
+            >
+              {events.map(ev => (
+                <option key={ev.id} value={ev.id}>{ev.event_name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {selectedEvent && (
+          <div style={s.eventName}>
+            <p style={s.sideLabel}>Evento</p>
+            <p style={s.eventNameText}>{selectedEvent.event_name}</p>
+          </div>
+        )}
 
         {/* Nav tabs */}
         <nav style={s.nav}>
           {[
-            { id: 'resumen',   label: 'Resumen',         icon: '📊' },
-            { id: 'momentos',  label: 'Momentos',        icon: '🎯' },
+            { id: 'resumen',   label: 'Resumen',          icon: '📊' },
+            { id: 'momentos',  label: 'Momentos',         icon: '🎯' },
             { id: 'pantalla',  label: 'Pantalla gigante', icon: '🖥️' },
-            { id: 'invitados', label: 'Invitados',       icon: '👥' },
-            { id: 'crear',     label: 'Crear evento',    icon: '➕' },
+            { id: 'invitados', label: 'Invitados',        icon: '👥' },
+            ...(!eventId ? [{ id: 'crear', label: 'Crear evento', icon: '➕' }] : []),
           ].map(t => (
             <button
               key={t.id}
@@ -429,21 +446,35 @@ function TabCrear({ password, onCreated }) {
     finally { setLoading(false) }
   }
 
-  if (result) return (
-    <div style={s.tabWrap}>
-      <h2 style={s.tabTitle}>Evento creado ✅</h2>
-      <div style={s.resultBox}>
-        <p style={s.resultName}>{eventName}</p>
-        <p style={s.resultKeyLabel}>Clave del tótem</p>
-        <p style={s.resultKey}>{result.key}</p>
-        <p style={s.resultSub}>Ingresa esta clave en el tótem para activar el evento</p>
-        <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(result.key)}>Copiar clave</button>
+  if (result) {
+    const base = window.location.origin
+    const urls = [
+      { label: '🖥️  Tótem',           url: `${base}/totem/${result.eventId}`,   hint: 'Abrir en el computador del tótem' },
+      { label: '📺  Pantalla gigante', url: `${base}/galeria/${result.eventId}`, hint: 'Abrir en el TV o pantalla del evento' },
+      { label: '⚙️  Dashboard',        url: `${base}/admin/${result.eventId}`,   hint: 'Abrir en el laptop del operador' },
+    ]
+    return (
+      <div style={s.tabWrap}>
+        <h2 style={s.tabTitle}>Evento creado ✅</h2>
+        <p style={s.tabSub}>{eventName}</p>
+        <div style={s.urlsBox}>
+          {urls.map(u => (
+            <div key={u.url} style={s.urlRow}>
+              <div style={s.urlInfo}>
+                <span style={s.urlLabel}>{u.label}</span>
+                <span style={s.urlHint}>{u.hint}</span>
+                <code style={s.urlCode}>{u.url}</code>
+              </div>
+              <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(u.url)}>Copiar</button>
+            </div>
+          ))}
+        </div>
         <button style={s.secondaryBtn} onClick={() => { setResult(null); setGuests([]); setFileName(null); setEventName(''); setExpiresAt('') }}>
           Crear otro evento
         </button>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div style={s.tabWrap}>
@@ -661,6 +692,24 @@ const s = {
   resultKeyLabel: { fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 },
   resultKey: { fontSize: 36, fontWeight: 900, letterSpacing: '6px', fontFamily: 'monospace', margin: 0 },
   resultSub: { fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 },
+
+  // Event name in sidebar
+  eventName: { display: 'flex', flexDirection: 'column', gap: 4 },
+  eventNameText: { fontSize: 13, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.3 },
+
+  // URLs box
+  urlsBox: {
+    width: '100%', display: 'flex', flexDirection: 'column', gap: 12,
+  },
+  urlRow: {
+    display: 'flex', alignItems: 'center', gap: 16,
+    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 14, padding: '16px 20px',
+  },
+  urlInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 },
+  urlLabel: { fontSize: 14, fontWeight: 700, color: '#fff' },
+  urlHint: { fontSize: 12, color: 'rgba(255,255,255,0.35)' },
+  urlCode: { fontSize: 12, color: '#22d3ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
 
   // Empty state
   empty: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 },

@@ -1,15 +1,36 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 
 const EventContext = createContext(null)
 
-export function EventProvider({ children }) {
+export function EventProvider({ children, eventId = null }) {
   const [event, setEvent] = useState(() => {
-    // Recuperar sesión guardada (por si se recarga la página)
+    if (eventId) return null // se cargará por URL
     try {
       const saved = sessionStorage.getItem('genofy_event')
       return saved ? JSON.parse(saved) : null
     } catch { return null }
   })
+  const [loadingEvent, setLoadingEvent] = useState(!!eventId)
+
+  // Auto-cargar evento desde la URL si viene eventId
+  useEffect(() => {
+    if (!eventId) return
+    const url = import.meta.env.VITE_SUPABASE_URL
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+    if (!url || !key) { setLoadingEvent(false); return }
+    const sb = createClient(url, key)
+    sb.from('events').select('id, key, event_name, guests, active')
+      .eq('id', eventId).single()
+      .then(({ data }) => {
+        if (data) {
+          const eventData = { eventId: data.id, eventName: data.event_name, guests: data.guests }
+          setEvent(eventData)
+          sessionStorage.setItem('genofy_event', JSON.stringify(eventData))
+        }
+        setLoadingEvent(false)
+      })
+  }, [eventId])
 
   const login = useCallback((eventData) => {
     setEvent(eventData)
@@ -20,6 +41,8 @@ export function EventProvider({ children }) {
     setEvent(null)
     sessionStorage.removeItem('genofy_event')
   }, [])
+
+  if (loadingEvent) return null
 
   return (
     <EventContext.Provider value={{ event, login, logout }}>
