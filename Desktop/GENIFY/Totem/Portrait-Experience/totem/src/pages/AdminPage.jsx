@@ -6,10 +6,12 @@ const BASE = import.meta.env.VITE_API_URL || ''
 
 // ── Supabase client (solo lectura desde el dashboard) ────────────────────────
 function useSupabase() {
-  return useMemo(() => createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY,
-  ), [])
+  return useMemo(() => {
+    const url = import.meta.env.VITE_SUPABASE_URL
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+    if (!url || !key) return null
+    return createClient(url, key)
+  }, [])
 }
 
 // ── Parse Excel/CSV de invitados ─────────────────────────────────────────────
@@ -63,20 +65,22 @@ export default function AdminPage() {
   // ── Login ────────────────────────────────────────────────────────────────────
   const checkAuth = async () => {
     if (!password.trim()) return setAuthError(true)
-    // Validar contra el servidor
-    const r = await fetch(`${BASE}/api/admin/create-event`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, eventName: '__auth_check__', guests: [{ nombre: 'test' }] }),
-    })
-    // Si responde 401 → contraseña incorrecta; cualquier otra cosa → ok
-    if (r.status === 401) return setAuthError(true)
-    setAuthed(true)
+    try {
+      const r = await fetch(`${BASE}/api/admin/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      if (r.status === 401) return setAuthError(true)
+      setAuthed(true)
+    } catch {
+      setAuthError(true)
+    }
   }
 
   // ── Cargar lista de eventos ───────────────────────────────────────────────
   useEffect(() => {
-    if (!authed) return
+    if (!authed || !supabase) return
     supabase.from('events').select('id, event_name, key, active, expires_at, created_at')
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (data?.length) { setEvents(data); setSelectedEvent(data[0]) } })
@@ -183,7 +187,7 @@ function TabResumen({ event, supabase }) {
   const [sorteoState, setSorteoState] = useState('inactive')
 
   const load = useCallback(async () => {
-    if (!event?.id) return
+    if (!event?.id || !supabase) return
     const [photos, participants, sorteo] = await Promise.all([
       supabase.from('event_photos').select('id', { count: 'exact', head: true }).eq('event_id', event.id),
       supabase.from('sorteo_participants').select('paired_session_id, confirmed_at').eq('event_id', event.id),
