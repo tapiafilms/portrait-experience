@@ -552,7 +552,7 @@ export default function LandingPage() {
           <span className="nav-link nav-link-soon">Cuenta Joy<span className="nav-soon-badge">Próximamente</span></span>
           <span className="nav-link nav-link-soon">mirrAI<span className="nav-soon-badge">Próximamente</span></span>
           <a href="#contacto" className="nav-link" onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
-          <a href="/totem" className="nav-cta">Iniciar tótem →</a>
+          <a href="/admin" className="nav-cta">Iniciar tótem →</a>
         </div>
       </nav>
 
