@@ -111,6 +111,7 @@ export default function AdminPage({ eventId = null }) {
             { id: 'momentos',  label: 'Momentos',         icon: '🎯' },
             { id: 'pantalla',  label: 'Pantalla gigante', icon: '🖥️' },
             { id: 'invitados', label: 'Invitados',        icon: '👥' },
+            { id: 'evento',    label: 'Evento / IA',      icon: '🤖' },
             ...(!eventId ? [{ id: 'crear', label: 'Crear evento', icon: '➕' }] : []),
           ].map(t => (
             <button
@@ -139,6 +140,7 @@ export default function AdminPage({ eventId = null }) {
             {tab === 'momentos'  && <TabMomentos  event={selectedEvent} password={ADMIN_PWD} />}
             {tab === 'pantalla'  && <TabPantalla  event={selectedEvent} />}
             {tab === 'invitados' && <TabInvitados event={selectedEvent} />}
+            {tab === 'evento'    && <TabEvento    event={selectedEvent} supabase={supabase} password={ADMIN_PWD} onUpdate={ev => setSelectedEvent(prev => ({ ...prev, ...ev }))} />}
             {tab === 'crear'     && <TabCrear     password={ADMIN_PWD} supabase={supabase} onCreated={ev => { setEvents(prev => [ev, ...prev]); setSelectedEvent(ev); setTab('resumen') }} />}
           </>
         )}
@@ -398,6 +400,133 @@ function TabInvitados({ event }) {
               Mostrando 100 de {filtered.length} resultados
             </p>
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Tab: Evento / IA — briefing del evento para el fotógrafo IA
+// ═══════════════════════════════════════════════════════════════════════════════
+function TabEvento({ event, supabase, password, onUpdate }) {
+  const [docUrl, setDocUrl]       = useState(event?.document_url || null)
+  const [uploading, setUploading] = useState(false)
+  const [msg, setMsg]             = useState(null)
+  const fileRef = useRef(null)
+
+  const flash = (text, ok = true) => { setMsg({ text, ok }); setTimeout(() => setMsg(null), 5000) }
+
+  async function handleUpload(e) {
+    const file = e.target.files[0]
+    if (!file || !event?.id) return
+    const ext = file.name.split('.').pop().toLowerCase()
+    if (!['pdf'].includes(ext)) return flash('Solo se aceptan archivos PDF', false)
+    if (file.size > 4 * 1024 * 1024) return flash('El archivo no puede superar 4 MB', false)
+
+    setUploading(true)
+    try {
+      // Subir a Supabase Storage
+      const path = `${event.id}/brief.pdf`
+      const { error: upErr } = await supabase.storage
+        .from('event-docs')
+        .upload(path, file, { upsert: true, contentType: 'application/pdf' })
+      if (upErr) throw new Error(upErr.message)
+
+      const { data: urlData } = supabase.storage.from('event-docs').getPublicUrl(path)
+      const publicUrl = urlData.publicUrl
+
+      // Guardar URL en la tabla events
+      const r = await fetch(`${BASE}/api/admin/create-event`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update-document', password, eventId: event.id, documentUrl: publicUrl }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error)
+
+      setDocUrl(publicUrl)
+      onUpdate?.({ document_url: publicUrl })
+      flash('✅ Documento cargado — la IA lo usará como contexto')
+    } catch (err) {
+      flash('❌ ' + err.message, false)
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  async function handleRemove() {
+    if (!event?.id) return
+    setUploading(true)
+    try {
+      await supabase.storage.from('event-docs').remove([`${event.id}/brief.pdf`])
+      const r = await fetch(`${BASE}/api/admin/create-event`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update-document', password, eventId: event.id, documentUrl: null }),
+      })
+      if (!r.ok) throw new Error((await r.json()).error)
+      setDocUrl(null)
+      onUpdate?.({ document_url: null })
+      flash('Documento eliminado')
+    } catch (err) {
+      flash('❌ ' + err.message, false)
+    } finally { setUploading(false) }
+  }
+
+  return (
+    <div style={s.tabWrap}>
+      <h2 style={s.tabTitle}>Evento / IA</h2>
+      <p style={s.tabSub}>El fotógrafo virtual leerá este documento y lo usará como contexto durante las conversaciones con los invitados.</p>
+
+      {msg && (
+        <div style={{ ...s.msgBox, background: msg.ok ? 'rgba(34,197,94,0.08)' : 'rgba(248,113,113,0.08)', borderColor: msg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(248,113,113,0.25)', color: msg.ok ? '#4ade80' : '#f87171' }}>
+          {msg.text}
+        </div>
+      )}
+
+      {/* Documento actual */}
+      <div style={s.docCard}>
+        <div style={s.docCardHeader}>
+          <span style={s.docCardIcon}>📄</span>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: '#fff' }}>Briefing del evento</p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>Sube un PDF con info del evento: empresa, objetivos, tono, asistentes clave, temas relevantes, etc.</p>
+          </div>
+        </div>
+
+        {docUrl ? (
+          <div style={s.docExisting}>
+            <span style={{ fontSize: 12, color: '#22d3ee' }}>✅ Documento activo</span>
+            <a href={docUrl} target="_blank" rel="noreferrer" style={s.docLink}>Ver PDF ↗</a>
+            <button style={s.docRemoveBtn} onClick={handleRemove} disabled={uploading}>Eliminar</button>
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', margin: 0 }}>Sin documento — la IA usará solo la lista de invitados como contexto.</p>
+        )}
+
+        <div style={s.uploadZone} onClick={() => fileRef.current?.click()}>
+          <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={handleUpload} disabled={uploading} />
+          <p style={s.uploadText}>
+            {uploading ? '⏳ Subiendo...' : docUrl ? '📂 Click para reemplazar el PDF' : '📂 Click para subir PDF'}
+          </p>
+          <p style={{ ...s.hint, marginTop: 6 }}>Máx. 4 MB · Solo PDF</p>
+        </div>
+      </div>
+
+      {/* Info sobre cómo funciona */}
+      <div style={s.infoBox}>
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>¿Cómo funciona?</p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>
+            Cada vez que un invitado se acerque al tótem, la IA descargará este PDF y lo leerá antes de iniciar la conversación.
+            Puedes incluir el nombre de la empresa, la industria, el propósito del evento, logros del año, personalidades clave, o cualquier información que quieras que Alex, el fotógrafo virtual, mencione de forma natural.
+          </p>
+        </div>
+      </div>
+
+      {!supabase && (
+        <div style={{ ...s.msgBox, background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.25)', color: '#fbbf24' }}>
+          ⚠️ Supabase no configurado — agrega VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY a las variables de entorno.
         </div>
       )}
     </div>
@@ -710,6 +839,21 @@ const s = {
   urlLabel: { fontSize: 14, fontWeight: 700, color: '#fff' },
   urlHint: { fontSize: 12, color: 'rgba(255,255,255,0.35)' },
   urlCode: { fontSize: 12, color: '#22d3ee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+
+  // Evento / IA
+  docCard: {
+    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 20, padding: 28, display: 'flex', flexDirection: 'column', gap: 16,
+  },
+  docCardHeader: { display: 'flex', alignItems: 'flex-start', gap: 16 },
+  docCardIcon: { fontSize: 32, lineHeight: 1 },
+  docExisting: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
+  docLink: { fontSize: 12, color: '#22d3ee', textDecoration: 'none', fontWeight: 600 },
+  docRemoveBtn: {
+    padding: '4px 14px', background: 'rgba(248,113,113,0.1)',
+    border: '1px solid rgba(248,113,113,0.3)', borderRadius: 6,
+    color: '#f87171', fontSize: 12, cursor: 'pointer',
+  },
 
   // Empty state
   empty: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 },

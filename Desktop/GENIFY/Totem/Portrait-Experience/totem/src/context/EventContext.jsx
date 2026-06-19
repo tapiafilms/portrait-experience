@@ -20,11 +20,11 @@ export function EventProvider({ children, eventId = null }) {
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY
     if (!url || !key) { setLoadingEvent(false); return }
     const sb = createClient(url, key)
-    sb.from('events').select('id, key, event_name, guests, active')
+    sb.from('events').select('id, key, event_name, guests, active, document_url')
       .eq('id', eventId).single()
       .then(({ data }) => {
         if (data) {
-          const eventData = { eventId: data.id, eventName: data.event_name, guests: data.guests }
+          const eventData = { eventId: data.id, eventName: data.event_name, guests: data.guests, documentUrl: data.document_url || null }
           setEvent(eventData)
           sessionStorage.setItem('genofy_event', JSON.stringify(eventData))
         }

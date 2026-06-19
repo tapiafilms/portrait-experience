@@ -40,10 +40,17 @@ const TOOLS = [{
   },
 }]
 
+async function fetchDocAsBase64(url) {
+  const resp = await fetch(url)
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+  const buf = await resp.arrayBuffer()
+  return Buffer.from(buf).toString('base64')
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { sessionId, message, history = [], eventName, guests: eventGuests } = req.body
+  const { sessionId, message, history = [], eventName, guests: eventGuests, documentUrl } = req.body
   if (!sessionId || !message) return res.status(400).json({ error: 'Faltan campos' })
 
   // Usar invitados del evento si vienen en el request, sino usar los locales
@@ -51,7 +58,33 @@ module.exports = async function handler(req, res) {
   const eventTitle = eventName || EVENT_NAME
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  const messages = [...history, { role: 'user', content: message }]
+
+  // Si hay documento del evento, cargarlo como contexto previo
+  let docPreamble = []
+  if (documentUrl) {
+    try {
+      const b64 = await fetchDocAsBase64(documentUrl)
+      const isPdf = documentUrl.toLowerCase().includes('.pdf')
+      docPreamble = [
+        {
+          role: 'user',
+          content: [{
+            type: 'document',
+            source: { type: 'base64', media_type: isPdf ? 'application/pdf' : 'text/plain', data: b64 },
+            cache_control: { type: 'ephemeral' },
+          }],
+        },
+        {
+          role: 'assistant',
+          content: 'Entendido. He revisado el briefing del evento y lo usaré como contexto adicional.',
+        },
+      ]
+    } catch (e) {
+      console.warn('[photographer] no se pudo cargar el documento:', e.message)
+    }
+  }
+
+  const messages = [...docPreamble, ...history, { role: 'user', content: message }]
 
   try {
     let response = await client.messages.create({

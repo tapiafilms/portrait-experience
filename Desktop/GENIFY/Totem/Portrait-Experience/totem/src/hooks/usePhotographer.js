@@ -86,6 +86,7 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
         history: historyRef.current,
         eventName: event?.eventName,
         guests: event?.guests,
+        documentUrl: event?.documentUrl || null,
       }),
     })
     const data = await res.json()
