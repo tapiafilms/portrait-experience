@@ -52,12 +52,56 @@ function parseSheet(data) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Login guard
+// ═══════════════════════════════════════════════════════════════════════════════
+function AdminLogin({ onAuth }) {
+  const [pwd, setPwd]   = useState('')
+  const [error, setError] = useState(false)
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (pwd === ADMIN_PWD) {
+      sessionStorage.setItem('admin_auth', '1')
+      onAuth()
+    } else {
+      setError(true)
+      setPwd('')
+    }
+  }
+
+  return (
+    <div style={s.loginRoot}>
+      <div style={s.loginCard}>
+        <img src="/logo-genofy-transparent.png" alt="Genofy" style={{ height: 32, marginBottom: 8 }} />
+        <p style={s.loginTitle}>Panel de control</p>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>Ingresa la contraseña para continuar</p>
+        <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+          <input
+            style={{ ...s.input, textAlign: 'center', letterSpacing: 4 }}
+            type="password"
+            placeholder="••••••••"
+            value={pwd}
+            onChange={e => { setPwd(e.target.value); setError(false) }}
+            autoFocus
+          />
+          {error && <p style={{ color: '#f87171', fontSize: 13, margin: 0, textAlign: 'center' }}>Contraseña incorrecta</p>}
+          <button type="submit" style={s.primaryBtn}>Ingresar →</button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 export default function AdminPage({ eventId = null }) {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem('admin_auth') === '1')
   const [events, setEvents]         = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [tab, setTab]               = useState('resumen')
 
   const supabase = useSupabase()
+
+  if (!authed) return <AdminLogin onAuth={() => setAuthed(true)} />
 
   // ── Cargar evento(s) ──────────────────────────────────────────────────────
   useEffect(() => {
