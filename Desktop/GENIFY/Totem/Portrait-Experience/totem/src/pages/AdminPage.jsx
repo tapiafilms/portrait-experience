@@ -117,7 +117,7 @@ export default function AdminPage({ eventId = null }) {
         .order('created_at', { ascending: false })
         .then(({ data }) => { if (data?.length) { setEvents(data); setSelectedEvent(data[0]) } })
     }
-  }, [])
+  }, [authed])
 
   return (
     <div style={s.root}>
