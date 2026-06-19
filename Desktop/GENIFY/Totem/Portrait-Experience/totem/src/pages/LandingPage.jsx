@@ -277,10 +277,10 @@ function HighlightsGallery() {
   const [playing, setPlaying] = useState(false)
   const [endedStates, setEndedStates] = useState(Array(HIGHLIGHTS.length).fill(false))
   const [playingStates, setPlayingStates] = useState(Array(HIGHLIGHTS.length).fill(false))
-  const playingRef = useRef(Array(HIGHLIGHTS.length).fill(false))
+  const playersRef = useRef([])
   const trackRef = useRef(null)
   const cardRefs = useRef([])
-  const iframeRefs = useRef([])
+  const playerDivRefs = useRef([])
   const intervalRef = useRef(null)
 
   const scrollTo = (i) => {
@@ -339,36 +339,63 @@ function HighlightsGallery() {
 
   const replayVideo = (i) => {
     setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
-    iframeRefs.current[i]?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func: 'playVideo', args: '' }), '*'
-    )
+    playersRef.current[i]?.playVideo()
   }
+
+  // Cargar YouTube IFrame API y crear players
+  useEffect(() => {
+    const initPlayers = () => {
+      HIGHLIGHTS.forEach((h, i) => {
+        const div = playerDivRefs.current[i]
+        if (!div) return
+        playersRef.current[i] = new window.YT.Player(div, {
+          videoId: h.youtubeId,
+          playerVars: { rel: 0, modestbranding: 1, mute: 1, controls: 0, iv_load_policy: 3, disablekb: 1, playsinline: 1 },
+          events: {
+            onStateChange: (e) => {
+              const YT = window.YT.PlayerState
+              if (e.data === YT.PLAYING) {
+                setPlayingStates(prev => prev.map((v, idx) => idx === i ? true : v))
+                setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
+              } else if (e.data === YT.ENDED) {
+                setPlayingStates(prev => prev.map((v, idx) => idx === i ? false : v))
+                setEndedStates(prev => prev.map((v, idx) => idx === i ? true : v))
+              } else {
+                setPlayingStates(prev => prev.map((v, idx) => idx === i ? false : v))
+              }
+            },
+          },
+        })
+      })
+    }
+
+    if (window.YT?.Player) {
+      initPlayers()
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayers
+      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        const tag = document.createElement('script')
+        tag.src = 'https://www.youtube.com/iframe_api'
+        document.head.appendChild(tag)
+      }
+    }
+    return () => playersRef.current.forEach(p => { try { p?.destroy() } catch {} })
+  }, [])
 
   // Autoplay on viewport enter, pause on exit
   useEffect(() => {
     const observers = []
-    iframeRefs.current.forEach((iframe, i) => {
-      if (!iframe) return
-      const send = (func) =>
-        iframe.contentWindow?.postMessage(
-          JSON.stringify({ event: 'command', func, args: '' }), '*'
-        )
+    playerDivRefs.current.forEach((div, i) => {
+      if (!div) return
       const observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting) {
-            send('playVideo')
-            playingRef.current = playingRef.current.map((v, idx) => idx === i ? true : v)
-            setPlayingStates([...playingRef.current])
-            setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
-          } else {
-            send('pauseVideo')
-            playingRef.current = playingRef.current.map((v, idx) => idx === i ? false : v)
-            setPlayingStates([...playingRef.current])
-          }
+          const p = playersRef.current[i]
+          if (!p) return
+          try { entry.isIntersecting ? p.playVideo() : p.pauseVideo() } catch {}
         },
         { threshold: 0.5 }
       )
-      observer.observe(iframe)
+      observer.observe(div)
       observers.push(observer)
     })
     return () => observers.forEach(o => o.disconnect())
@@ -413,14 +440,9 @@ function HighlightsGallery() {
           >
             {/* Video full card */}
             <div style={s.hlCardImg}>
-              <iframe
-                ref={el => iframeRefs.current[i] = el}
-                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&enablejsapi=1&mute=1&controls=0&iv_load_policy=3&disablekb=1&playsinline=1&loop=1`}
+              <div
+                ref={el => playerDivRefs.current[i] = el}
                 style={s.hlCardVideo}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                loading="lazy"
-                title={h.title}
               />
               {/* Thumbnail — visible cuando no está reproduciendo */}
               {!playingStates[i] && (
