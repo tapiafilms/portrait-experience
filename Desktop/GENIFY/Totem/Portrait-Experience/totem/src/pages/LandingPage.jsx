@@ -276,6 +276,7 @@ function HighlightsGallery() {
   const [active, setActive] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [showThumb, setShowThumb] = useState(Array(HIGHLIGHTS.length).fill(true))
+  const [fadingThumb, setFadingThumb] = useState(Array(HIGHLIGHTS.length).fill(false))
   const trackRef = useRef(null)
   const cardRefs = useRef([])
   const iframeRefs = useRef([])
@@ -336,13 +337,16 @@ function HighlightsGallery() {
   }, [])
 
   const handleThumbClick = (i) => {
-    setShowThumb(prev => prev.map((v, idx) => idx === i ? false : v))
-    // Reiniciar el iframe con autoplay para que empiece a reproducir
+    setFadingThumb(prev => prev.map((v, idx) => idx === i ? true : v))
     const iframe = iframeRefs.current[i]
     if (iframe) {
       const src = iframe.src.replace('&autoplay=0', '').replace('autoplay=0', '')
       iframe.src = src.includes('autoplay=1') ? src : src + '&autoplay=1'
     }
+    setTimeout(() => {
+      setShowThumb(prev => prev.map((v, idx) => idx === i ? false : v))
+      setFadingThumb(prev => prev.map((v, idx) => idx === i ? false : v))
+    }, 500)
   }
 
   // Volver a mostrar thumbnail cuando el card sale del viewport
@@ -431,7 +435,7 @@ function HighlightsGallery() {
 
               {/* Thumbnail — click para reproducir */}
               {showThumb[i] && (
-                <div style={s.hlThumbnail} onClick={() => handleThumbClick(i)}>
+                <div style={{ ...s.hlThumbnail, ...(fadingThumb[i] ? s.hlThumbnailFading : {}) }} onClick={() => handleThumbClick(i)}>
                   <img
                     src={h.thumbnail || '/video-thumbnail.jpg'}
                     alt="Reproducir video"
@@ -939,6 +943,11 @@ const s = {
     background: '#000',
     cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
+    transition: 'opacity 0.5s ease',
+  },
+  hlThumbnailFading: {
+    opacity: 0,
+    pointerEvents: 'none',
   },
   hlPlayIcon: {
     position: 'absolute',
