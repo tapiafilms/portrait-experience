@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import QRCode from 'qrcode'
 
 const BASE = ''
 
@@ -230,6 +231,7 @@ function SorteoSection({ sessionId, eventId }) {
   const [partnerSelfie, setPartnerSelfie] = useState(null)
   const [partnerSessionId, setPartnerSessionId] = useState(null)
   const [alertMsg, setAlertMsg]     = useState(null)
+  const [qrDataUrl, setQrDataUrl]   = useState(null)
 
   const videoRef    = useRef(null)
   const streamRef   = useRef(null)
@@ -243,6 +245,16 @@ function SorteoSection({ sessionId, eventId }) {
   const captureCalledRef = useRef(false)
 
   const flash = (msg, ms = 3000) => { setAlertMsg(msg); setTimeout(() => setAlertMsg(null), ms) }
+
+  // ── Generar QR con la URL de esta sesión ─────────────────────────────────
+  useEffect(() => {
+    if (!sessionId) return
+    const url = `${window.location.origin}/session/${sessionId}`
+    QRCode.toDataURL(url, {
+      width: 280, margin: 2,
+      color: { dark: '#1a0533', light: '#ffffff' },
+    }).then(setQrDataUrl).catch(() => {})
+  }, [sessionId])
 
   // ── Cargar jsQR para el escáner ──────────────────────────────────────────
   useEffect(() => {
@@ -561,6 +573,12 @@ function SorteoSection({ sessionId, eventId }) {
             <div style={ss.partnerGlow} />
           </div>
           <p style={ss.revealSub}>¡Encuéntrala en el evento!</p>
+          {qrDataUrl && (
+            <div style={ss.qrBox}>
+              <p style={ss.qrLabel}>Tu QR — muéstraselo cuando te encuentre</p>
+              <img src={qrDataUrl} alt="Tu QR" style={ss.qrImg} />
+            </div>
+          )}
           <button style={ss.huntBtn} onClick={() => setPhase('hunting')}>
             🔍 Ir a buscarla
           </button>
@@ -574,7 +592,13 @@ function SorteoSection({ sessionId, eventId }) {
             {partnerSelfie && <img src={partnerSelfie} alt="Tu pareja" style={ss.huntMiniImg} />}
           </div>
           <p style={ss.huntTitle}>¡Encuéntrala!</p>
-          <p style={ss.huntSub}>Cuando la encuentres, escanea el QR que aparece en su teléfono</p>
+          {qrDataUrl && (
+            <div style={ss.qrBox}>
+              <p style={ss.qrLabel}>Tu QR — muéstraselo a tu pareja para confirmar</p>
+              <img src={qrDataUrl} alt="Tu QR" style={ss.qrImg} />
+            </div>
+          )}
+          <p style={ss.huntSub}>Cuando la encuentres, escanea el QR de su teléfono</p>
           <button style={ss.scanBtn} onClick={openQRScanner}>
             📷 Escanear su QR
           </button>
@@ -744,6 +768,15 @@ const ss = {
   },
   huntTitle: { fontSize: 22, fontWeight: 900, color: '#fff', margin: 0 },
   huntSub: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: 0 },
+  qrBox: {
+    width: '100%',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 20, padding: '16px',
+  },
+  qrLabel: { fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0, textAlign: 'center' },
+  qrImg: { width: 200, height: 200, borderRadius: 12 },
   scanBtn: {
     width: '100%', padding: '16px',
     background: 'linear-gradient(135deg, #0891b2, #06b6d4)',
