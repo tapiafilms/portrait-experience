@@ -350,14 +350,23 @@ function HighlightsGallery() {
   // Autoplay on viewport enter, pause on exit
   useEffect(() => {
     const observers = []
-    iframeRefs.current.forEach((iframe) => {
+    iframeRefs.current.forEach((iframe, i) => {
       if (!iframe) return
       const send = (func) =>
         iframe.contentWindow?.postMessage(
           JSON.stringify({ event: 'command', func, args: '' }), '*'
         )
       const observer = new IntersectionObserver(
-        ([entry]) => { entry.isIntersecting ? send('playVideo') : send('pauseVideo') },
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            send('playVideo')
+            setPlayingStates(prev => prev.map((v, idx) => idx === i ? true : v))
+            setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
+          } else {
+            send('pauseVideo')
+            setPlayingStates(prev => prev.map((v, idx) => idx === i ? false : v))
+          }
+        },
         { threshold: 0.5 }
       )
       observer.observe(iframe)
