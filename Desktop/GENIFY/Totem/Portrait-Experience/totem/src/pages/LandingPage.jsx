@@ -360,6 +360,27 @@ function HighlightsGallery() {
     return () => observers.forEach(o => o.disconnect())
   }, [])
 
+  // Mostrar thumbnail cuando el video termina
+  useEffect(() => {
+    const onMessage = (e) => {
+      try {
+        const data = JSON.parse(e.data)
+        let state = null
+        if (data.event === 'onStateChange') state = data.info
+        if (data.event === 'infoDelivery' && data.info?.playerState != null) state = data.info.playerState
+        if (state !== 0) return
+        // Video terminó — restaurar thumbnail del que estaba reproduciendo
+        setShowThumb(prev => {
+          const idx = prev.findIndex(v => v === false)
+          if (idx === -1) return prev
+          return prev.map((v, i) => i === idx ? true : v)
+        })
+      } catch {}
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
+
   useEffect(() => {
     const track = trackRef.current
     if (!track) return
@@ -401,7 +422,7 @@ function HighlightsGallery() {
             <div style={s.hlCardImg}>
               <iframe
                 ref={el => iframeRefs.current[i] = el}
-                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&mute=1&controls=1&iv_load_policy=3&playsinline=1`}
+                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&mute=1&controls=1&iv_load_policy=3&playsinline=1&enablejsapi=1`}
                 style={s.hlCardVideo}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
