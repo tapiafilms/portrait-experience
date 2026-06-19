@@ -38,7 +38,7 @@ export default function IdleScreen({ onPresenceDetected }) {
         </div>
       </div>
 
-      {/* CTA — botón táctil */}
+      {/* CTA — botones */}
       <div style={s.ctaZone}>
         <button style={s.ctaBtn} onClick={handleTouch} onTouchStart={handleTouch}>
           <span style={s.ctaBtnText}>TOCA PARA COMENZAR</span>
@@ -48,6 +48,7 @@ export default function IdleScreen({ onPresenceDetected }) {
             <div style={{ ...s.dot, animationDelay: '0.4s' }} />
           </div>
         </button>
+        <a href="/admin" style={s.adminLink}>Panel de control</a>
       </div>
 
       {/* Logo Genofy */}
@@ -102,7 +103,13 @@ const s = {
   ctaZone: {
     zIndex: 2, paddingTop: '20px',
     display: 'flex', flexDirection: 'column',
-    alignItems: 'center', gap: '8px',
+    alignItems: 'center', gap: '14px',
+  },
+  adminLink: {
+    fontSize: '11px', letterSpacing: '2px', fontWeight: 600,
+    color: 'rgba(255,255,255,0.25)',
+    textDecoration: 'none',
+    textTransform: 'uppercase',
   },
   ctaBtn: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
