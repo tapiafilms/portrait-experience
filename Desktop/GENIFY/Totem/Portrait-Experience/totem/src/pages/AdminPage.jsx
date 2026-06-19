@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import * as XLSX from 'xlsx'
 
 const BASE = import.meta.env.VITE_API_URL || ''
+const ADMIN_PWD = import.meta.env.VITE_ADMIN_PASSWORD || 'genofy2025'
 
 // ── Supabase client (solo lectura desde el dashboard) ────────────────────────
 function useSupabase() {
@@ -52,41 +53,19 @@ function parseSheet(data) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function AdminPage() {
-  const [password, setPassword] = useState('')
-  const [authed, setAuthed]     = useState(false)
-  const [authError, setAuthError] = useState(false)
-
   const [events, setEvents]         = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [tab, setTab]               = useState('resumen')
 
   const supabase = useSupabase()
 
-  // ── Login ────────────────────────────────────────────────────────────────────
-  const checkAuth = async () => {
-    if (!password.trim()) return setAuthError(true)
-    try {
-      const r = await fetch(`${BASE}/api/admin/auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-      if (r.status === 401) return setAuthError(true)
-      setAuthed(true)
-    } catch {
-      setAuthError(true)
-    }
-  }
-
   // ── Cargar lista de eventos ───────────────────────────────────────────────
   useEffect(() => {
-    if (!authed || !supabase) return
+    if (!supabase) return
     supabase.from('events').select('id, event_name, key, active, expires_at, created_at')
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (data?.length) { setEvents(data); setSelectedEvent(data[0]) } })
-  }, [authed])
-
-  if (!authed) return <Login password={password} setPassword={setPassword} authError={authError} onLogin={checkAuth} />
+  }, [])
 
   return (
     <div style={s.root}>
@@ -128,9 +107,6 @@ export default function AdminPage() {
           ))}
         </nav>
 
-        <button style={s.logoutBtn} onClick={() => { setAuthed(false); setPassword('') }}>
-          Salir
-        </button>
       </aside>
 
       {/* Contenido principal */}
@@ -143,38 +119,13 @@ export default function AdminPage() {
         ) : (
           <>
             {tab === 'resumen'   && <TabResumen   event={selectedEvent} supabase={supabase} />}
-            {tab === 'momentos'  && <TabMomentos  event={selectedEvent} password={password} />}
+            {tab === 'momentos'  && <TabMomentos  event={selectedEvent} password={ADMIN_PWD} />}
             {tab === 'pantalla'  && <TabPantalla  event={selectedEvent} />}
             {tab === 'invitados' && <TabInvitados event={selectedEvent} />}
-            {tab === 'crear'     && <TabCrear     password={password} supabase={supabase} onCreated={ev => { setEvents(prev => [ev, ...prev]); setSelectedEvent(ev); setTab('resumen') }} />}
+            {tab === 'crear'     && <TabCrear     password={ADMIN_PWD} supabase={supabase} onCreated={ev => { setEvents(prev => [ev, ...prev]); setSelectedEvent(ev); setTab('resumen') }} />}
           </>
         )}
       </main>
-    </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Login
-// ═══════════════════════════════════════════════════════════════════════════════
-function Login({ password, setPassword, authError, onLogin }) {
-  return (
-    <div style={s.loginRoot}>
-      <div style={s.loginCard}>
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={{ height: 40, marginBottom: 8 }} />
-        <p style={s.loginTitle}>Dashboard del Operador</p>
-        <input
-          style={s.input}
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && onLogin()}
-          autoFocus
-        />
-        {authError && <p style={s.errorText}>Contraseña incorrecta</p>}
-        <button style={s.primaryBtn} onClick={onLogin}>Entrar →</button>
-      </div>
     </div>
   )
 }
