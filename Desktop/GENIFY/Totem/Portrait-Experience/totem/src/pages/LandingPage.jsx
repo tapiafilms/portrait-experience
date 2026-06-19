@@ -275,12 +275,10 @@ const HIGHLIGHTS = [
 function HighlightsGallery() {
   const [active, setActive] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const [endedStates, setEndedStates] = useState(Array(HIGHLIGHTS.length).fill(false))
-  const [playingStates, setPlayingStates] = useState(Array(HIGHLIGHTS.length).fill(false))
-  const playersRef = useRef([])
+  const [showThumb, setShowThumb] = useState(Array(HIGHLIGHTS.length).fill(true))
   const trackRef = useRef(null)
   const cardRefs = useRef([])
-  const playerDivRefs = useRef([])
+  const iframeRefs = useRef([])
   const intervalRef = useRef(null)
 
   const scrollTo = (i) => {
@@ -337,75 +335,29 @@ function HighlightsGallery() {
     return () => window.removeEventListener('message', onMessage)
   }, [])
 
-  const replayVideo = (i) => {
-    setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
-    playersRef.current[i]?.playVideo()
+  const handleThumbClick = (i) => {
+    setShowThumb(prev => prev.map((v, idx) => idx === i ? false : v))
+    // Reiniciar el iframe con autoplay para que empiece a reproducir
+    const iframe = iframeRefs.current[i]
+    if (iframe) {
+      const src = iframe.src.replace('&autoplay=0', '').replace('autoplay=0', '')
+      iframe.src = src.includes('autoplay=1') ? src : src + '&autoplay=1'
+    }
   }
 
-  // Cargar YouTube IFrame API, crear players y manejar autoplay
+  // Volver a mostrar thumbnail cuando el card sale del viewport
   useEffect(() => {
     const observers = []
-
-    const setupObserver = (div, i) => {
+    cardRefs.current.forEach((card, i) => {
+      if (!card) return
       const observer = new IntersectionObserver(
-        ([entry]) => {
-          const p = playersRef.current[i]
-          if (!p) return
-          try { entry.isIntersecting ? p.playVideo() : p.pauseVideo() } catch {}
-        },
-        { threshold: 0.5 }
+        ([entry]) => { if (!entry.isIntersecting) setShowThumb(prev => prev.map((v, idx) => idx === i ? true : v)) },
+        { threshold: 0.1 }
       )
-      observer.observe(div)
+      observer.observe(card)
       observers.push(observer)
-    }
-
-    const initPlayers = () => {
-      HIGHLIGHTS.forEach((h, i) => {
-        const div = playerDivRefs.current[i]
-        if (!div) return
-        playersRef.current[i] = new window.YT.Player(div, {
-          videoId: h.youtubeId,
-          playerVars: { rel: 0, modestbranding: 1, mute: 1, controls: 0, iv_load_policy: 3, disablekb: 1, playsinline: 1 },
-          events: {
-            onReady: (e) => {
-              // Al estar listo, verificar si el div está en el viewport y reproducir
-              const rect = playerDivRefs.current[i]?.getBoundingClientRect()
-              if (rect && rect.top < window.innerHeight && rect.bottom > 0) {
-                try { e.target.playVideo() } catch {}
-              }
-            },
-            onStateChange: (e) => {
-              const S = window.YT.PlayerState
-              if (e.data === S.PLAYING) {
-                setPlayingStates(prev => prev.map((v, idx) => idx === i ? true : v))
-                setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
-              } else if (e.data === S.ENDED) {
-                setPlayingStates(prev => prev.map((v, idx) => idx === i ? false : v))
-                setEndedStates(prev => prev.map((v, idx) => idx === i ? true : v))
-              } else {
-                setPlayingStates(prev => prev.map((v, idx) => idx === i ? false : v))
-              }
-            },
-          },
-        })
-        setupObserver(div, i)
-      })
-    }
-
-    if (window.YT?.Player) {
-      initPlayers()
-    } else {
-      window.onYouTubeIframeAPIReady = initPlayers
-      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-        const tag = document.createElement('script')
-        tag.src = 'https://www.youtube.com/iframe_api'
-        document.head.appendChild(tag)
-      }
-    }
-    return () => {
-      observers.forEach(o => o.disconnect())
-      playersRef.current.forEach(p => { try { p?.destroy() } catch {} })
-    }
+    })
+    return () => observers.forEach(o => o.disconnect())
   }, [])
 
   useEffect(() => {
@@ -447,32 +399,29 @@ function HighlightsGallery() {
           >
             {/* Video full card */}
             <div style={s.hlCardImg}>
-              <div
-                ref={el => playerDivRefs.current[i] = el}
+              <iframe
+                ref={el => iframeRefs.current[i] = el}
+                src={`https://www.youtube-nocookie.com/embed/${h.youtubeId}?rel=0&modestbranding=1&mute=1&controls=1&iv_load_policy=3&playsinline=1`}
                 style={s.hlCardVideo}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={h.title}
               />
-              {/* Thumbnail — visible cuando no está reproduciendo */}
-              {!playingStates[i] && (
-                <div style={s.hlThumbnail}>
+
+              {/* Thumbnail — click para reproducir */}
+              {showThumb[i] && (
+                <div style={s.hlThumbnail} onClick={() => handleThumbClick(i)}>
                   <img
                     src={h.thumbnail || '/video-thumbnail.jpg'}
-                    alt=""
+                    alt="Reproducir video"
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
+                  <div style={s.hlPlayIcon}>▶</div>
                 </div>
               )}
 
-              {/* Title overlay — top right */}
+              {/* Title overlay */}
               <div style={s.hlCardOverlay}>{h.title}</div>
-
-              {/* End-of-video overlay */}
-              {endedStates[i] && (
-                <div style={s.hlVideoEndOverlay} onClick={() => replayVideo(i)}>
-                  <div style={s.hlVideoReplayBtn}>
-                    <span style={s.hlVideoReplayIcon} />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         ))}
@@ -967,7 +916,13 @@ const s = {
   hlThumbnail: {
     position: 'absolute', inset: 0, zIndex: 3,
     background: '#000',
-    transition: 'opacity 0.4s ease',
+    cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  hlPlayIcon: {
+    position: 'absolute',
+    fontSize: 64, color: 'rgba(255,255,255,0.9)',
+    textShadow: '0 2px 20px rgba(0,0,0,0.8)',
     pointerEvents: 'none',
   },
   hlCardOverlay: {
