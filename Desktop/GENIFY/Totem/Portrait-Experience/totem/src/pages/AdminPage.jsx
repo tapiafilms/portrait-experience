@@ -101,23 +101,21 @@ export default function AdminPage({ eventId = null }) {
 
   const supabase = useSupabase()
 
-  if (!authed) return <AdminLogin onAuth={() => setAuthed(true)} />
-
-  // ── Cargar evento(s) ──────────────────────────────────────────────────────
+  // ── Cargar evento(s) — debe estar antes de cualquier early return ─────────
   useEffect(() => {
-    if (!supabase) return
+    if (!authed || !supabase) return
     if (eventId) {
-      // Modo operador: cargar solo este evento
       supabase.from('events').select('id, event_name, key, active, expires_at, created_at, guests')
         .eq('id', eventId).single()
         .then(({ data }) => { if (data) { setEvents([data]); setSelectedEvent(data) } })
     } else {
-      // Modo Genofy: cargar todos los eventos
       supabase.from('events').select('id, event_name, key, active, expires_at, created_at, guests')
         .order('created_at', { ascending: false })
         .then(({ data }) => { if (data?.length) { setEvents(data); setSelectedEvent(data[0]) } })
     }
   }, [authed])
+
+  if (!authed) return <AdminLogin onAuth={() => setAuthed(true)} />
 
   return (
     <div style={s.root}>
@@ -716,7 +714,7 @@ const s = {
     display: 'flex', flexDirection: 'column',
     padding: '28px 16px', gap: 24,
   },
-  logo: { height: 48, objectFit: 'contain', alignSelf: 'flex-start', marginLeft: 8 },
+  logo: { height: 37, objectFit: 'contain', alignSelf: 'flex-start', marginLeft: 8 },
   eventSelector: { display: 'flex', flexDirection: 'column', gap: 6 },
   sideLabel: { fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 },
   select: {
