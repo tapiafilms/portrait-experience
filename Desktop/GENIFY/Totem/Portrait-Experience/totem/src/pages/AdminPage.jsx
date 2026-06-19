@@ -72,7 +72,7 @@ function AdminLogin({ onAuth }) {
   return (
     <div style={s.loginRoot}>
       <div style={s.loginCard}>
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={{ height: 32, marginBottom: 8 }} />
+        <img src="/logo-gen-ex.png" alt="Gen Experience" style={{ height: 56, marginBottom: 8, objectFit: 'contain' }} />
         <p style={s.loginTitle}>Panel de control</p>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>Ingresa la contraseña para continuar</p>
         <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
