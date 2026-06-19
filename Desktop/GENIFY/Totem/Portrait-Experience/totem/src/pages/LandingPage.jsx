@@ -342,8 +342,23 @@ function HighlightsGallery() {
     playersRef.current[i]?.playVideo()
   }
 
-  // Cargar YouTube IFrame API y crear players
+  // Cargar YouTube IFrame API, crear players y manejar autoplay
   useEffect(() => {
+    const observers = []
+
+    const setupObserver = (div, i) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          const p = playersRef.current[i]
+          if (!p) return
+          try { entry.isIntersecting ? p.playVideo() : p.pauseVideo() } catch {}
+        },
+        { threshold: 0.5 }
+      )
+      observer.observe(div)
+      observers.push(observer)
+    }
+
     const initPlayers = () => {
       HIGHLIGHTS.forEach((h, i) => {
         const div = playerDivRefs.current[i]
@@ -352,12 +367,19 @@ function HighlightsGallery() {
           videoId: h.youtubeId,
           playerVars: { rel: 0, modestbranding: 1, mute: 1, controls: 0, iv_load_policy: 3, disablekb: 1, playsinline: 1 },
           events: {
+            onReady: (e) => {
+              // Al estar listo, verificar si el div está en el viewport y reproducir
+              const rect = playerDivRefs.current[i]?.getBoundingClientRect()
+              if (rect && rect.top < window.innerHeight && rect.bottom > 0) {
+                try { e.target.playVideo() } catch {}
+              }
+            },
             onStateChange: (e) => {
-              const YT = window.YT.PlayerState
-              if (e.data === YT.PLAYING) {
+              const S = window.YT.PlayerState
+              if (e.data === S.PLAYING) {
                 setPlayingStates(prev => prev.map((v, idx) => idx === i ? true : v))
                 setEndedStates(prev => prev.map((v, idx) => idx === i ? false : v))
-              } else if (e.data === YT.ENDED) {
+              } else if (e.data === S.ENDED) {
                 setPlayingStates(prev => prev.map((v, idx) => idx === i ? false : v))
                 setEndedStates(prev => prev.map((v, idx) => idx === i ? true : v))
               } else {
@@ -366,6 +388,7 @@ function HighlightsGallery() {
             },
           },
         })
+        setupObserver(div, i)
       })
     }
 
@@ -379,26 +402,10 @@ function HighlightsGallery() {
         document.head.appendChild(tag)
       }
     }
-    return () => playersRef.current.forEach(p => { try { p?.destroy() } catch {} })
-  }, [])
-
-  // Autoplay on viewport enter, pause on exit
-  useEffect(() => {
-    const observers = []
-    playerDivRefs.current.forEach((div, i) => {
-      if (!div) return
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          const p = playersRef.current[i]
-          if (!p) return
-          try { entry.isIntersecting ? p.playVideo() : p.pauseVideo() } catch {}
-        },
-        { threshold: 0.5 }
-      )
-      observer.observe(div)
-      observers.push(observer)
-    })
-    return () => observers.forEach(o => o.disconnect())
+    return () => {
+      observers.forEach(o => o.disconnect())
+      playersRef.current.forEach(p => { try { p?.destroy() } catch {} })
+    }
   }, [])
 
   useEffect(() => {
