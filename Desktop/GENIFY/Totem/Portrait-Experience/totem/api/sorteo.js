@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid')
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'genofy2025'
 
 function supabase() {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)
 }
 
 function cors(res) {

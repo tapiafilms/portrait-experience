@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     // Iniciar job en el Worker → devuelve requestId para polling
     const { sessionId } = req.query
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)
 
     const { data: session } = await supabase.from('sessions').select('*').eq('id', sessionId).single()
     if (!session) return res.status(404).json({ error: 'Sesión no encontrada' })
@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     // Guardar resultado final en DB
     const { sessionId } = req.query
     const { transformedImageUrl } = req.body
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)
 
     await supabase.from('sessions').update({ transformed_url: transformedImageUrl }).eq('id', sessionId)
     return res.json({ ok: true })

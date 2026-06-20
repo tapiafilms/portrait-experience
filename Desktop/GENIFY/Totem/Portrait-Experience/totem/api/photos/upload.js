@@ -8,7 +8,10 @@ module.exports = async function handler(req, res) {
   const { photo, eventId } = req.body
   if (!photo || !eventId) return res.status(400).json({ error: 'Faltan datos' })
 
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+  )
 
   try {
     // 1. Subir foto a Supabase Storage

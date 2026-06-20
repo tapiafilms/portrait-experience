@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   const { key } = req.body
   if (!key) return res.status(400).json({ error: 'Falta la clave' })
 
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)
 
   const { data: event } = await supabase
     .from('events')
