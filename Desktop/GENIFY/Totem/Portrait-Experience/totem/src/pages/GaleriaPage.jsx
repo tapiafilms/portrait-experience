@@ -148,12 +148,13 @@ export default function GaleriaPage() {
 
       <style>{`
         @keyframes photoIn {
-          from { opacity: 0; transform: scale(1.06) translateY(20px); filter: blur(10px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0); }
+          from { opacity: 0; transform: scale(0.88) translate(40px, 40px) rotate(6deg); filter: blur(8px); }
+          60%  { opacity: 1; transform: scale(1.03) translate(-4px, -4px) rotate(-1deg); filter: blur(0); }
+          to   { opacity: 1; transform: scale(1)    translate(0, 0)       rotate(0deg); filter: blur(0); }
         }
         @keyframes photoOut {
-          from { opacity: 1; transform: scale(1)    translateY(0);     filter: blur(0); }
-          to   { opacity: 0; transform: scale(0.94) translateY(-20px); filter: blur(10px); }
+          from { opacity: 1; transform: scale(1)    translate(0, 0)        rotate(0deg); filter: blur(0); }
+          to   { opacity: 0; transform: scale(0.88) translate(-40px, -40px) rotate(-6deg); filter: blur(8px); }
         }
         @keyframes pulse {
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
