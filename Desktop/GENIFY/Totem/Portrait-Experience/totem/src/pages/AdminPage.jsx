@@ -178,7 +178,7 @@ export default function AdminPage({ eventId = null }) {
           </div>
         ) : (
           <>
-            {tab === 'resumen'   && <TabResumen   event={selectedEvent} supabase={supabase} />}
+            {tab === 'resumen'   && <TabResumen   event={selectedEvent} supabase={supabase} password={ADMIN_PWD} onDeleted={id => { setEvents(prev => prev.filter(e => e.id !== id)); setSelectedEvent(prev => prev?.id === id ? null : prev); setTab('crear') }} />}
             {tab === 'momentos'  && <TabMomentos  event={selectedEvent} password={ADMIN_PWD} />}
             {tab === 'pantalla'  && <TabPantalla  event={selectedEvent} />}
             {tab === 'invitados' && <TabInvitados event={selectedEvent} />}
@@ -194,9 +194,26 @@ export default function AdminPage({ eventId = null }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Tab: Resumen
 // ═══════════════════════════════════════════════════════════════════════════════
-function TabResumen({ event, supabase }) {
+function TabResumen({ event, supabase, password, onDeleted }) {
   const [metrics, setMetrics] = useState({ photos: 0, sorteoTotal: 0, sorteoPaired: 0, sorteoConfirmed: 0 })
   const [sorteoState, setSorteoState] = useState('inactive')
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!window.confirm(`¿Eliminar el evento "${event?.event_name}"? Esta acción no se puede deshacer.`)) return
+    setDeleting(true)
+    try {
+      const r = await fetch(`${BASE}/api/admin/create-event`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete-event', password, eventId: event.id }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error)
+      onDeleted?.(event.id)
+    } catch (err) {
+      alert('Error al eliminar: ' + err.message)
+    } finally { setDeleting(false) }
+  }
 
   const load = useCallback(async () => {
     if (!event?.id || !supabase) return
@@ -222,8 +239,19 @@ function TabResumen({ event, supabase }) {
 
   return (
     <div style={s.tabWrap}>
-      <h2 style={s.tabTitle}>Resumen — {event?.event_name}</h2>
-      <p style={s.tabSub}>Clave del tótem: <code style={s.code}>{event?.key}</code></p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+        <div>
+          <h2 style={s.tabTitle}>Resumen — {event?.event_name}</h2>
+          <p style={s.tabSub}>Clave del tótem: <code style={s.code}>{event?.key}</code></p>
+        </div>
+        <button
+          style={{ ...s.deleteBtn, opacity: deleting ? 0.5 : 1 }}
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? 'Eliminando...' : '🗑 Eliminar evento'}
+        </button>
+      </div>
 
       <div style={s.metricsGrid}>
         <MetricCard label="Fotos en pantalla gigante" value={metrics.photos} color="#22d3ee" icon="📸" />
@@ -929,5 +957,11 @@ const s = {
     fontSize: 14, textAlign: 'center',
   },
   errorText: { color: '#f87171', fontSize: 13, margin: 0 },
+  deleteBtn: {
+    padding: '8px 16px', background: 'rgba(248,113,113,0.08)',
+    border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8,
+    color: '#f87171', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+    whiteSpace: 'nowrap', flexShrink: 0,
+  },
   code: { fontSize: 12, background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: 6, fontFamily: 'monospace' },
 }
