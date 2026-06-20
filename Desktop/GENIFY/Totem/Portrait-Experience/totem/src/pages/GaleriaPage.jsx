@@ -1,8 +1,11 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const INTERVAL = 8000   // ms por foto
-const ANIM_OUT = 700    // ms de animación de salida
+const INTERVAL  = 10000  // ms por grupo
+const STAGGER   = 500    // ms entre cada foto al entrar/salir
+const ANIM_DUR  = 700    // ms de cada animación individual
+// tiempo total de salida = STAGGER * 2 + ANIM_DUR
+const EXIT_TOTAL = STAGGER * 2 + ANIM_DUR
 
 export default function GaleriaPage() {
   const supabase = useMemo(() => createClient(
@@ -10,82 +13,72 @@ export default function GaleriaPage() {
     import.meta.env.VITE_SUPABASE_ANON_KEY
   ), [])
   const eventId = window.location.pathname.split('/galeria/')[1]
-  const [photos, setPhotos]       = useState([])
-  const [current, setCurrent]     = useState(0)
-  const [leaving, setLeaving]     = useState(false)  // true = foto saliendo
+  const [photos, setPhotos]   = useState([])
+  const [current, setCurrent] = useState(0)
+  const [leaving, setLeaving] = useState(false)
   const [eventName, setEventName] = useState('')
   const photosRef = useRef([])
-  const timerRef  = useRef(null)
 
-  // Mantener ref sincronizada para usarla en el interval
   useEffect(() => { photosRef.current = photos }, [photos])
 
-  // Cargar evento y fotos iniciales
+  // Carga inicial
   useEffect(() => {
     supabase.from('events').select('event_name').eq('id', eventId).single()
       .then(({ data }) => { if (data) setEventName(data.event_name) })
 
     supabase.from('event_photos')
       .select('id, photo_url, created_at')
-      .eq('event_id', eventId)
-      .eq('status', 'approved')
+      .eq('event_id', eventId).eq('status', 'approved')
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (data?.length) setPhotos(data) })
   }, [eventId])
 
-  // Polling cada 15s para detectar fotos nuevas sin depender de realtime
+  // Polling cada 15s — detecta fotos nuevas sin refrescar
   useEffect(() => {
     const poll = async () => {
-      const { data } = await supabase
-        .from('event_photos')
+      const { data } = await supabase.from('event_photos')
         .select('id, photo_url, created_at')
-        .eq('event_id', eventId)
-        .eq('status', 'approved')
+        .eq('event_id', eventId).eq('status', 'approved')
         .order('created_at', { ascending: false })
       if (!data?.length) return
       setPhotos(prev => {
-        const existingIds = new Set(prev.map(p => p.id))
-        const newOnes = data.filter(p => !existingIds.has(p.id))
-        return newOnes.length ? [...newOnes, ...prev] : prev
+        const ids = new Set(prev.map(p => p.id))
+        const nuevas = data.filter(p => !ids.has(p.id))
+        return nuevas.length ? [...nuevas, ...prev] : prev
       })
     }
     const t = setInterval(poll, 15000)
     return () => clearInterval(t)
   }, [eventId])
 
-  // Suscripción Realtime como refuerzo
+  // Realtime como respaldo
   useEffect(() => {
-    const channel = supabase
-      .channel('galeria-rt')
+    const ch = supabase.channel('galeria-rt')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'event_photos', filter: `event_id=eq.${eventId}` },
-        (payload) => {
-          if (payload.new.status === 'approved')
-            setPhotos(prev => prev.find(p => p.id === payload.new.id) ? prev : [payload.new, ...prev])
-        })
+        ({ new: p }) => { if (p.status === 'approved') setPhotos(prev => prev.find(x => x.id === p.id) ? prev : [p, ...prev]) })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'event_photos', filter: `event_id=eq.${eventId}` },
-        (payload) => {
-          if (payload.new.status === 'approved')
-            setPhotos(prev => prev.find(p => p.id === payload.new.id) ? prev : [payload.new, ...prev])
-        })
+        ({ new: p }) => { if (p.status === 'approved') setPhotos(prev => prev.find(x => x.id === p.id) ? prev : [p, ...prev]) })
       .subscribe()
-    return () => supabase.removeChannel(channel)
+    return () => supabase.removeChannel(ch)
   }, [eventId])
 
-  // Avance automático con animación de salida
+  // Avance automático con salida escalonada antes de cambiar grupo
   useEffect(() => {
     if (photos.length < 2) return
-    clearInterval(timerRef.current)
-    timerRef.current = setInterval(() => {
+    const t = setInterval(() => {
       setLeaving(true)
       setTimeout(() => {
-        setCurrent(prev => (prev + 1) % photosRef.current.length)
+        setCurrent(prev => {
+          const next = prev + 3
+          return next >= photosRef.current.length ? 0 : next
+        })
         setLeaving(false)
-      }, ANIM_OUT)
+      }, EXIT_TOTAL + 100)
     }, INTERVAL)
-    return () => clearInterval(timerRef.current)
+    return () => clearInterval(t)
   }, [photos.length])
 
-  const photo = photos[current]
+  const group = photos.slice(current, current + 3)
 
   if (!photos.length) return (
     <div style={s.root}>
@@ -96,12 +89,12 @@ export default function GaleriaPage() {
         <p style={s.waitingText}>Esperando fotos del evento...</p>
         <p style={s.waitingEvent}>{eventName}</p>
         <div style={s.waitingDots}>
-          <div style={s.wDot} />
-          <div style={{ ...s.wDot, animationDelay: '0.3s' }} />
-          <div style={{ ...s.wDot, animationDelay: '0.6s' }} />
+          {[0, 0.3, 0.6].map(d => (
+            <div key={d} style={{ ...s.wDot, animationDelay: `${d}s` }} />
+          ))}
         </div>
       </div>
-      <img src="/logo.webp" alt="Genofy" style={s.footerLogoAlone} />
+      <img src="/logo.webp" alt="Genofy" style={{ ...s.footerLogo, position: 'relative', zIndex: 2, marginBottom: 24 }} />
     </div>
   )
 
@@ -110,47 +103,44 @@ export default function GaleriaPage() {
       <img src="/bg-totem.png" alt="" style={s.bg} />
       <div style={s.bgOverlay} />
 
-      {/* Header */}
       <div style={s.header}>
         <img src="/logo-gen-ex.png" alt="" style={s.headerLogo} />
         <p style={s.headerEvent}>{eventName}</p>
         <div style={s.counter}>{photos.length} foto{photos.length !== 1 ? 's' : ''}</div>
       </div>
 
-      {/* Foto única con animación entrada/salida */}
-      <div style={s.photoWrap}>
-        {photo && (
+      {/* 3 fotos con entrada/salida escalonada */}
+      <div style={s.photoRow}>
+        {group.map((photo, i) => (
           <img
             key={photo.id}
             src={photo.photo_url}
             alt="Foto del evento"
             style={{
               ...s.photo,
-              animation: leaving
-                ? `photoOut ${ANIM_OUT}ms cubic-bezier(0.4,0,1,1) forwards`
-                : 'photoIn 0.9s cubic-bezier(0,0,0.2,1) forwards',
+              animationName: leaving ? 'photoOut' : 'photoIn',
+              animationDuration: `${ANIM_DUR}ms`,
+              animationDelay: `${i * STAGGER}ms`,
+              animationTimingFunction: leaving ? 'cubic-bezier(0.4,0,1,1)' : 'cubic-bezier(0,0,0.2,1)',
+              animationFillMode: 'both',
             }}
           />
-        )}
+        ))}
       </div>
 
-      {/* Indicadores */}
-      {photos.length > 1 && (
+      {/* Indicadores de grupo */}
+      {Math.ceil(photos.length / 3) > 1 && (
         <div style={s.indicators}>
-          {photos.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                ...s.dot,
-                width: i === current ? 24 : 8,
-                background: i === current ? '#60a5fa' : 'rgba(255,255,255,0.2)',
-              }}
-            />
+          {Array.from({ length: Math.ceil(photos.length / 3) }).map((_, i) => (
+            <div key={i} style={{
+              ...s.dot,
+              width: i === Math.floor(current / 3) ? 24 : 8,
+              background: i === Math.floor(current / 3) ? '#60a5fa' : 'rgba(255,255,255,0.2)',
+            }} />
           ))}
         </div>
       )}
 
-      {/* Footer */}
       <div style={s.footer}>
         <img src="/logo.webp" alt="Genofy" style={s.footerLogo} />
         <p style={s.footerText}>Escanea el QR del tótem para publicar tu foto</p>
@@ -158,12 +148,12 @@ export default function GaleriaPage() {
 
       <style>{`
         @keyframes photoIn {
-          from { opacity: 0; transform: scale(1.06) translateY(16px); filter: blur(8px); }
+          from { opacity: 0; transform: scale(1.06) translateY(20px); filter: blur(10px); }
           to   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0); }
         }
         @keyframes photoOut {
           from { opacity: 1; transform: scale(1)    translateY(0);     filter: blur(0); }
-          to   { opacity: 0; transform: scale(0.94) translateY(-16px); filter: blur(8px); }
+          to   { opacity: 0; transform: scale(0.94) translateY(-20px); filter: blur(10px); }
         }
         @keyframes pulse {
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
@@ -176,12 +166,9 @@ export default function GaleriaPage() {
 
 const s = {
   root: {
-    width: '100vw', height: '100vh',
-    background: '#050810',
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'space-between',
-    position: 'relative', overflow: 'hidden',
-    fontFamily: "'Inter', system-ui, sans-serif",
+    width: '100vw', height: '100vh', background: '#050810',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
+    position: 'relative', overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif",
   },
   bg: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 },
   bgOverlay: { position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(5,8,16,0.72)' },
@@ -197,34 +184,28 @@ const s = {
   },
   counter: {
     background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)',
-    color: '#60a5fa', fontSize: 13, fontWeight: 700,
-    padding: '6px 16px', borderRadius: 50,
+    color: '#60a5fa', fontSize: 13, fontWeight: 700, padding: '6px 16px', borderRadius: 50,
   },
-  photoWrap: {
+  photoRow: {
     zIndex: 2, flex: 1,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '0 80px', width: '100%',
+    display: 'flex', flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 24, padding: '0 48px', width: '100%',
   },
   photo: {
-    maxHeight: '68vh', maxWidth: '72vw',
-    borderRadius: 28, objectFit: 'contain',
-    boxShadow: '0 0 120px rgba(59,130,246,0.25), 0 32px 64px rgba(0,0,0,0.6)',
+    flex: 1, maxHeight: '65vh', maxWidth: '30vw',
+    borderRadius: 24, objectFit: 'cover',
+    boxShadow: '0 0 80px rgba(59,130,246,0.25), 0 24px 48px rgba(0,0,0,0.5)',
     border: '2px solid rgba(100,160,255,0.15)',
   },
-  indicators: {
-    zIndex: 2, display: 'flex', alignItems: 'center', gap: 6, padding: '0 48px 12px',
-  },
-  dot: {
-    height: 8, borderRadius: 4,
-    transition: 'all 0.4s ease',
-  },
+  indicators: { zIndex: 2, display: 'flex', alignItems: 'center', gap: 6, padding: '0 48px 12px' },
+  dot: { height: 8, borderRadius: 4, transition: 'all 0.4s ease' },
   footer: {
     zIndex: 2, width: '100%', padding: '12px 48px',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     borderTop: '1px solid rgba(255,255,255,0.06)',
   },
   footerLogo: { height: 28, objectFit: 'contain' },
-  footerLogoAlone: { height: 28, objectFit: 'contain', position: 'relative', zIndex: 2, marginBottom: 24 },
   footerText: { fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0, letterSpacing: '0.05em' },
   waiting: { zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 },
   waitingLogo: { height: 48, objectFit: 'contain' },
