@@ -199,24 +199,7 @@ function TabResumen({ event, supabase, password, onDeleted }) {
   const [sorteoState, setSorteoState] = useState('inactive')
   const [deleting, setDeleting] = useState(false)
   const [portraits, setPortraits] = useState([])
-  const [carouselIdx, setCarouselIdx] = useState(0)
-  const [carouselLeaving, setCarouselLeaving] = useState(false)
   const carouselRef = useRef(null)
-  const portraitsRef = useRef([])
-  useEffect(() => { portraitsRef.current = portraits }, [portraits])
-
-  // Auto-avance del carrusel
-  useEffect(() => {
-    if (portraits.length < 2) return
-    const t = setInterval(() => {
-      setCarouselLeaving(true)
-      setTimeout(() => {
-        setCarouselIdx(prev => (prev + 1) % portraitsRef.current.length)
-        setCarouselLeaving(false)
-      }, 400)
-    }, 3000)
-    return () => clearInterval(t)
-  }, [portraits.length])
 
   async function handleDelete() {
     if (!window.confirm(`¿Eliminar el evento "${event?.event_name}"? Esta acción no se puede deshacer.`)) return
@@ -302,37 +285,22 @@ function TabResumen({ event, supabase, password, onDeleted }) {
           <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/${u.path}`)}>Copiar</button>
         </div>
       ))}
-      {/* Carrusel retratos Pixar */}
+      {/* Carrusel retratos Pixar — marquee infinito */}
       {portraits.length > 0 && (
         <div style={s.carouselSection}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={s.carouselTitle}>Retratos generados — {portraits.length}</p>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {portraits.map((_, i) => (
-                <div key={i} onClick={() => setCarouselIdx(i)} style={{
-                  width: i === carouselIdx ? 20 : 6, height: 6, borderRadius: 3,
-                  background: i === carouselIdx ? '#6366f1' : 'rgba(255,255,255,0.15)',
-                  cursor: 'pointer', transition: 'all 0.3s ease',
-                }} />
+          <p style={s.carouselTitle}>Retratos generados — {portraits.length}</p>
+          <div style={s.carouselMask}>
+            <div style={{
+              ...s.carouselTrack,
+              animationDuration: `${portraits.length * 3}s`,
+            }}>
+              {[...portraits, ...portraits].map((p, i) => (
+                <img key={i} src={p.transformed_url} alt="" style={s.portraitImg} />
               ))}
             </div>
           </div>
-          <div style={s.carouselWrap}>
-            <img
-              key={portraits[carouselIdx]?.id}
-              src={portraits[carouselIdx]?.transformed_url}
-              alt=""
-              style={{
-                ...s.carouselImg,
-                animation: carouselLeaving
-                  ? 'cOut 0.4s cubic-bezier(0.4,0,1,1) forwards'
-                  : 'cIn 0.5s cubic-bezier(0,0,0.2,1) forwards',
-              }}
-            />
-          </div>
           <style>{`
-            @keyframes cIn  { from { opacity:0; transform: scale(0.92) translate(20px,20px) rotate(4deg); } to { opacity:1; transform: scale(1) translate(0,0) rotate(0deg); } }
-            @keyframes cOut { from { opacity:1; transform: scale(1) translate(0,0) rotate(0deg); } to { opacity:0; transform: scale(0.92) translate(-20px,-20px) rotate(-4deg); } }
+            @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
           `}</style>
         </div>
       )}
@@ -1014,14 +982,15 @@ const s = {
   errorText: { color: '#f87171', fontSize: 13, margin: 0 },
   carouselSection: { display: 'flex', flexDirection: 'column', gap: 12 },
   carouselTitle: { fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 },
-  carouselWrap: {
-    width: '100%', aspectRatio: '3/4', maxHeight: 340,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    borderRadius: 16, overflow: 'hidden',
-    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+  carouselMask: { overflow: 'hidden', width: '100%' },
+  carouselTrack: {
+    display: 'flex', gap: 12,
+    animation: 'marquee linear infinite',
+    width: 'max-content',
   },
-  carouselImg: {
-    width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+  portraitImg: {
+    width: 120, height: 160, objectFit: 'cover', borderRadius: 12, flexShrink: 0,
+    border: '1px solid rgba(255,255,255,0.08)',
   },
   deleteBtn: {
     padding: '8px 16px', background: 'rgba(248,113,113,0.08)',
