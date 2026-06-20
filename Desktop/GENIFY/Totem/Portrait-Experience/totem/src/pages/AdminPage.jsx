@@ -223,7 +223,7 @@ function TabResumen({ event, supabase, password, onDeleted }) {
       supabase.from('event_photos').select('id', { count: 'exact', head: true }).eq('event_id', event.id),
       supabase.from('sorteo_participants').select('paired_session_id, confirmed_at').eq('event_id', event.id),
       supabase.from('sorteo_events').select('state').eq('event_id', event.id).single(),
-      supabase.from('sessions').select('id, transformed_url, guest_name').eq('event_id', event.id).not('transformed_url', 'is', null).order('created_at', { ascending: false }),
+      supabase.from('sessions').select('id, transformed_url').eq('event_id', event.id).not('transformed_url', 'is', null).order('created_at', { ascending: false }),
     ])
     setPortraits(sessions.data || [])
     const p = participants.data || []
@@ -293,7 +293,6 @@ function TabResumen({ event, supabase, password, onDeleted }) {
             {portraits.map(p => (
               <div key={p.id} style={s.portraitCard}>
                 <img src={p.transformed_url} alt={p.guest_name || ''} style={s.portraitImg} />
-                {p.guest_name && <p style={s.portraitName}>{p.guest_name}</p>}
               </div>
             ))}
           </div>
