@@ -88,7 +88,7 @@ export default function GaleriaPage() {
           <div style={{ ...s.dot, animationDelay: '0.6s' }} />
         </div>
       </div>
-      <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.footerLogo} />
+      <img src="/logo.webp" alt="Genofy" style={s.footerLogo} />
     </div>
   )
 
@@ -101,7 +101,7 @@ export default function GaleriaPage() {
 
       {/* Header */}
       <div style={s.header}>
-        <img src="/logo-ai-portrait-experience.png" alt="" style={s.headerLogo} />
+        <img src="/logo-gen-ex.png" alt="" style={s.headerLogo} />
         <p style={s.headerEvent}>{eventName}</p>
         <div style={s.counter}>{photos.length} foto{photos.length !== 1 ? 's' : ''}</div>
       </div>
@@ -133,7 +133,7 @@ export default function GaleriaPage() {
 
       {/* Footer */}
       <div style={s.footer}>
-        <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.footerLogo} />
+        <img src="/logo.webp" alt="Genofy" style={s.footerLogo} />
         <p style={s.footerText}>Escanea el QR del tótem para publicar tu foto</p>
       </div>
 
