@@ -20,7 +20,10 @@ module.exports = async function handler(req, res) {
   if (password !== ADMIN_PASSWORD)
     return res.status(401).json({ error: 'Contraseña incorrecta' })
 
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+  )
 
   // Acción: guardar URL del documento en el evento
   if (action === 'update-document') {
