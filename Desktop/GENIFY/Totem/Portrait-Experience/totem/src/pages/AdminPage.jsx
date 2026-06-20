@@ -223,7 +223,7 @@ function TabResumen({ event, supabase, password, onDeleted }) {
       supabase.from('event_photos').select('id', { count: 'exact', head: true }).eq('event_id', event.id),
       supabase.from('sorteo_participants').select('paired_session_id, confirmed_at').eq('event_id', event.id),
       supabase.from('sorteo_events').select('state').eq('event_id', event.id).single(),
-      supabase.from('sessions').select('id, transformed_url').eq('event_id', event.id).not('transformed_url', 'is', null).order('created_at', { ascending: false }),
+      supabase.from('sessions').select('id, transformed_url').or(`event_id.eq.${event.id},event_id.is.null`).not('transformed_url', 'is', null).order('created_at', { ascending: false }),
     ])
     setPortraits(sessions.data || [])
     const p = participants.data || []
