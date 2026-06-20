@@ -61,11 +61,15 @@ export default function GaleriaPage() {
     return () => supabase.removeChannel(channel)
   }, [eventId])
 
-  // Auto-advance entre fotos
+  // Auto-advance de grupo en grupo (de 3 en 3)
   useEffect(() => {
     if (photos.length < 2) return
     timerRef.current = setInterval(() => {
-      setCurrent(prev => (prev + 1) % photos.length)
+      setCurrent(prev => {
+        const total = photos.length
+        const next = prev + 3
+        return next >= total ? 0 : next
+      })
     }, 5000)
     return () => clearInterval(timerRef.current)
   }, [photos.length])
@@ -88,7 +92,7 @@ export default function GaleriaPage() {
     </div>
   )
 
-  const photo = photos[current]
+  const group = photos.slice(current, current + 3)
 
   return (
     <div style={s.root}>
@@ -102,32 +106,30 @@ export default function GaleriaPage() {
         <div style={s.counter}>{photos.length} foto{photos.length !== 1 ? 's' : ''}</div>
       </div>
 
-      {/* Foto principal con transición */}
+      {/* Grupo de 3 fotos */}
       <div style={s.mainPhotoWrap}>
-        <img
-          key={photo.id}
-          src={photo.photo_url}
-          alt="Foto del evento"
-          style={s.mainPhoto}
-        />
-      </div>
-
-      {/* Miniaturas */}
-      <div style={s.thumbnails}>
-        {photos.slice(0, 8).map((p, i) => (
-          <div
-            key={p.id}
-            style={{
-              ...s.thumb,
-              opacity: i === current ? 1 : 0.4,
-              transform: i === current ? 'scale(1.1)' : 'scale(1)',
-            }}
-            onClick={() => setCurrent(i)}
-          >
-            <img src={p.photo_url} alt="" style={s.thumbImg} />
-          </div>
+        {group.map(photo => (
+          <img
+            key={photo.id}
+            src={photo.photo_url}
+            alt="Foto del evento"
+            style={s.mainPhoto}
+          />
         ))}
       </div>
+
+      {/* Indicadores de grupo */}
+      {Math.ceil(photos.length / 3) > 1 && (
+        <div style={s.indicators}>
+          {Array.from({ length: Math.ceil(photos.length / 3) }).map((_, i) => (
+            <div
+              key={i}
+              style={{ ...s.indicator, background: i === Math.floor(current / 3) ? '#60a5fa' : 'rgba(255,255,255,0.2)' }}
+              onClick={() => setCurrent(i * 3)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Footer */}
       <div style={s.footer}>
@@ -181,28 +183,24 @@ const s = {
   },
   mainPhotoWrap: {
     zIndex: 2, flex: 1,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '0 80px',
+    display: 'flex', flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 24, padding: '0 48px',
   },
   mainPhoto: {
-    maxHeight: '65vh', maxWidth: '80vw',
-    borderRadius: 24, objectFit: 'contain',
+    flex: 1, maxHeight: '65vh', maxWidth: '30vw',
+    borderRadius: 24, objectFit: 'cover',
     boxShadow: '0 0 80px rgba(59,130,246,0.3)',
     animation: 'fadeInPhoto 0.8s ease',
     border: '2px solid rgba(100,160,255,0.2)',
   },
-  thumbnails: {
-    zIndex: 2, display: 'flex', gap: 12,
-    padding: '0 48px 16px',
-    overflowX: 'auto',
+  indicators: {
+    zIndex: 2, display: 'flex', gap: 8, padding: '0 48px 12px',
   },
-  thumb: {
-    width: 80, height: 80, flexShrink: 0,
-    borderRadius: 12, overflow: 'hidden',
-    cursor: 'pointer', transition: 'all 0.3s ease',
-    border: '1.5px solid rgba(100,160,255,0.3)',
+  indicator: {
+    width: 8, height: 8, borderRadius: '50%',
+    cursor: 'pointer', transition: 'background 0.3s ease',
   },
-  thumbImg: { width: '100%', height: '100%', objectFit: 'cover' },
   footer: {
     zIndex: 2, width: '100%', padding: '12px 48px',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
