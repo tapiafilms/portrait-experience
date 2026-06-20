@@ -463,31 +463,24 @@ function TabEvento({ event, supabase, password, onUpdate }) {
     const file = e.target.files[0]
     if (!file || !event?.id) return
     const ext = file.name.split('.').pop().toLowerCase()
-    if (!['pdf'].includes(ext)) return flash('Solo se aceptan archivos PDF', false)
+    if (ext !== 'pdf') return flash('Solo se aceptan archivos PDF', false)
     if (file.size > 4 * 1024 * 1024) return flash('El archivo no puede superar 4 MB', false)
 
     setUploading(true)
     try {
-      // Subir a Supabase Storage
-      const path = `${event.id}/brief.pdf`
-      const { error: upErr } = await supabase.storage
-        .from('event-docs')
-        .upload(path, file, { upsert: true, contentType: 'application/pdf' })
-      if (upErr) throw new Error(upErr.message)
+      // Leer el archivo como base64 y enviarlo al servidor
+      const arrayBuffer = await file.arrayBuffer()
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
 
-      const { data: urlData } = supabase.storage.from('event-docs').getPublicUrl(path)
-      const publicUrl = urlData.publicUrl
-
-      // Guardar URL en la tabla events
       const r = await fetch(`${BASE}/api/admin/create-event`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update-document', password, eventId: event.id, documentUrl: publicUrl }),
+        body: JSON.stringify({ action: 'upload-document', password, eventId: event.id, fileBase64: base64, fileName: file.name }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error)
 
-      setDocUrl(publicUrl)
-      onUpdate?.({ document_url: publicUrl })
+      setDocUrl(d.publicUrl)
+      onUpdate?.({ document_url: d.publicUrl })
       flash('✅ Documento cargado — la IA lo usará como contexto')
     } catch (err) {
       flash('❌ ' + err.message, false)

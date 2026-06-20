@@ -25,6 +25,32 @@ module.exports = async function handler(req, res) {
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
   )
 
+  // Acción: subir PDF y guardar URL (todo server-side con service role)
+  if (action === 'upload-document') {
+    if (!eventId) return res.status(400).json({ error: 'Falta eventId' })
+    const { fileBase64, fileName } = req.body
+    if (!fileBase64) return res.status(400).json({ error: 'Falta archivo' })
+
+    const buffer = Buffer.from(fileBase64, 'base64')
+    const path = `${eventId}/brief.pdf`
+
+    const { error: upErr } = await supabase.storage
+      .from('event-docs')
+      .upload(path, buffer, { upsert: true, contentType: 'application/pdf' })
+    if (upErr) return res.status(500).json({ error: upErr.message })
+
+    const { data: urlData } = supabase.storage.from('event-docs').getPublicUrl(path)
+    const publicUrl = urlData.publicUrl
+
+    const { error } = await supabase
+      .from('events')
+      .update({ document_url: publicUrl })
+      .eq('id', eventId)
+    if (error) return res.status(500).json({ error: error.message })
+
+    return res.json({ ok: true, publicUrl })
+  }
+
   // Acción: guardar URL del documento en el evento
   if (action === 'update-document') {
     if (!eventId) return res.status(400).json({ error: 'Falta eventId' })
