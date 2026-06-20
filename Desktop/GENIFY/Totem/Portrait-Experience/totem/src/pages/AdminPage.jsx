@@ -239,13 +239,20 @@ function TabResumen({ event, supabase }) {
         </span>
       </div>
 
-      <div style={s.infoBox}>
-        <p style={s.infoText}>URL de la galería (pantalla gigante):</p>
-        <code style={s.codeBlock}>{window.location.origin}/galeria/{event?.id}</code>
-        <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/galeria/${event?.id}`)}>
-          Copiar
-        </button>
-      </div>
+      {[
+        { label: '🖥️ Tótem',           path: `totem/${event?.id}`,   hint: 'Abrir en el computador del tótem' },
+        { label: '📺 Pantalla gigante', path: `galeria/${event?.id}`, hint: 'Abrir en el TV o pantalla del evento' },
+        { label: '⚙️ Dashboard',        path: `admin/${event?.id}`,   hint: 'Abrir en el laptop del operador' },
+      ].map(u => (
+        <div key={u.path} style={s.urlRow}>
+          <div style={s.urlInfo}>
+            <span style={s.urlLabel}>{u.label}</span>
+            <span style={s.urlHint}>{u.hint}</span>
+            <code style={s.urlCode}>{window.location.origin}/{u.path}</code>
+          </div>
+          <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/${u.path}`)}>Copiar</button>
+        </div>
+      ))}
     </div>
   )
 }
