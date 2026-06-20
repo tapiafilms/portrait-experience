@@ -198,6 +198,8 @@ function TabResumen({ event, supabase, password, onDeleted }) {
   const [metrics, setMetrics] = useState({ photos: 0, sorteoTotal: 0, sorteoPaired: 0, sorteoConfirmed: 0 })
   const [sorteoState, setSorteoState] = useState('inactive')
   const [deleting, setDeleting] = useState(false)
+  const [portraits, setPortraits] = useState([])
+  const carouselRef = useRef(null)
 
   async function handleDelete() {
     if (!window.confirm(`¿Eliminar el evento "${event?.event_name}"? Esta acción no se puede deshacer.`)) return
@@ -217,11 +219,13 @@ function TabResumen({ event, supabase, password, onDeleted }) {
 
   const load = useCallback(async () => {
     if (!event?.id || !supabase) return
-    const [photos, participants, sorteo] = await Promise.all([
+    const [photos, participants, sorteo, sessions] = await Promise.all([
       supabase.from('event_photos').select('id', { count: 'exact', head: true }).eq('event_id', event.id),
       supabase.from('sorteo_participants').select('paired_session_id, confirmed_at').eq('event_id', event.id),
       supabase.from('sorteo_events').select('state').eq('event_id', event.id).single(),
+      supabase.from('sessions').select('id, transformed_url, guest_name').eq('event_id', event.id).not('transformed_url', 'is', null).order('created_at', { ascending: false }),
     ])
+    setPortraits(sessions.data || [])
     const p = participants.data || []
     setMetrics({
       photos:           photos.count || 0,
@@ -281,6 +285,20 @@ function TabResumen({ event, supabase, password, onDeleted }) {
           <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/${u.path}`)}>Copiar</button>
         </div>
       ))}
+      {/* Carrusel retratos Pixar */}
+      {portraits.length > 0 && (
+        <div style={s.carouselSection}>
+          <p style={s.carouselTitle}>Retratos generados — {portraits.length}</p>
+          <div ref={carouselRef} style={s.carousel}>
+            {portraits.map(p => (
+              <div key={p.id} style={s.portraitCard}>
+                <img src={p.transformed_url} alt={p.guest_name || ''} style={s.portraitImg} />
+                {p.guest_name && <p style={s.portraitName}>{p.guest_name}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -957,6 +975,21 @@ const s = {
     fontSize: 14, textAlign: 'center',
   },
   errorText: { color: '#f87171', fontSize: 13, margin: 0 },
+  carouselSection: { display: 'flex', flexDirection: 'column', gap: 12 },
+  carouselTitle: { fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 },
+  carousel: {
+    display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8,
+    scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+  },
+  portraitCard: {
+    flexShrink: 0, width: 120,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+  },
+  portraitImg: {
+    width: 120, height: 160, objectFit: 'cover', borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.08)',
+  },
+  portraitName: { fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0, textAlign: 'center', width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   deleteBtn: {
     padding: '8px 16px', background: 'rgba(248,113,113,0.08)',
     border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8,
