@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import * as XLSX from 'xlsx'
+import QRCode from 'qrcode'
 
 const BASE = import.meta.env.VITE_API_URL || ''
 const ADMIN_PWD = import.meta.env.VITE_ADMIN_PASSWORD || 'genofy2025'
@@ -199,7 +200,15 @@ function TabResumen({ event, supabase, password, onDeleted }) {
   const [sorteoState, setSorteoState] = useState('inactive')
   const [deleting, setDeleting] = useState(false)
   const [portraits, setPortraits] = useState([])
+  const [totemQR, setTotemQR] = useState(null)
   const carouselRef = useRef(null)
+
+  useEffect(() => {
+    if (!event?.id) return
+    const url = `${window.location.origin}/totem/${event.id}`
+    QRCode.toDataURL(url, { width: 160, margin: 1, color: { dark: '#000', light: '#fff' } })
+      .then(setTotemQR)
+  }, [event?.id])
 
   async function handleDelete() {
     if (!window.confirm(`¿Eliminar el evento "${event?.event_name}"? Esta acción no se puede deshacer.`)) return
@@ -285,25 +294,37 @@ function TabResumen({ event, supabase, password, onDeleted }) {
           <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/${u.path}`)}>Copiar</button>
         </div>
       ))}
-      {/* Carrusel retratos Pixar — marquee infinito */}
-      {portraits.length > 0 && (
-        <div style={s.carouselSection}>
-          <p style={s.carouselTitle}>Retratos generados — {portraits.length}</p>
-          <div style={s.carouselMask}>
-            <div style={{
-              ...s.carouselTrack,
-              animationDuration: `${portraits.length * 3}s`,
-            }}>
-              {[...portraits, ...portraits].map((p, i) => (
-                <img key={i} src={p.transformed_url} alt="" style={s.portraitImg} />
-              ))}
+      {/* Carrusel retratos Pixar + QR tótem */}
+      <div style={s.carouselQRRow}>
+        {portraits.length > 0 && (
+          <div style={{ ...s.carouselSection, flex: 1, minWidth: 0 }}>
+            <p style={s.carouselTitle}>Retratos generados — {portraits.length}</p>
+            <div style={s.carouselMask}>
+              <div style={{
+                ...s.carouselTrack,
+                animationDuration: `${portraits.length * 3}s`,
+              }}>
+                {[...portraits, ...portraits].map((p, i) => (
+                  <img key={i} src={p.transformed_url} alt="" style={s.portraitImg} />
+                ))}
+              </div>
             </div>
+            <style>{`
+              @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+            `}</style>
           </div>
-          <style>{`
-            @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-          `}</style>
-        </div>
-      )}
+        )}
+
+        {totemQR && (
+          <div style={s.qrPanel}>
+            <p style={s.carouselTitle}>QR tótem</p>
+            <div style={s.qrPanelBox}>
+              <img src={totemQR} alt="QR Tótem" style={{ width: 140, height: 140, display: 'block' }} />
+            </div>
+            <p style={s.qrPanelHint}>Escanear para abrir el tótem</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -980,7 +1001,15 @@ const s = {
     fontSize: 14, textAlign: 'center',
   },
   errorText: { color: '#f87171', fontSize: 13, margin: 0 },
+  carouselQRRow: { display: 'flex', alignItems: 'flex-start', gap: 24 },
   carouselSection: { display: 'flex', flexDirection: 'column', gap: 12 },
+  qrPanel: { display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', flexShrink: 0 },
+  qrPanelBox: {
+    background: '#fff', borderRadius: 12, padding: 8,
+    border: '1px solid rgba(255,255,255,0.12)',
+    boxShadow: '0 0 20px rgba(34,211,238,0.15)',
+  },
+  qrPanelHint: { fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: 0, textAlign: 'center' },
   carouselTitle: { fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 },
   carouselMask: { overflow: 'hidden', width: '100%' },
   carouselTrack: {
