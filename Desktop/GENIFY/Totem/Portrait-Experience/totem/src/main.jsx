@@ -3,11 +3,19 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import AdminPage from './pages/AdminPage'
 import LandingPage from './pages/LandingPage'
+import SplashScreen from './pages/SplashScreen'
 import SessionPage from './pages/SessionPage'
 import GaleriaPage from './pages/GaleriaPage'
 import SorteoAdmin from './pages/SorteoAdmin'
 import { EventProvider } from './context/EventContext'
+import { setInstallPrompt } from './pwaInstallStore'
 import './styles/global.css'
+
+// Capture beforeinstallprompt globally — must happen before any render
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  setInstallPrompt(e)
+})
 
 const path = window.location.pathname
 
@@ -18,7 +26,9 @@ const totemEventId = totemMatch?.[1] || null
 const adminEventId = adminMatch?.[1] || null
 
 let root
-if (path.startsWith('/sorteo-admin')) {
+if (path.startsWith('/splash')) {
+  root = <SplashScreen />
+} else if (path.startsWith('/sorteo-admin')) {
   root = <SorteoAdmin />
 } else if (path.startsWith('/admin')) {
   root = <AdminPage eventId={adminEventId} />

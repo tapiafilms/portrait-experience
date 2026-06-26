@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { getInstallPrompt, onInstallPromptChange } from '../pwaInstallStore'
 
 /* ── Google Fonts ── */
 const FontLoader = () => (
@@ -537,12 +538,97 @@ function HeroParallaxBg() {
 /* ══════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════ */
+function isSafariBrowser() {
+  if (typeof window === 'undefined') return false
+  const ua = window.navigator.userAgent
+  return /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua)
+}
+
+function SafariInstallModal({ onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 20,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth: 380, background: '#0d1020',
+          border: '1px solid rgba(120,160,255,0.25)', borderRadius: 24,
+          padding: '28px 24px 32px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <p style={{ color: '#fff', fontWeight: 700, fontSize: 15, margin: 0, fontFamily: 'Montserrat, sans-serif' }}>Instalar GEN EXPERIENCE</p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>×</button>
+        </div>
+        {[
+          { step: '1', icon: '⬆️', title: 'Toca el botón Compartir', desc: 'El ícono con una flecha hacia arriba en la barra inferior de Safari.' },
+          { step: '2', icon: '➕', title: 'Toca "Agregar a pantalla de inicio"', desc: 'Desplázate hacia abajo en el menú que aparece.' },
+          { step: '3', icon: '✅', title: 'Toca "Agregar"', desc: 'GEN EXPERIENCE aparecerá en tu pantalla de inicio.' },
+        ].map(({ step, icon, title, desc }) => (
+          <div key={step} style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(120,160,255,0.1)', border: '1px solid rgba(120,160,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16 }}>{icon}</div>
+            <div>
+              <p style={{ color: '#fff', fontWeight: 600, fontSize: 13, margin: '0 0 2px', fontFamily: 'Montserrat, sans-serif' }}>{title}</p>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: 0 }}>{desc}</p>
+            </div>
+          </div>
+        ))}
+        <div style={{ marginTop: 8, background: 'rgba(120,160,255,0.08)', border: '1px solid rgba(120,160,255,0.2)', borderRadius: 12, padding: '10px 14px', textAlign: 'center', fontSize: 12, color: 'rgba(120,160,255,0.8)' }}>
+          👆 El botón Compartir está en la barra inferior de Safari
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [installPrompt, setInstallPromptState] = useState(() => getInstallPrompt())
+  const [fading, setFading] = useState(false)
+  const [showSafariModal, setShowSafariModal] = useState(false)
+  const isSafari = isSafariBrowser()
+
+  useEffect(() => {
+    return onInstallPromptChange(e => setInstallPromptState(e))
+  }, [])
+
+  const handleInstall = async () => {
+    if (isSafari) { setShowSafariModal(true); return }
+    if (!installPrompt) return
+    setFading(true)
+    await new Promise(r => setTimeout(r, 600))
+    await installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    if (outcome === 'accepted') {
+      localStorage.setItem('totem_pwa_installed', 'true')
+      window.location.replace('/splash')
+    } else {
+      setFading(false)
+    }
+    setInstallPromptState(null)
+  }
+
+  const showInstallBtn = isSafari || !!installPrompt
 
   return (
     <div style={s.root}>
       <FontLoader />
+
+      {/* Fade to black overlay */}
+      <div style={{
+        position: 'fixed', inset: 0, background: '#000', zIndex: 9998,
+        opacity: fading ? 1 : 0, pointerEvents: fading ? 'all' : 'none',
+        transition: 'opacity 0.6s ease',
+      }} />
+
+      {/* Safari modal */}
+      {showSafariModal && <SafariInstallModal onClose={() => setShowSafariModal(false)} />}
 
       {/* ── Nav ── */}
       <nav style={s.nav} className="site-nav">
@@ -552,6 +638,25 @@ export default function LandingPage() {
           <span className="nav-link nav-link-soon">Cuenta Joy<span className="nav-soon-badge">Próximamente</span></span>
           <span className="nav-link nav-link-soon">mirrAI<span className="nav-soon-badge">Próximamente</span></span>
           <a href="#contacto" className="nav-link" onClick={e => smoothScroll(e, 'contacto')}>Contacto</a>
+          {showInstallBtn && (
+            <button
+              onClick={handleInstall}
+              style={{
+                background: 'linear-gradient(135deg, #3b82f6, #6d28d9)',
+                color: '#fff', border: 'none', cursor: 'pointer',
+                padding: '8px 18px', borderRadius: 8,
+                fontSize: 13, fontWeight: 700,
+                fontFamily: 'Montserrat, sans-serif',
+                letterSpacing: '0.03em',
+                boxShadow: '0 0 16px rgba(59,130,246,0.4)',
+                transition: 'box-shadow 0.25s, transform 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 28px rgba(59,130,246,0.7)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 16px rgba(59,130,246,0.4)'; e.currentTarget.style.transform = 'none' }}
+            >
+              Instalar GEN EXPERIENCE ↓
+            </button>
+          )}
           <a href="/admin" className="nav-cta">Iniciar tótem →</a>
         </div>
       </nav>
@@ -569,8 +674,22 @@ export default function LandingPage() {
           </h1>
         </div>
         <div style={s.heroCtas} className="hero-ctas">
-          <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Solicitar Demo</a>
-          <a href="#flujo"    style={s.ctaSecondary} onClick={e => smoothScroll(e, 'flujo')}>Ver experiencia</a>
+          {showInstallBtn ? (
+            <button
+              onClick={handleInstall}
+              style={{
+                ...s.ctaPrimary,
+                background: 'linear-gradient(135deg, #3b82f6, #6d28d9)',
+                border: 'none', cursor: 'pointer',
+                boxShadow: '0 0 30px rgba(59,130,246,0.5)',
+              }}
+            >
+              Instalar GEN EXPERIENCE ↓
+            </button>
+          ) : (
+            <a href="#contacto" style={s.ctaPrimary} onClick={e => smoothScroll(e, 'contacto')}>Solicitar Demo</a>
+          )}
+          <a href="#flujo" style={s.ctaSecondary} onClick={e => smoothScroll(e, 'flujo')}>Ver experiencia</a>
         </div>
       </section>
 
