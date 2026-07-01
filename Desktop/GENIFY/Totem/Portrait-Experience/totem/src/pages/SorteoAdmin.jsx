@@ -60,7 +60,7 @@ export default function SorteoAdmin() {
     return (
       <div style={s.root}>
         <div style={s.loginBox}>
-          <img src="/logo-ai-portrait-experience.png" alt="" style={s.logo} />
+          <img src="/logo-gen-ex.png" alt="" style={s.logo} />
           <h2 style={s.loginTitle}>Panel del Animador</h2>
           <p style={s.loginSub}>Ingresa el ID del evento para continuar</p>
           <input
@@ -105,7 +105,7 @@ export default function SorteoAdmin() {
   return (
     <div style={s.root}>
       <div style={s.panel}>
-        <img src="/logo-ai-portrait-experience.png" alt="" style={s.logo} />
+        <img src="/logo-gen-ex.png" alt="" style={s.logo} />
         <h1 style={s.title}>Panel del Animador</h1>
         <p style={s.eventId}>Evento: <code style={s.code}>{eventId}</code></p>
 

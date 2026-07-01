@@ -487,13 +487,68 @@ function ImgPlaceholder({ label, hint, tall }) {
   )
 }
 
+/* ── Video Autoplay on Scroll ── */
+function ScrollVideo({ src, tall }) {
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(err => {
+            console.log("Auto-play prevented or failed:", err)
+          })
+        } else {
+          video.pause()
+        }
+      },
+      {
+        threshold: 0.1
+      }
+    )
+
+    observer.observe(video)
+
+    return () => {
+      observer.unobserve(video)
+    }
+  }, [src])
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      style={{
+        width: '100%',
+        height: '100%',
+        minHeight: tall ? 560 : 400,
+        borderRadius: 16,
+        objectFit: 'cover',
+        display: 'block',
+        background: '#07070c',
+      }}
+    />
+  )
+}
+
 /* ── Parallax Image wrapper ── */
-function ParallaxImg({ label, hint, tall, speed = 0.1 }) {
+function ParallaxImg({ label, hint, tall, speed = 0.1, videoUrl }) {
   const ref = useParallax(speed)
   return (
     <div style={s.parallaxOuter}>
       <div ref={ref} style={s.parallaxInner}>
-        <ImgPlaceholder label={label} hint={hint} tall={tall} />
+        {videoUrl ? (
+          <ScrollVideo src={videoUrl} tall={tall} />
+        ) : (
+          <ImgPlaceholder label={label} hint={hint} tall={tall} />
+        )}
       </div>
     </div>
   )
@@ -588,6 +643,17 @@ function SafariInstallModal({ onClose }) {
 }
 
 export default function LandingPage() {
+  // Verificación síncrona: si es PWA standalone, redirigir antes de renderizar
+  const isStandaloneNow =
+    typeof window !== 'undefined' && (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      navigator.standalone === true
+    )
+  if (isStandaloneNow) {
+    window.location.replace('/splash')
+    return null
+  }
+
   const [menuOpen, setMenuOpen] = useState(false)
   const [installPrompt, setInstallPromptState] = useState(() => getInstallPrompt())
   const [fading, setFading] = useState(false)
@@ -598,13 +664,24 @@ export default function LandingPage() {
     return onInstallPromptChange(e => setInstallPromptState(e))
   }, [])
 
+
   const handleInstall = async () => {
     if (isSafari) { setShowSafariModal(true); return }
-    if (!installPrompt) return
+
+    // Si el prompt no llegó aún, esperar hasta 3s
+    let prompt = installPrompt
+    if (!prompt) {
+      prompt = await new Promise(resolve => {
+        const unsub = onInstallPromptChange(e => { unsub(); resolve(e) })
+        setTimeout(() => { unsub(); resolve(null) }, 3000)
+      })
+    }
+    if (!prompt) return
+
     setFading(true)
     await new Promise(r => setTimeout(r, 600))
-    await installPrompt.prompt()
-    const { outcome } = await installPrompt.userChoice
+    await prompt.prompt()
+    const { outcome } = await prompt.userChoice
     if (outcome === 'accepted') {
       localStorage.setItem('totem_pwa_installed', 'true')
       window.location.replace('/splash')
@@ -614,7 +691,10 @@ export default function LandingPage() {
     setInstallPromptState(null)
   }
 
-  const showInstallBtn = isSafari || !!installPrompt
+  // Mostrar siempre (excepto si ya está instalada como PWA)
+  const isStandalone = typeof window !== 'undefined' &&
+    (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone)
+  const showInstallBtn = !isStandalone
 
   return (
     <div style={s.root}>
@@ -736,6 +816,7 @@ export default function LandingPage() {
             label: 'FOTO TÓTEM 02', hint: 'Invitado frente al tótem siendo recibido por el avatar',
             title: 'Alex te recibe por tu nombre',
             desc: 'Un fotógrafo con IA y voz humana conoce tu nombre, conversa contigo y crea el momento perfecto para tu retrato. Cada experiencia es única.',
+            videoUrl: '/video1.mp4',
           },
           {
             n: '02', reverse: true,
@@ -764,7 +845,7 @@ export default function LandingPage() {
         ].map(step => (
           <div key={step.n} style={{ ...s.stepSplit, ...(step.reverse ? s.stepSplitReverse : {}) }} className="step-split">
             <div style={s.stepImg} className="step-img">
-              <ParallaxImg label={step.label} hint={step.hint} speed={0.08} />
+              <ParallaxImg label={step.label} hint={step.hint} speed={0.08} videoUrl={step.videoUrl} />
             </div>
             <div style={s.stepText} className="step-text">
               <span style={s.stepNum}>{step.n}</span>

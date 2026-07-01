@@ -77,7 +77,6 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
   }, [captureFrame, onCaptureDone, userName, guestId])
 
   const currentLabel = STATE_LABELS[conversation.state] || ''
-  const [showText, setShowText] = useState(false)
 
   return (
     <div style={s.root}>
@@ -91,7 +90,7 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
 
       {/* Header */}
       <div style={s.header}>
-        <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
+        <img src="/logo-gen-ex.png" alt="AI Portrait Experience" style={s.logoTitle} />
       </div>
 
       {/* Tarjeta central — avatar del fotógrafo */}
@@ -140,65 +139,17 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
         </div>
       </div>
 
-      {/* Zona inferior — PiP cámara + burbuja */}
+      {/* Zona inferior — Burbuja de estado centrada */}
       <div style={s.bottomZone}>
-
-        {/* PiP: cámara del usuario */}
-        <div style={s.pipWrap}>
-          {error ? (
-            <div style={s.pipError}><span style={{ fontSize: 20 }}>⚠</span></div>
-          ) : (
-            <CameraFeed videoRef={videoRef} />
-          )}
-        </div>
-
-        {/* Burbuja + estado */}
-        <div style={s.bubbleCol}>
-          {/* Botón escribir — siempre visible */}
-          {phase === 'conversation' && (
-            <button style={s.writeBtn} onClick={() => setShowText(v => !v)}>
-              {showText ? 'cerrar' : 'escribir'}
-            </button>
-          )}
-
-          {/* Texto + input — solo si showText */}
-          {showText && (
-            <>
-              {conversation.avatarText && phase === 'conversation' && (
-                <div style={s.bubble}>
-                  {userName && <p style={s.bubbleName}>👋 {userName}</p>}
-                  <p style={s.bubbleText}>{conversation.avatarText}</p>
-                  {currentLabel && (
-                    <div style={s.listeningIndicator}>
-                      <div style={s.dot} />
-                      <div style={{ ...s.dot, animationDelay: '0.2s' }} />
-                      <div style={{ ...s.dot, animationDelay: '0.4s' }} />
-                      <span style={s.listeningLabel}>{currentLabel}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {phase === 'conversation' && conversation.state === 'listening' && (
-                <input
-                  ref={inputRef}
-                  style={s.keyboardInput}
-                  value={keyboardInput}
-                  onChange={e => setKeyboardInput(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && keyboardInput.trim()) {
-                      conversation.sendManualInput(keyboardInput.trim())
-                      setKeyboardInput('')
-                      setShowText(false)
-                    }
-                  }}
-                  placeholder="Escribe tu respuesta y presiona Enter..."
-                  autoFocus
-                />
-              )}
-            </>
-          )}
-        </div>
+        {/* Burbuja de estado — solo icono + "Escuchando..." */}
+        {phase === 'conversation' && (
+          <div style={s.bubbleMinimal}>
+            <div style={s.audioIcon} />
+            {currentLabel && (
+              <span style={s.listeningLabel}>{currentLabel}</span>
+            )}
+          </div>
+        )}
       </div>
 
       </div>{/* /inner */}
@@ -236,7 +187,7 @@ const s = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
   logoTitle: {
-    height: '80px', objectFit: 'contain',
+    width: '125px', objectFit: 'contain',
   },
   logoGenofy: {
     height: '26px', objectFit: 'contain',
@@ -302,69 +253,34 @@ const s = {
   bottomZone: {
     flexShrink: 0,
     zIndex: 2,
-    width: '100%', padding: '12px 55px 28px',
-    display: 'flex', alignItems: 'flex-end', gap: '12px',
+    width: '100%', padding: '20px 55px 28px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
   },
   pipWrap: {
-    position: 'relative',
-    width: 180, height: 230,
-    borderRadius: '16px', overflow: 'hidden', flexShrink: 0,
-    border: '2px solid rgba(100,160,255,0.5)',
-    boxShadow: '0 0 20px rgba(30,100,255,0.4)',
-    background: '#000',
+    display: 'none',
   },
   pipError: {
-    width: '100%', height: '100%',
+    display: 'none',
+  },
+  bubbleMinimal: {
+    display: 'flex', alignItems: 'center', gap: '10px',
+    background: 'rgba(168,85,247,0.15)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '50px', padding: '10px 20px',
+    border: '1.5px solid rgba(168,85,247,0.4)',
+    boxShadow: '0 4px 20px rgba(168,85,247,0.15)',
+  },
+  audioIcon: {
+    width: '24px', height: '24px', borderRadius: '50%',
+    border: '2px solid #a855f7',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: '#0a0a0a', color: '#f87171',
-  },
-  bubbleCol: {
-    flex: 1, display: 'flex', flexDirection: 'column', gap: '8px',
-  },
-  bubble: {
-    background: 'rgba(255,255,255,0.95)',
-    borderRadius: '16px', padding: '14px 18px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-  },
-  bubbleName: {
-    fontSize: '13px', fontWeight: 800,
-    background: 'linear-gradient(90deg, #a855f7, #22d3ee)',
-    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-    marginBottom: '4px', letterSpacing: '1px',
-  },
-  bubbleText: {
-    fontSize: '15px', color: '#1a1a2e',
-    fontWeight: 600, lineHeight: 1.5,
-  },
-  listeningIndicator: {
-    display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px',
-  },
-  dot: {
-    width: '5px', height: '5px', borderRadius: '50%',
-    background: '#a855f7', animation: 'pulse 1s ease-in-out infinite',
+    position: 'relative', flexShrink: 0,
+    background: 'radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)',
   },
   listeningLabel: {
-    fontSize: '10px', color: '#a855f7',
-    letterSpacing: '2px', fontWeight: 600,
-    textTransform: 'uppercase', marginLeft: '3px',
-  },
-  keyboardInput: {
-    width: '100%', padding: '12px 16px',
-    fontSize: '15px', borderRadius: '50px',
-    border: '1.5px solid rgba(168,85,247,0.6)',
-    background: 'rgba(0,0,0,0.7)', color: '#fff',
-    outline: 'none', boxSizing: 'border-box',
-    backdropFilter: 'blur(10px)',
-  },
-  writeBtn: {
-    alignSelf: 'flex-start',
-    background: 'rgba(168,85,247,0.15)',
-    border: '1px solid rgba(168,85,247,0.5)',
-    color: 'rgba(255,255,255,0.85)',
-    padding: '6px 18px', borderRadius: '50px',
-    cursor: 'pointer', fontSize: '12px',
-    fontWeight: 600, letterSpacing: '1px',
-    backdropFilter: 'blur(8px)',
+    fontSize: '12px', color: '#a855f7',
+    letterSpacing: '1px', fontWeight: 600,
+    textTransform: 'uppercase',
   },
   spinner: {
     width: '48px', height: '48px', borderRadius: '50%',

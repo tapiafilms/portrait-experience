@@ -28,7 +28,7 @@ export default function IdleScreen({ onPresenceDetected }) {
 
       {/* Logo AI Portrait Experience */}
       <div style={s.header}>
-        <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
+        <img src="/logo-gen-ex.png" alt="AI Portrait Experience" style={s.logoTitle} />
       </div>
 
       {/* Avatar en tarjeta */}
@@ -84,7 +84,7 @@ const s = {
     display: 'flex', justifyContent: 'center',
   },
   logoTitle: {
-    width: '320px', objectFit: 'contain',
+    width: '125px', objectFit: 'contain',
   },
   avatarZone: {
     flex: 1, zIndex: 2,

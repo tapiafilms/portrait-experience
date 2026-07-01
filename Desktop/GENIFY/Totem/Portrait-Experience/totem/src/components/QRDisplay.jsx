@@ -47,7 +47,7 @@ export default function QRDisplay({ sessionData, onReset }) {
 
         {/* Header */}
         <div style={s.header}>
-          <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logoTitle} />
+          <img src="/logo-gen-ex.png" alt="AI Portrait Experience" style={s.logoTitle} />
           <img src="/logo-genofy-transparent.png" alt="Genofy" style={s.logoGenofy} />
         </div>
 
@@ -175,7 +175,7 @@ const s = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
   logoTitle: {
-    height: '34px', objectFit: 'contain',
+    width: '125px', objectFit: 'contain',
   },
   logoGenofy: {
     height: '26px', objectFit: 'contain',

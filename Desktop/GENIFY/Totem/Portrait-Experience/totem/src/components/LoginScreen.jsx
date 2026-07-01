@@ -43,7 +43,7 @@ export default function LoginScreen() {
       <div style={s.overlay} />
 
       <div style={s.card}>
-        <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logo} />
+        <img src="/logo-gen-ex.png" alt="AI Portrait Experience" style={s.logo} />
 
         <p style={s.subtitle}>Ingresa la clave de tu evento</p>
 
@@ -103,7 +103,7 @@ const s = {
     animation: 'fadeIn 0.5s ease',
   },
   logo: {
-    width: '260px', objectFit: 'contain',
+    width: '125px', objectFit: 'contain',
   },
   subtitle: {
     fontSize: '14px', color: 'rgba(255,255,255,0.6)',

@@ -123,7 +123,7 @@ function TransformingScreen({ userName }) {
     <div style={ts.root}>
       <img src="/bg-totem.png" alt="" style={ts.bg} />
       <div style={ts.bgOverlay} />
-      <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={ts.logoTitle} />
+      <img src="/logo-gen-ex.png" alt="AI Portrait Experience" style={ts.logoTitle} />
       <div style={ts.content}>
         <div style={ts.orbWrapper}>
           <div style={ts.orb} />
@@ -146,7 +146,7 @@ const ts = {
   root: { width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'hidden', animation: 'fadeIn 0.5s ease', paddingTop: 40, paddingBottom: 36 },
   bg: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 },
   bgOverlay: { position: 'absolute', inset: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(0,5,30,0.4) 0%, rgba(0,5,30,0.2) 50%, rgba(0,5,30,0.6) 100%)' },
-  logoTitle: { height: '42px', objectFit: 'contain', zIndex: 2 },
+  logoTitle: { width: '125px', objectFit: 'contain', zIndex: 2 },
   content: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', zIndex: 2 },
   orbWrapper: { position: 'relative', width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   orb: { width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%)', boxShadow: '0 0 40px rgba(96,165,250,0.7), 0 0 80px rgba(59,130,246,0.4)', animation: 'pulse 2s ease-in-out infinite', zIndex: 1 },

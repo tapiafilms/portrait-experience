@@ -56,14 +56,16 @@ function parseSheet(data) {
 // Login guard
 // ═══════════════════════════════════════════════════════════════════════════════
 function AdminLogin({ onAuth }) {
-  const [pwd, setPwd]   = useState('')
+  const [pwd, setPwd]     = useState('')
   const [error, setError] = useState(false)
+  const [fading, setFading] = useState(false)
 
   function handleSubmit(e) {
     e.preventDefault()
     if (pwd === ADMIN_PWD) {
       sessionStorage.setItem('admin_auth', '1')
-      onAuth()
+      setFading(true)
+      setTimeout(() => onAuth(), 400)
     } else {
       setError(true)
       setPwd('')
@@ -71,7 +73,7 @@ function AdminLogin({ onAuth }) {
   }
 
   return (
-    <div style={s.loginRoot}>
+    <div style={s.loginRoot} className={fading ? 'page-fade-out' : 'page-fade-in'}>
       <div style={s.loginCard}>
         <img src="/logo-gen-ex.png" alt="Gen Experience" style={{ height: 56, marginBottom: 8, objectFit: 'contain' }} />
         <p style={s.loginTitle}>Panel de control</p>
@@ -119,7 +121,7 @@ export default function AdminPage({ eventId = null }) {
   if (!authed) return <AdminLogin onAuth={() => setAuthed(true)} />
 
   return (
-    <div style={s.root}>
+    <div style={s.root} className="page-fade-in">
       {/* Sidebar */}
       <aside style={s.sidebar}>
         <img src="/logo-gen-ex.png" alt="Gen Experience" style={s.logo} />
@@ -152,7 +154,7 @@ export default function AdminPage({ eventId = null }) {
           {[
             { id: 'resumen',   label: 'Resumen',          icon: '📊' },
             { id: 'momentos',  label: 'Momentos',         icon: '🎯' },
-            { id: 'pantalla',  label: 'Pantalla gigante', icon: '🖥️' },
+            { id: 'pantalla',  label: 'Pantalla Gigante',   icon: '🖥️' },
             { id: 'invitados', label: 'Invitados',        icon: '👥' },
             { id: 'evento',    label: 'Evento / IA',      icon: '🤖' },
             ...(!eventId ? [{ id: 'crear', label: 'Crear evento', icon: '➕' }] : []),
@@ -200,6 +202,7 @@ function TabResumen({ event, supabase, password, onDeleted }) {
   const [sorteoState, setSorteoState] = useState('inactive')
   const [deleting, setDeleting] = useState(false)
   const [portraits, setPortraits] = useState([])
+  const [portraitsLoading, setPortraitsLoading] = useState(true)
   const [totemQR, setTotemQR] = useState(null)
   const carouselRef = useRef(null)
 
@@ -235,6 +238,7 @@ function TabResumen({ event, supabase, password, onDeleted }) {
       supabase.from('sessions').select('id, transformed_url').eq('event_id', event.id).not('transformed_url', 'is', null).order('created_at', { ascending: false }),
     ])
     setPortraits(sessions.data || [])
+    setPortraitsLoading(false)
     const p = participants.data || []
     setMetrics({
       photos:           photos.count || 0,
@@ -250,80 +254,115 @@ function TabResumen({ event, supabase, password, onDeleted }) {
   const sorteoStateLabel = { inactive: 'Inactivo', active: 'Activo', countdown: 'Countdown', done: 'Finalizado' }
   const sorteoStateColor = { inactive: '#475569', active: '#22c55e', countdown: '#f59e0b', done: '#6366f1' }
 
+  const totemUrl = event ? `${window.location.origin}/totem/${event.id}` : null
+
   return (
     <div style={s.tabWrap}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div>
-          <h2 style={s.tabTitle}>Resumen — {event?.event_name}</h2>
-          <p style={s.tabSub}>Clave del tótem: <code style={s.code}>{event?.key}</code></p>
-        </div>
-        <button
-          style={{ ...s.deleteBtn, opacity: deleting ? 0.5 : 1 }}
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? 'Eliminando...' : '🗑 Eliminar evento'}
-        </button>
-      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 32 }}>
 
-      <div style={s.metricsGrid}>
-        <MetricCard label="Fotos en pantalla gigante" value={metrics.photos} color="#22d3ee" icon="📸" />
-        <MetricCard label="Participantes en sorteo"   value={metrics.sorteoTotal} color="#a855f7" icon="🎯" />
-        <MetricCard label="Parejas formadas"          value={metrics.sorteoPaired / 2 | 0} color="#f59e0b" icon="💑" />
-        <MetricCard label="Encuentros confirmados"    value={metrics.sorteoConfirmed / 2 | 0} color="#22c55e" icon="🏆" />
-      </div>
-
-      <div style={s.statusRow}>
-        <span style={s.statusLabel}>Estado del sorteo:</span>
-        <span style={{ ...s.statusBadge, background: sorteoStateColor[sorteoState] + '22', color: sorteoStateColor[sorteoState], border: `1px solid ${sorteoStateColor[sorteoState]}55` }}>
-          {sorteoStateLabel[sorteoState] || sorteoState}
-        </span>
-      </div>
-
-      {[
-        { label: '🖥️ Tótem',           path: `totem/${event?.id}`,   hint: 'Abrir en el computador del tótem' },
-        { label: '📺 Pantalla gigante', path: `galeria/${event?.id}`, hint: 'Abrir en el TV o pantalla del evento' },
-        { label: '⚙️ Dashboard',        path: `admin/${event?.id}`,   hint: 'Abrir en el laptop del operador' },
-      ].map(u => (
-        <div key={u.path} style={s.urlRow}>
-          <div style={s.urlInfo}>
-            <span style={s.urlLabel}>{u.label}</span>
-            <span style={s.urlHint}>{u.hint}</span>
-            <code style={s.urlCode}>{window.location.origin}/{u.path}</code>
+        {/* ── Columna izquierda: info del evento ── */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+            <div>
+              <h2 style={s.tabTitle}>Resumen — {event?.event_name}</h2>
+              <p style={s.tabSub}>Clave del tótem: <code style={s.code}>{event?.key}</code></p>
+            </div>
+            <button
+              style={{ ...s.deleteBtn, opacity: deleting ? 0.5 : 1 }}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Eliminando...' : '🗑 Eliminar evento'}
+            </button>
           </div>
-          <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/${u.path}`)}>Copiar</button>
-        </div>
-      ))}
-      {/* Carrusel retratos Pixar + QR tótem */}
-      <div style={s.carouselQRRow}>
-        {portraits.length > 0 && (
-          <div style={{ ...s.carouselSection, flex: 1, minWidth: 0 }}>
-            <p style={s.carouselTitle}>Retratos generados — {portraits.length}</p>
-            <div style={s.carouselMask}>
-              <div style={{
-                ...s.carouselTrack,
-                animationDuration: `${portraits.length * 3}s`,
-              }}>
-                {[...portraits, ...portraits].map((p, i) => (
-                  <img key={i} src={p.transformed_url} alt="" style={s.portraitImg} />
-                ))}
+
+          <div style={s.metricsGrid}>
+            <MetricCard label="Fotos en pantalla gigante" value={metrics.photos} color="#22d3ee" icon="📸" />
+            <MetricCard label="Participantes en sorteo"   value={metrics.sorteoTotal} color="#a855f7" icon="🎯" />
+            <MetricCard label="Parejas formadas"          value={metrics.sorteoPaired / 2 | 0} color="#f59e0b" icon="💑" />
+            <MetricCard label="Encuentros confirmados"    value={metrics.sorteoConfirmed / 2 | 0} color="#22c55e" icon="🏆" />
+          </div>
+
+          <div style={s.statusRow}>
+            <span style={s.statusLabel}>Estado del sorteo:</span>
+            <span style={{ ...s.statusBadge, background: sorteoStateColor[sorteoState] + '22', color: sorteoStateColor[sorteoState], border: `1px solid ${sorteoStateColor[sorteoState]}55` }}>
+              {sorteoStateLabel[sorteoState] || sorteoState}
+            </span>
+          </div>
+
+          {[
+            { label: '🖥️ Tótem',           path: `totem/${event?.id}`,   hint: 'Abrir en el computador del tótem' },
+            { label: '📺 Pantalla gigante', path: `galeria/${event?.id}`, hint: 'Abrir en el TV o pantalla del evento' },
+            { label: '⚙️ Dashboard',        path: `admin/${event?.id}`,   hint: 'Abrir en el laptop del operador' },
+          ].map(u => (
+            <div key={u.path} style={s.urlRow}>
+              <div style={s.urlInfo}>
+                <span style={s.urlLabel}>{u.label}</span>
+                <span style={s.urlHint}>{u.hint}</span>
+                <code style={s.urlCode}>{window.location.origin}/{u.path}</code>
               </div>
+              <button style={s.copyBtn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/${u.path}`)}>Copiar</button>
             </div>
-            <style>{`
-              @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-            `}</style>
+          ))}
+
+          {/* Carrusel retratos Pixar + QR tótem */}
+          <div style={s.carouselQRRow}>
+            <div style={{ ...s.carouselSection, flex: 1, minWidth: 0 }}>
+              <p style={s.carouselTitle}>
+                Retratos generados{!portraitsLoading && ` — ${portraits.length}`}
+              </p>
+              {portraitsLoading ? (
+                <div style={{ display: 'flex', gap: 12, overflow: 'hidden' }}>
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: 120, height: 160, borderRadius: 12, flexShrink: 0,
+                        background: 'rgba(255,255,255,0.06)',
+                        animation: `shimmer 1.4s ease-in-out ${i * 0.1}s infinite`,
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : portraits.length > 0 ? (
+                <div style={s.carouselMask}>
+                  <div style={{ ...s.carouselTrack, animationDuration: `${portraits.length * 3}s` }}>
+                    {[...portraits, ...portraits].map((p, i) => (
+                      <img key={i} src={p.transformed_url} alt="" style={s.portraitImg} />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
+                  Aún no hay retratos generados en este evento.
+                </p>
+              )}
+              <style>{`
+                @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+                @keyframes shimmer {
+                  0%, 100% { opacity: 0.4; }
+                  50%       { opacity: 0.8; }
+                }
+              `}</style>
+            </div>
+
+            {totemQR && (
+              <div style={s.qrPanel}>
+                <p style={s.carouselTitle}>QR tótem</p>
+                <div style={s.qrPanelBox}>
+                  <img src={totemQR} alt="QR Tótem" style={{ width: 140, height: 140, display: 'block' }} />
+                </div>
+                <p style={s.qrPanelHint}>Escanear para abrir el tótem</p>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* ── Columna derecha: preview tótem ── */}
+        {totemUrl && (
+          <IframePanel url={totemUrl} title="Tótem" label="Tótem" aspect="9/16" />
         )}
 
-        {totemQR && (
-          <div style={s.qrPanel}>
-            <p style={s.carouselTitle}>QR tótem</p>
-            <div style={s.qrPanelBox}>
-              <img src={totemQR} alt="QR Tótem" style={{ width: 140, height: 140, display: 'block' }} />
-            </div>
-            <p style={s.qrPanelHint}>Escanear para abrir el tótem</p>
-          </div>
-        )}
       </div>
     </div>
   )
@@ -448,28 +487,45 @@ function TabMomentos({ event, password }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Tab: Pantalla gigante
 // ═══════════════════════════════════════════════════════════════════════════════
+function IframePanel({ url, title, label, aspect = '16/9' }) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minWidth: 0 }}>
+      <div style={s.pantallaToolbar}>
+        <code style={s.codeSmall}>{url}</code>
+        <a href={url} target="_blank" rel="noreferrer" style={s.openBtn}>Abrir ↗</a>
+      </div>
+      <div style={{ position: 'relative', width: '100%', aspectRatio: aspect, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#000' }}>
+        {!loaded && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 2, background: '#0d1117', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 16 }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid rgba(34,211,238,0.15)', borderTopColor: '#22d3ee', animation: 'spin 0.8s linear infinite' }} />
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: 0 }}>Cargando {label}...</p>
+          </div>
+        )}
+        <iframe
+          src={url}
+          title={title}
+          style={{ width: '100%', height: '100%', border: 'none', opacity: loaded ? 1 : 0, transition: 'opacity 0.4s ease' }}
+          allow="autoplay"
+          onLoad={() => setLoaded(true)}
+        />
+      </div>
+      <p style={s.pantallaHint}>{label}</p>
+    </div>
+  )
+}
+
 function TabPantalla({ event }) {
-  const url = event ? `${window.location.origin}/galeria/${event.id}` : null
+  const galeriaUrl = event ? `${window.location.origin}/galeria/${event.id}` : null
+  const totemUrl   = event ? `${window.location.origin}/totem/${event.id}`   : null
 
   return (
-    <div style={s.tabWrap}>
-      <h2 style={s.tabTitle}>Monitor — Pantalla Gigante</h2>
-      {url && (
-        <>
-          <div style={s.pantallaToolbar}>
-            <code style={s.codeSmall}>{url}</code>
-            <a href={url} target="_blank" rel="noreferrer" style={s.openBtn}>Abrir en pestaña ↗</a>
-          </div>
-          <div style={s.iframeWrap}>
-            <iframe
-              src={url}
-              title="Pantalla gigante"
-              style={s.iframe}
-              allow="autoplay"
-            />
-          </div>
-          <p style={s.pantallaHint}>Este es el preview de lo que se está mostrando en la pantalla del evento.</p>
-        </>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <h2 style={s.tabTitle}>Pantalla Gigante</h2>
+      {event && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          <IframePanel url={galeriaUrl} title="Pantalla gigante" label="Pantalla gigante del evento" aspect="16/9" />
+        </div>
       )}
     </div>
   )

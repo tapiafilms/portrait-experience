@@ -103,7 +103,7 @@ export default function SessionPage() {
     <div style={s.root}>
       {/* Header */}
       <div style={s.header}>
-        <img src="/logo-ai-portrait-experience.png" alt="AI Portrait Experience" style={s.logo} />
+        <img src="/logo-gen-ex.png" alt="AI Portrait Experience" style={s.logo} />
       </div>
 
       {/* Foto principal */}
@@ -816,7 +816,7 @@ const s = {
     width: '100%', padding: '20px 24px',
     display: 'flex', justifyContent: 'center',
   },
-  logo: { height: 32, objectFit: 'contain' },
+  logo: { width: 125, objectFit: 'contain' },
   photoWrap: {
     padding: '0 24px', width: '100%',
     maxWidth: 400, boxSizing: 'border-box',
