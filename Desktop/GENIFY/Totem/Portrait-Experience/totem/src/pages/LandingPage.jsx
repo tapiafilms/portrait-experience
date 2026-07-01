@@ -533,6 +533,7 @@ function ScrollVideo({ src, tall }) {
         objectFit: 'cover',
         display: 'block',
         background: '#07070c',
+        filter: 'brightness(0.65)',
       }}
     />
   )
