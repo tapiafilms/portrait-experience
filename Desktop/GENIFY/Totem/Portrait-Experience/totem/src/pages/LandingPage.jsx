@@ -250,7 +250,7 @@ const HIGHLIGHTS = [
   {
     title: '',
     desc: 'Un fotógrafo con IA y voz humana crea el momento perfecto para tu retrato.',
-    youtubeId: 'dbw41KbMdI0',
+    youtubeId: 'A5teSv8MpCg',
     thumbnail: '/thumb-1.jpg',
   },
   {
