@@ -518,24 +518,36 @@ function ScrollVideo({ src, tall }) {
   }, [src])
 
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      muted
-      loop
-      playsInline
-      preload="metadata"
-      style={{
-        width: '100%',
-        height: '100%',
-        minHeight: tall ? 560 : 400,
-        borderRadius: 16,
-        objectFit: 'cover',
-        display: 'block',
-        background: '#07070c',
-        filter: 'brightness(0.65)',
-      }}
-    />
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: tall ? 560 : 400, borderRadius: 16, overflow: 'hidden' }}>
+      <video
+        ref={videoRef}
+        src={src}
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: tall ? 560 : 400,
+          objectFit: 'cover',
+          display: 'block',
+          background: '#07070c',
+          filter: 'brightness(0.65)',
+        }}
+      />
+      {/* Malla (mesh overlay) de puntos oscuros */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'radial-gradient(rgba(0, 0, 0, 0.45) 1px, transparent 1px)',
+          backgroundSize: '4px 4px',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
+    </div>
   )
 }
 
