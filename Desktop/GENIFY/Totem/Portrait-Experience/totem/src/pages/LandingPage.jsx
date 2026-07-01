@@ -855,6 +855,7 @@ export default function LandingPage() {
             label: 'FOTO PANTALLA 01', hint: 'Pantalla gigante del evento con galería de retratos proyectada',
             title: 'Sé parte de la pantalla gigante',
             desc: 'Tu retrato aparece en la galería en vivo proyectada en el evento. Todos los invitados, en el centro de la noche.',
+            videoUrl: '/video3.mp4',
           },
         ].map(step => (
           <div key={step.n} style={{ ...s.stepSplit, ...(step.reverse ? s.stepSplitReverse : {}) }} className="step-split">
