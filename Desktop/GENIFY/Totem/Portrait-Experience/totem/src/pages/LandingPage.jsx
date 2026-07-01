@@ -836,6 +836,7 @@ export default function LandingPage() {
             label: 'FOTO TÓTEM 03', hint: 'Pantalla mostrando la transformación Pixar en proceso',
             title: 'Tu foto se convierte en arte',
             desc: 'La IA transforma tu retrato en un personaje Pixar en menos de 30 segundos, preservando tus rasgos únicos.',
+            videoUrl: '/video2.mp4',
           },
           {
             n: '03', reverse: false,
