@@ -47,6 +47,25 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
 
       let gotAnyResult = false
       let finalTranscript = ''
+      let turnTriggered = false
+
+      // Guard para evitar llamadas duplicadas en un mismo turno
+      const triggerTurn = (text) => {
+        if (turnTriggered) return
+        turnTriggered = true
+        clearTimeout(timeoutRef.current)
+        clearTimeout(silenceTimerRef.current)
+        r.onresult = null; r.onerror = null; r.onend = null
+        try { r.stop() } catch {}
+        cancelSpeech()
+        if (activeRef.current) {
+          if (text) {
+            onResult(text)
+          } else {
+            onSilence()
+          }
+        }
+      }
 
       r.onresult = (e) => {
         gotAnyResult = true
@@ -68,14 +87,7 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
         // Si el usuario deja de hablar por 1.8 segundos, consideramos que terminó su turno
         silenceTimerRef.current = setTimeout(() => {
           console.log('[SR VAD final]', currentText)
-          r.onresult = null; r.onerror = null; r.onend = null
-          try { r.stop() } catch {}
-          cancelSpeech()
-          if (activeRef.current && currentText) {
-            onResult(currentText)
-          } else {
-            onSilence()
-          }
+          triggerTurn(currentText)
         }, 1800)
       }
 
@@ -85,18 +97,16 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
 
       r.onend = () => {
         if (!gotAnyResult && activeRef.current) {
-          onSilence()
+          triggerTurn(null)
         }
       }
 
-      try { r.start() } catch { onSilence(); return }
+      try { r.start() } catch { triggerTurn(null); return }
 
       // Timer de silencio inicial (7s): si no dice nada en 7 segundos, activa onSilence
       timeoutRef.current = setTimeout(() => {
         if (!gotAnyResult && activeRef.current) {
-          r.onresult = null; r.onerror = null; r.onend = null
-          try { r.abort() } catch {}
-          onSilence()
+          triggerTurn(null)
         }
       }, ms)
     }, 500)
@@ -182,8 +192,15 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
           onCaptureRef.current?.()
           return
         }
-        const next = await sendTurn('[silencio — el usuario no respondió]').catch(() => null)
-        if (next) processResponse(next)
+        setState('thinking')
+        setAvatar('...')
+        try {
+          const next = await sendTurn('[silencio — el usuario no respondió]')
+          processResponse(next)
+        } catch (err) {
+          console.error('[Photographer silence]', err)
+          setState('listening')
+        }
       }
     )
   }, [guestData, listen, sendTurn, onGuestIdentified])
