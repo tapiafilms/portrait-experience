@@ -151,12 +151,32 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
 
       {/* Zona inferior — Burbuja de estado centrada */}
       <div style={s.bottomZone}>
-        {/* Burbuja de estado — solo icono + "Escuchando..." */}
         {phase === 'conversation' && (
-          <div style={s.bubbleMinimal}>
-            <div style={s.audioIcon} />
-            {currentLabel && (
-              <span style={s.listeningLabel}>{currentLabel}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: '12px' }}>
+            {/* Burbuja de estado — solo icono + "Escuchando..." */}
+            <div style={s.bubbleMinimal}>
+              <div style={s.audioIcon} />
+              {currentLabel && (
+                <span style={s.listeningLabel}>{currentLabel}</span>
+              )}
+            </div>
+
+            {/* Input teclado oculto/auxiliar */}
+            {conversation.state === 'listening' && (
+              <input
+                ref={inputRef}
+                style={s.keyboardInput}
+                value={keyboardInput}
+                onChange={e => setKeyboardInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && keyboardInput.trim()) {
+                    conversation.sendManualInput(keyboardInput.trim())
+                    setKeyboardInput('')
+                  }
+                }}
+                placeholder="Escribe tu respuesta..."
+                autoFocus
+              />
             )}
           </div>
         )}
@@ -313,5 +333,16 @@ const s = {
     color: '#fff', border: 'none',
     padding: '12px 32px', fontSize: '16px', fontWeight: 700,
     borderRadius: '50px', cursor: 'pointer',
+  },
+  keyboardInput: {
+    width: '100%', maxWidth: '380px', padding: '12px 20px',
+    fontSize: '15px', borderRadius: '50px',
+    border: '1.5px solid rgba(168,85,247,0.5)',
+    background: 'rgba(0,5,30,0.85)', color: '#fff',
+    outline: 'none', boxSizing: 'border-box',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 0 20px rgba(168,85,247,0.15)',
+    textAlign: 'center',
+    marginTop: '4px',
   },
 }
