@@ -105,15 +105,40 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
             <div style={s.scanLine} />
           </div>
 
-          {/* Cámara de fondo para captura y visualización */}
-          {error ? (
-            <div style={s.cardOverlay}>
-              <p style={s.errorText}>⚠ Cámara no disponible</p>
-              <p style={s.errorSub}>{error}</p>
-            </div>
-          ) : (
-            <CameraFeed videoRef={videoRef} />
-          )}
+          {/* Contenedor de cámara con transición dinámica (PiP durante conversación, Fullscreen en captura) */}
+          <div style={{
+            position: 'absolute',
+            transition: 'all 0.7s cubic-bezier(0.34, 1.3, 0.64, 1)',
+            overflow: 'hidden',
+            background: '#000',
+            ...(phase === 'conversation' ? {
+              top: '24px',
+              right: '24px',
+              width: '150px',
+              height: '200px',
+              borderRadius: '16px',
+              border: '1.5px solid rgba(100,160,255,0.5)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 15px rgba(30,100,255,0.25)',
+              zIndex: 10,
+            } : {
+              top: 0,
+              right: 0,
+              width: '100%',
+              height: '100%',
+              borderRadius: 0,
+              border: 'none',
+              boxShadow: 'none',
+              zIndex: 0,
+            })
+          }}>
+            {error ? (
+              <div style={s.pipError}>
+                <span style={{ fontSize: 20 }}>⚠</span>
+              </div>
+            ) : (
+              <CameraFeed videoRef={videoRef} />
+            )}
+          </div>
 
           <div style={{
             position: 'absolute', bottom: 0, left: '50%', width: '130%', height: '130%', zIndex: 1,
