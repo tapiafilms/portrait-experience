@@ -114,32 +114,8 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
   text = normalizeText(text)
 
   const BASE = import.meta.env.VITE_API_URL || ''
-  const fetchController = new AbortController()
-  const fetchTimeout = setTimeout(() => fetchController.abort(), 15_000)
+  const url = `${BASE}/api/tts?text=${encodeURIComponent(text)}&voiceId=${voiceId || ''}`
 
-  let res
-  try {
-    res = await fetch(`${BASE}/api/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, voiceId }),
-      signal: fetchController.signal,
-    })
-  } finally {
-    clearTimeout(fetchTimeout)
-  }
-
-  if (!res.ok) {
-    const body = await res.text()
-    console.error('[TTS] Error:', res.status, body)
-    throw new Error(`TTS error: ${res.status}`)
-  }
-
-  const arrayBuffer = await res.arrayBuffer()
-  console.log('[ElevenLabs] Audio recibido, bytes:', arrayBuffer.byteLength)
-
-  const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
-  const url = URL.createObjectURL(blob)
   const audio = new Audio(url)
   currentAudio = audio
 
@@ -148,15 +124,33 @@ async function speakElevenLabs(text, { voiceId, onStart, onPause, onResume } = {
 
     const cleanup = () => {
       currentResolve = null
-      URL.revokeObjectURL(url)
       resolve()
     }
-    const safetyTimer = setTimeout(cleanup, 60_000)
 
-    audio.onended = () => { console.log('[ElevenLabs] audio.onended'); clearTimeout(safetyTimer); cleanup() }
-    audio.onerror = (e) => { console.warn('[ElevenLabs] Audio error:', e); clearTimeout(safetyTimer); cleanup() }
+    // Timer de seguridad dinámico basado en la cantidad de palabras
+    const wordCount = text.split(/\s+/).length
+    const safetyDuration = Math.max(3000, wordCount * 600 + 4000)
+    const safetyTimer = setTimeout(() => {
+      console.warn('[speakElevenLabs] Fallback timeout disparado (onended no se ejecutó)')
+      cleanup()
+    }, safetyDuration)
+
+    audio.onended = () => {
+      console.log('[ElevenLabs] audio.onended')
+      clearTimeout(safetyTimer)
+      cleanup()
+    }
+    audio.onerror = (e) => {
+      console.warn('[ElevenLabs] Audio error:', e)
+      clearTimeout(safetyTimer)
+      cleanup()
+    }
+
     audio.play()
-      .then(() => { console.log('[ElevenLabs] play() OK → onStart'); onStart?.() })
+      .then(() => {
+        console.log('[ElevenLabs] play() OK (stream streaming) → onStart')
+        onStart?.()
+      })
       .catch(e => {
         console.warn('[ElevenLabs] play() FALLÓ:', e.name, e.message)
         onStart?.()  // animar avatar aunque el audio no salga

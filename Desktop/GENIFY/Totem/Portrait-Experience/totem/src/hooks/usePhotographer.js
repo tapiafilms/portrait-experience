@@ -10,20 +10,22 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
   const [guestData, setGuest]   = useState(null)
   const [isSpeaking, setIsSpeaking] = useState(false)
 
-  const activeRef      = useRef(false)
-  const historyRef     = useRef([])
-  const recognRef      = useRef(null)
-  const timeoutRef     = useRef(null)
-  const sessionId      = useRef(`photo-${Date.now()}`)
-  const onCaptureRef   = useRef(onCapture)
-  const silenceCount   = useRef(0)
-  const MAX_SILENCES   = 6
+  const activeRef       = useRef(false)
+  const historyRef      = useRef([])
+  const recognRef       = useRef(null)
+  const timeoutRef      = useRef(null)
+  const silenceTimerRef = useRef(null)
+  const sessionId       = useRef(`photo-${Date.now()}`)
+  const onCaptureRef    = useRef(onCapture)
+  const silenceCount    = useRef(0)
+  const MAX_SILENCES    = 6
 
   useEffect(() => { onCaptureRef.current = onCapture }, [onCapture])
 
   // ── Escuchar ──────────────────────────────────────────────────────────────
   const listen = useCallback((onResult, onSilence, ms = 7000) => {
     clearTimeout(timeoutRef.current)
+    clearTimeout(silenceTimerRef.current)
     if (recognRef.current) {
       recognRef.current.onresult = null
       recognRef.current.onerror  = null
@@ -36,43 +38,68 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
 
     // Pequeño delay para que Chrome re-inicialice el micrófono entre sesiones
     setTimeout(() => {
-    const r = new SR()
-    r.lang = 'es-ES'
-    r.continuous = false
-    r.interimResults = false
-    r.maxAlternatives = 3
-    recognRef.current = r
+      const r = new SR()
+      r.lang = 'es-ES'
+      r.continuous = true // Permitir hablar de corrido con pausas naturales
+      r.interimResults = true // Capturar resultados parciales en tiempo real
+      r.maxAlternatives = 1
+      recognRef.current = r
 
-    let gotResult = false
+      let gotAnyResult = false
+      let finalTranscript = ''
 
-    r.onresult = (e) => {
-      gotResult = true
-      clearTimeout(timeoutRef.current)
-      r.onresult = null; r.onerror = null; r.onend = null
-      try { r.abort() } catch {}
-      cancelSpeech()
-      const t = Array.from(e.results)
-        .flatMap(res => Array.from(res).map(a => a.transcript))
-        .join(' ').toLowerCase().trim()
-      console.log('[Mic]', t)
-      if (activeRef.current) onResult(t)
-    }
+      r.onresult = (e) => {
+        gotAnyResult = true
+        clearTimeout(silenceTimerRef.current)
+        clearTimeout(timeoutRef.current)
 
-    // No usamos onend/onerror para detectar silencio — son poco confiables en Electron
-    r.onerror = (e) => { if (e.error !== 'aborted') console.warn('[SR]', e.error) }
-    r.onend = () => {}
+        let interimTranscript = ''
+        for (let i = e.resultIndex; i < e.results.length; ++i) {
+          if (e.results[i].isFinal) {
+            finalTranscript += e.results[i][0].transcript + ' '
+          } else {
+            interimTranscript += e.results[i][0].transcript
+          }
+        }
 
-    try { r.start() } catch { onSilence(); return }
+        const currentText = (finalTranscript + interimTranscript).trim()
+        console.log('[SR VAD partial]', currentText)
 
-    // Nuestro propio timer controla el silencio
-    timeoutRef.current = setTimeout(() => {
-      if (!gotResult && activeRef.current) {
-        r.onresult = null; r.onerror = null; r.onend = null
-        try { r.abort() } catch {}
-        onSilence()
+        // Si el usuario deja de hablar por 1.8 segundos, consideramos que terminó su turno
+        silenceTimerRef.current = setTimeout(() => {
+          console.log('[SR VAD final]', currentText)
+          r.onresult = null; r.onerror = null; r.onend = null
+          try { r.stop() } catch {}
+          cancelSpeech()
+          if (activeRef.current && currentText) {
+            onResult(currentText)
+          } else {
+            onSilence()
+          }
+        }, 1800)
       }
-    }, ms)
-    }, 500) // delay para re-inicializar mic entre sesiones
+
+      r.onerror = (e) => {
+        if (e.error !== 'aborted') console.warn('[SR Error]', e.error)
+      }
+
+      r.onend = () => {
+        if (!gotAnyResult && activeRef.current) {
+          onSilence()
+        }
+      }
+
+      try { r.start() } catch { onSilence(); return }
+
+      // Timer de silencio inicial (7s): si no dice nada en 7 segundos, activa onSilence
+      timeoutRef.current = setTimeout(() => {
+        if (!gotAnyResult && activeRef.current) {
+          r.onresult = null; r.onerror = null; r.onend = null
+          try { r.abort() } catch {}
+          onSilence()
+        }
+      }, ms)
+    }, 500)
   }, [])
 
   // ── Enviar turno a Claude ─────────────────────────────────────────────────
@@ -182,6 +209,7 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
   const stop = useCallback(() => {
     activeRef.current = false
     clearTimeout(timeoutRef.current)
+    clearTimeout(silenceTimerRef.current)
     cancelSpeech()
     try { recognRef.current?.abort() } catch {}
     setState('idle')
@@ -195,6 +223,7 @@ export function usePhotographer({ onCapture, onGuestIdentified, event }) {
   const sendManualInput = useCallback(async (text) => {
     if (!activeRef.current || !text.trim()) return
     clearTimeout(timeoutRef.current)
+    clearTimeout(silenceTimerRef.current)
     silenceCount.current = 0
     setState('thinking')
     setAvatar('...')
