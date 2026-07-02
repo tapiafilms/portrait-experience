@@ -61,11 +61,33 @@ function speakBrowser(text, { lang = 'es-ES', rate = 0.92, pitch = 1.05 } = {}) 
       || voices.find(v => v.lang.startsWith('es'))
     if (esVoice) utterance.voice = esVoice
 
-    utterance.onend = resolve
+    let resolved = false
+    const cleanup = () => {
+      if (resolved) return
+      resolved = true
+      clearTimeout(safetyTimer)
+      resolve()
+    }
+
+    // Timer de seguridad: aproximadamente 500ms por palabra + 2 segundos
+    const wordCount = text.split(/\s+/).length
+    const safetyDuration = Math.max(2500, wordCount * 500 + 2000)
+    const safetyTimer = setTimeout(() => {
+      console.warn('[speakBrowser] Fallback timeout disparado (onend no se ejecutó)')
+      try { window.speechSynthesis.cancel() } catch {}
+      cleanup()
+    }, safetyDuration)
+
+    utterance.onend = () => {
+      cleanup()
+    }
     utterance.onerror = (e) => {
-      // 'interrupted' no es error real — ocurre al cancelar
-      if (e.error === 'interrupted' || e.error === 'canceled') return resolve()
-      reject(e)
+      if (e.error === 'interrupted' || e.error === 'canceled') {
+        cleanup()
+      } else {
+        clearTimeout(safetyTimer)
+        reject(e)
+      }
     }
     window.speechSynthesis.speak(utterance)
   })
