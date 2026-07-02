@@ -184,7 +184,7 @@ export default function AdminPage({ eventId = null }) {
             {tab === 'resumen'   && <TabResumen   event={selectedEvent} supabase={supabase} password={ADMIN_PWD} onDeleted={id => { setEvents(prev => prev.filter(e => e.id !== id)); setSelectedEvent(prev => prev?.id === id ? null : prev); setTab('crear') }} />}
             {tab === 'momentos'  && <TabMomentos  event={selectedEvent} password={ADMIN_PWD} />}
             {tab === 'pantalla'  && <TabPantalla  event={selectedEvent} />}
-            {tab === 'invitados' && <TabInvitados event={selectedEvent} />}
+            {tab === 'invitados' && <TabInvitados event={selectedEvent} password={ADMIN_PWD} onUpdate={ev => { setSelectedEvent(prev => ({ ...prev, ...ev })); setEvents(prev => prev.map(e => e.id === selectedEvent.id ? { ...e, ...ev } : e)) }} />}
             {tab === 'evento'    && <TabEvento    event={selectedEvent} supabase={supabase} password={ADMIN_PWD} onUpdate={ev => setSelectedEvent(prev => ({ ...prev, ...ev }))} />}
             {tab === 'crear'     && <TabCrear     password={ADMIN_PWD} supabase={supabase} onCreated={ev => { setEvents(prev => [ev, ...prev]); setSelectedEvent(ev); setTab('resumen') }} />}
           </>
@@ -534,17 +534,72 @@ function TabPantalla({ event }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Tab: Invitados
 // ═══════════════════════════════════════════════════════════════════════════════
-function TabInvitados({ event }) {
+function TabInvitados({ event, password, onUpdate }) {
   const guests = event?.guests || []
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const fileRef = useRef(null)
+
   const filtered = guests.filter(g =>
     `${g.nombre} ${g.apellido} ${g.cargo} ${g.area}`.toLowerCase().includes(search.toLowerCase())
   )
 
+  function handleFile(e) {
+    const file = e.target.files[0]
+    if (!file || !event?.id) return
+    setLoading(true)
+    setError(null)
+    const reader = new FileReader()
+    reader.onload = async ev => {
+      try {
+        const newGuests = parseSheet(new Uint8Array(ev.target.result))
+        if (!newGuests.length) throw new Error('El archivo está vacío o no tiene el formato correcto.')
+        
+        const r = await fetch(`${BASE}/api/admin/create-event`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'replace-guests',
+            password,
+            eventId: event.id,
+            guests: newGuests
+          }),
+        })
+        const data = await r.json()
+        if (!r.ok) throw new Error(data.error)
+        
+        onUpdate?.({ guests: newGuests })
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+        e.target.value = ''
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
   return (
     <div style={s.tabWrap}>
-      <h2 style={s.tabTitle}>Invitados — {event?.event_name}</h2>
-      <p style={s.tabSub}>{guests.length} invitados registrados</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16 }}>
+        <div>
+          <h2 style={s.tabTitle}>Invitados — {event?.event_name}</h2>
+          <p style={s.tabSub}>{guests.length} invitados registrados</p>
+        </div>
+        <div>
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleFile} />
+          <button 
+            style={s.secondaryBtn} 
+            onClick={() => fileRef.current?.click()}
+            disabled={loading}
+          >
+            {loading ? 'Reemplazando...' : 'Reemplazar base de datos'}
+          </button>
+        </div>
+      </div>
+
+      {error && <p style={{ color: '#f87171', fontSize: 13, margin: '0 0 16px 0' }}>⚠ {error}</p>}
 
       <input
         style={{ ...s.input, marginBottom: 16 }}

@@ -75,6 +75,18 @@ module.exports = async function handler(req, res) {
     return res.json({ ok: true })
   }
 
+  // Acción: reemplazar lista de invitados
+  if (action === 'replace-guests') {
+    if (!eventId) return res.status(400).json({ error: 'Falta eventId' })
+    if (!guests) return res.status(400).json({ error: 'Faltan invitados' })
+    const { error } = await supabase
+      .from('events')
+      .update({ guests })
+      .eq('id', eventId)
+    if (error) return res.status(500).json({ error: error.message })
+    return res.json({ ok: true })
+  }
+
   // Acción: verificar contraseña sin crear evento
   if (action === 'auth') {
     return res.json({ ok: true })
