@@ -105,6 +105,16 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
             <div style={s.scanLine} />
           </div>
 
+          {/* Cámara de fondo para captura y visualización */}
+          {error ? (
+            <div style={s.cardOverlay}>
+              <p style={s.errorText}>⚠ Cámara no disponible</p>
+              <p style={s.errorSub}>{error}</p>
+            </div>
+          ) : (
+            <CameraFeed videoRef={videoRef} />
+          )}
+
           <div style={{
             position: 'absolute', bottom: 0, left: '50%', width: '130%', height: '130%', zIndex: 1,
             transform: `translateX(-50%) ${conversation.state === 'countdown' || phase === 'countdown' ? 'translateY(100%) scale(2.15)' : 'scale(1.0)'}`,
