@@ -105,47 +105,26 @@ export default function ActiveSession({ onCaptureDone, onReset }) {
             <div style={s.scanLine} />
           </div>
 
-          {/* Cámara de fondo (Fullscreen durante la captura) */}
+          {/* Cámara oculta (ejecutándose en segundo plano para captura de foto) */}
           <div style={{
-            position: 'absolute', inset: 0, zIndex: 0,
-            opacity: phase === 'conversation' ? 0 : 1,
-            transition: 'opacity 0.5s ease',
-            background: '#000',
+            position: 'absolute', width: '1px', height: '1px', opacity: 0,
+            pointerEvents: 'none', overflow: 'hidden'
           }}>
-            {error ? (
-              <div style={s.pipError}><span style={{ fontSize: 20 }}>⚠</span></div>
-            ) : (
-              <CameraFeed videoRef={videoRef} />
-            )}
+            {!error && <CameraFeed videoRef={videoRef} />}
           </div>
 
-          {/* Cámara pequeña flotante (PiP durante conversación) */}
-          <div style={{
-            position: 'absolute',
-            top: '24px',
-            right: '24px',
-            width: '150px',
-            height: '200px',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            border: '1.5px solid rgba(100,160,255,0.5)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 15px rgba(30,100,255,0.25)',
-            zIndex: 10,
-            opacity: phase === 'conversation' ? 1 : 0,
-            pointerEvents: phase === 'conversation' ? 'auto' : 'none',
-            transition: 'opacity 0.2s ease, transform 0.2s ease',
-            background: '#000',
-          }}>
-            {error ? (
-              <div style={s.pipError}><span style={{ fontSize: 20 }}>⚠</span></div>
-            ) : (
-              <CameraFeed videoRef={videoRef} />
-            )}
-          </div>
+          {/* Overlay si la cámara no está disponible */}
+          {error && (
+            <div style={s.cardOverlay}>
+              <p style={s.errorText}>⚠ Cámara no disponible</p>
+              <p style={s.errorSub}>{error}</p>
+            </div>
+          )}
 
+          {/* Avatar principal del fotógrafo */}
           <div style={{
             position: 'absolute', bottom: 0, left: '50%', width: '130%', height: '130%', zIndex: 1,
-            transform: `translateX(-50%) ${conversation.state === 'countdown' || phase === 'countdown' ? 'translateY(100%) scale(2.15)' : 'scale(1.0)'}`,
+            transform: 'translateX(-50%) scale(1.0)',
             transformOrigin: 'bottom center',
             transition: 'transform 1.2s cubic-bezier(0.34, 1.1, 0.64, 1)',
           }}>
